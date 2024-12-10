@@ -1,8 +1,9 @@
 import { registerGObjectClass } from '@/utils/gjs';
-import { GObject, St, Clutter, Gio } from '@gi.ext';
+import { GObject, St, Clutter, Gio, Mtk } from '@gi.ext';
 import TilePreview from './tilePreview';
 import Settings from '@settings/settings';
 import { buildBlurEffect } from '@utils/ui';
+import Tile from '@components/layout/Tile';
 
 @registerGObjectClass
 export default class SelectionTilePreview extends TilePreview {
@@ -21,8 +22,14 @@ export default class SelectionTilePreview extends TilePreview {
 
     private _blur: boolean;
 
-    constructor(params: { parent: Clutter.Actor }) {
-        super({ parent: params.parent, name: 'SelectionTilePreview' });
+    constructor(params: {
+        parent: Clutter.Actor;
+        tile?: Tile;
+        containerRect?: Mtk.Rectangle;
+        rect?: Mtk.Rectangle;
+        gaps?: Clutter.Margin;
+    }) {
+        super(params);
 
         this._blur = false;
 
