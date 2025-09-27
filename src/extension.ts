@@ -1,3 +1,25 @@
+// eslint-disable-next-line spaced-comment
+/*!
+ * Tiling Shell: advanced and modern window management for GNOME
+ *
+ * Copyright (C) 2025 Domenico Ferraro
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 import './styles/stylesheet.scss';
 
 import { Gio, GLib, Meta } from '@gi.ext';
@@ -28,6 +50,9 @@ import { WindowBorderManager } from '@components/windowBorderManager';
 import TilingShellWindowManager from '@components/windowManager/tilingShellWindowManager';
 import ExtendedWindow from '@components/tilingsystem/extendedWindow';
 import { Extension } from '@polyfill';
+import OverriddenAltTab from '@components/altTab/overriddenAltTab';
+import { LayoutSwitcherPopup } from '@components/layoutSwitcher/layoutSwitcher';
+import { unmaximizeWindow } from '@utils/gnomesupport';
 
 const debug = logger('extension');
 
@@ -128,8 +153,7 @@ export default class TilingShellExtension extends Extension {
         this._dbus.enable(this);
 
         if (Settings.OVERRIDE_WINDOW_MENU) OverriddenWindowMenu.enable();
-
-        // TODO OverriddenAltTab.enable();
+        if (Settings.OVERRIDE_ALT_TAB) OverriddenAltTab.enable();
 
         debug('extension is enabled');
     }
@@ -282,6 +306,23 @@ export default class TilingShellExtension extends Extension {
                     );
                 },
             );
+            this._signals.connect(
+                this._keybindings,
+                'cycle-layouts',
+                (
+                    _: KeyBindings,
+                    dp: Meta.Display,
+                    action: number,
+                    mask: number,
+                ) => {
+                    const switcher = new LayoutSwitcherPopup(
+                        action,
+                        !this._fractionalScalingEnabled,
+                    );
+
+                    if (!switcher.show(false, '', mask)) switcher.destroy();
+                },
+            );
         }
 
         // when Tiling Shell's edge-tiling is enabled/disable
@@ -334,6 +375,12 @@ export default class TilingShellExtension extends Extension {
             },
         );
 
+        // enable/disable addition of tiled windows at the end of ALT+TAB from preferences
+        this._signals.connect(Settings, Settings.KEY_OVERRIDE_ALT_TAB, () => {
+            if (Settings.OVERRIDE_ALT_TAB) OverriddenAltTab.enable();
+            else OverriddenAltTab.disable();
+        });
+
         /* todo move maximized to workspace
         this._signals.connect(
             global.window_manager,
@@ -357,7 +404,7 @@ export default class TilingShellExtension extends Extension {
         if (
             window.wmClass === null ||
             change !== Meta.SizeChange.MAXIMIZE || // handle maximize changes only
-            window.get_maximized() !== Meta.MaximizeFlags.BOTH || // handle maximized window only
+            (window.maximizedHorizontally && window.maximizedVertically) || // handle maximized window only
             window.is_attached_dialog() || // skip dialogs
             window.is_on_all_workspaces() ||
             window.windowType !== Meta.WindowType.NORMAL || // handle normal windows only
@@ -451,7 +498,7 @@ export default class TilingShellExtension extends Extension {
                 focus_window.maximizedVertically) &&
             direction === KeyBindingsDirection.DOWN
         ) {
-            focus_window.unmaximize(Meta.MaximizeFlags.BOTH);
+            unmaximizeWindow(focus_window);
             return;
         }
 
@@ -464,7 +511,7 @@ export default class TilingShellExtension extends Extension {
             (focus_window.maximizedHorizontally ||
                 focus_window.maximizedVertically)
         ) {
-            focus_window.unmaximize(Meta.MaximizeFlags.BOTH);
+            unmaximizeWindow(focus_window);
             return;
         }
 
@@ -507,7 +554,7 @@ export default class TilingShellExtension extends Extension {
             direction === KeyBindingsDirection.UP
         ) {
             Main.wm.skipNextEffect(focus_window.get_compositor_private());
-            focus_window.unmaximize(Meta.MaximizeFlags.BOTH);
+            unmaximizeWindow(focus_window);
             (focus_window as ExtendedWindow).assignedTile = undefined;
         }
 
@@ -550,10 +597,16 @@ export default class TilingShellExtension extends Extension {
         const windowList = filterUnfocusableWindows(
             focus_window.get_workspace().list_windows(),
         );
+        const onlyTiledWindows = Settings.ENABLE_DIRECTIONAL_FOCUS_TILED_ONLY;
 
         windowList
             .filter((win) => {
                 if (win === focus_window || win.minimized) return false;
+                if (
+                    onlyTiledWindows &&
+                    (win as ExtendedWindow).assignedTile === undefined
+                )
+                    return false;
 
                 const winRect = win.get_frame_rect();
                 switch (direction) {
@@ -652,8 +705,11 @@ export default class TilingShellExtension extends Extension {
             return;
 
         // if the window is maximized, unmaximize it
-        if (focus_window.get_maximized())
-            focus_window.unmaximize(Meta.MaximizeFlags.BOTH);
+        if (
+            focus_window.maximizedHorizontally ||
+            focus_window.maximizedVertically
+        )
+            unmaximizeWindow(focus_window);
 
         const monitorTilingManager =
             this._tilingManagers[focus_window.get_monitor()];
@@ -706,7 +762,7 @@ export default class TilingShellExtension extends Extension {
         this._fractionalScalingEnabled = false;
 
         OverriddenWindowMenu.destroy();
-        // TODO OverriddenAltTab.destroy();
+        OverriddenAltTab.destroy();
 
         // restore native edge tiling and all the overridden settings
         SettingsOverride.destroy();
