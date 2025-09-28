@@ -301,3 +301,18 @@ The first element is the settings key, the second element is the title and the t
 _Please use the same description you wrote in the schema at step 1._
 
 For any problem, doubts or if you are stuck, feel free to open a pull request with what you have already done. I'm more than happy to help!
+
+## Vagrant
+
+```
+The private key to connect to the machine via SSH must be owned
+by the user running Vagrant. This is a strict requirement from
+SSH itself. Please fix the following key to be owned by the user
+running Vagrant:
+```
+
+If you are running on a NTFS file system then you have to move out the key:
+```
+mv /path/to/gnome46/virtualbox/private_key $HOME/.ssh/vagrant_key
+ln -sr $HOME/.ssh/vagrant_key /path/to/gnome46/virtualbox/private_key
+```
