@@ -1,6 +1,6 @@
-import { Clutter, Mtk, Meta, GLib } from '@gi.ext';
+import { Clutter, Mtk, Meta, GLib } from '../../gi/ext';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { logger } from '@utils/logger';
+import { logger } from '../../utils/logger';
 import {
     buildMargin,
     buildRectangle,
@@ -11,24 +11,25 @@ import {
     isPointInsideRect,
     isTileOnContainerBorder,
     squaredEuclideanDistance,
-} from '@/utils/ui';
-import TilingLayout from '@/components/tilingsystem/tilingLayout';
+} from '../../utils/ui';
+import TilingLayout from '../../components/tilingsystem/tilingLayout';
 import SnapAssist from '../snapassist/snapAssist';
 import SelectionTilePreview from '../tilepreview/selectionTilePreview';
-import Settings, { ActivationKey } from '@settings/settings';
-import SignalHandling from '@utils/signalHandling';
+import { ActivationKey } from '../../settings/settings';
+import Settings from '../../settings/settings';
+import SignalHandling from '../../utils/signalHandling';
 import Layout from '../layout/Layout';
 import Tile from '../layout/Tile';
 import TileUtils from '../layout/TileUtils';
-import GlobalState from '@utils/globalState';
+import GlobalState from '../../utils/globalState';
 import { Monitor } from 'resource:///org/gnome/shell/ui/layout.js';
 import ExtendedWindow from './extendedWindow';
 import EdgeTilingManager from './edgeTilingManager';
 import TouchPointer from './touchPointer';
-import { KeyBindingsDirection } from '@keybindings';
-import TilingShellWindowManager from '@components/windowManager/tilingShellWindowManager';
+import { KeyBindingsDirection } from '../../keybindings';
+import TilingShellWindowManager from '../../components/windowManager/tilingShellWindowManager';
 import TilingLayoutWithSuggestions from '../windowsSuggestions/tilingLayoutWithSuggestions';
-import { maximizeWindow, unmaximizeWindow } from '@utils/gnomesupport';
+import { maximizeWindow, unmaximizeWindow } from '../../utils/gnomesupport';
 
 const MINIMUM_DISTANCE_TO_RESTORE_ORIGINAL_SIZE = 90;
 
@@ -76,7 +77,7 @@ export class TilingManager {
     private _movingWindowTimerId: number | null = null;
 
     private readonly _signals: SignalHandling;
-    private readonly _debug: (...content: unknown[]) => void;
+    private readonly _debug: (..._content: unknown[]) => void;
 
     /**
      * Constructs a new TilingManager instance.
@@ -715,8 +716,8 @@ export class TilingManager {
                 if (Settings.SNAP_ASSIST) {
                     this._snapAssist.onMovingWindow(
                         window,
-                        true,
                         currPointerPos,
+                        true,
                     );
                 }
             }
@@ -1085,8 +1086,8 @@ export class TilingManager {
             );
         }
         if (window)
-            this._selectedTilesPreview.openAbove(window, ease, position);
-        else this._selectedTilesPreview.open(ease, position);
+            this._selectedTilesPreview.openAbove(window, position, ease);
+        else this._selectedTilesPreview.open(position, ease);
     }
 
     /**
@@ -1137,7 +1138,7 @@ export class TilingManager {
             });
             initialRect.x -= initialRect.width / 2;
             initialRect.y -= initialRect.height / 2;
-            this._selectedTilesPreview.open(false, initialRect);
+            this._selectedTilesPreview.open(initialRect, false);
         }
 
         this.openSelectionTilePreview(edgeTile, false, true, window);

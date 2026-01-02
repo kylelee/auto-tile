@@ -1,4 +1,4 @@
-import { Gio, GObject, GLib } from '@gi.shared';
+import { Gio, GObject, GLib } from '../gi/shared';
 import Layout from '../components/layout/Layout';
 import Tile from '../components/layout/Tile';
 
@@ -79,25 +79,20 @@ export default class Settings {
     static KEY_LAST_VERSION_NAME_INSTALLED = 'last-version-name-installed';
     static KEY_OVERRIDDEN_SETTINGS = 'overridden-settings';
     static KEY_WINDOW_BORDER_COLOR = 'window-border-color';
-    static KEY_WINDOW_USE_CUSTOM_BORDER_COLOR =
-        'window-use-custom-border-color';
+    static KEY_WINDOW_USE_CUSTOM_BORDER_COLOR = 'window-use-custom-border-color';
     static KEY_TILING_SYSTEM = 'enable-tiling-system';
     static KEY_SNAP_ASSIST = 'enable-snap-assist';
     static KEY_SHOW_INDICATOR = 'show-indicator';
     static KEY_TILING_SYSTEM_ACTIVATION_KEY = 'tiling-system-activation-key';
-    static KEY_TILING_SYSTEM_DEACTIVATION_KEY =
-        'tiling-system-deactivation-key';
-    static KEY_SPAN_MULTIPLE_TILES_ACTIVATION_KEY =
-        'span-multiple-tiles-activation-key';
+    static KEY_TILING_SYSTEM_DEACTIVATION_KEY = 'tiling-system-deactivation-key';
+    static KEY_SPAN_MULTIPLE_TILES_ACTIVATION_KEY = 'span-multiple-tiles-activation-key';
     static KEY_SPAN_MULTIPLE_TILES = 'enable-span-multiple-tiles';
     static KEY_RESTORE_WINDOW_ORIGINAL_SIZE = 'restore-window-original-size';
     static KEY_WRAPAROUND_FOCUS = 'enable-wraparound-focus';
-    static KEY_ENABLE_DIRECTIONAL_FOCUS_TILED_ONLY =
-        'enable-directional-focus-tiled-only';
+    static KEY_ENABLE_DIRECTIONAL_FOCUS_TILED_ONLY = 'enable-directional-focus-tiled-only';
     static KEY_RESIZE_COMPLEMENTING_WINDOWS = 'resize-complementing-windows';
     static KEY_ENABLE_BLUR_SNAP_ASSISTANT = 'enable-blur-snap-assistant';
-    static KEY_ENABLE_BLUR_SELECTED_TILEPREVIEW =
-        'enable-blur-selected-tilepreview';
+    static KEY_ENABLE_BLUR_SELECTED_TILEPREVIEW = 'enable-blur-selected-tilepreview';
     static KEY_ENABLE_MOVE_KEYBINDINGS = 'enable-move-keybindings';
     static KEY_ENABLE_AUTO_TILING = 'enable-autotiling';
     static KEY_ACTIVE_SCREEN_EDGES = 'active-screen-edges';
@@ -113,16 +108,12 @@ export default class Settings {
     static KEY_SETTING_LAYOUTS_JSON = 'layouts-json';
     static KEY_SETTING_SELECTED_LAYOUTS = 'selected-layouts';
     static KEY_WINDOW_BORDER_WIDTH = 'window-border-width';
-    static KEY_ENABLE_SMART_WINDOW_BORDER_RADIUS =
-        'enable-smart-window-border-radius';
+    static KEY_ENABLE_SMART_WINDOW_BORDER_RADIUS = 'enable-smart-window-border-radius';
     static KEY_QUARTER_TILING_THRESHOLD = 'quarter-tiling-threshold';
     static KEY_EDGE_TILING_OFFSET = 'edge-tiling-offset';
-    static KEY_ENABLE_TILING_SYSTEM_WINDOWS_SUGGESTIONS =
-        'enable-tiling-system-windows-suggestions';
-    static KEY_ENABLE_SNAP_ASSISTANT_WINDOWS_SUGGESTIONS =
-        'enable-snap-assistant-windows-suggestions';
-    static KEY_ENABLE_SCREEN_EDGES_WINDOWS_SUGGESTIONS =
-        'enable-screen-edges-windows-suggestions';
+    static KEY_ENABLE_TILING_SYSTEM_WINDOWS_SUGGESTIONS = 'enable-tiling-system-windows-suggestions';
+    static KEY_ENABLE_SNAP_ASSISTANT_WINDOWS_SUGGESTIONS = 'enable-snap-assistant-windows-suggestions';
+    static KEY_ENABLE_SCREEN_EDGES_WINDOWS_SUGGESTIONS = 'enable-screen-edges-windows-suggestions';
 
     static SETTING_MOVE_WINDOW_RIGHT = 'move-window-right';
     static SETTING_MOVE_WINDOW_LEFT = 'move-window-left';
@@ -164,7 +155,6 @@ export default class Settings {
 
     static bind(
         key: string,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         object: GObject.Object | any,
         property: string,
         flags: Gio.SettingsBindFlags = Gio.SettingsBindFlags.DEFAULT,
@@ -519,7 +509,7 @@ export default class Settings {
             if (layouts.length === 0)
                 throw new Error('At least one layout is required');
             return layouts.filter((layout) => layout.tiles.length > 0);
-        } catch (ex: unknown) {
+        } catch (_unused) {
             this.reset_layouts_json();
             return JSON.parse(
                 this._settings?.get_string(this.KEY_SETTING_LAYOUTS_JSON) ||
@@ -685,7 +675,7 @@ export default class Settings {
         );
     }
 
-    static connect(key: string, func: (...arg: unknown[]) => void): number {
+    static connect(key: string, func: (..._arg: unknown[]) => void): number {
         return this._settings?.connect(`changed::${key}`, func) || -1;
     }
 

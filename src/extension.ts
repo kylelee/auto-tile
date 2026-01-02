@@ -1,4 +1,4 @@
-// eslint-disable-next-line spaced-comment
+
 /*!
  * Tiling Shell: advanced and modern window management for GNOME
  *
@@ -20,39 +20,35 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import './styles/stylesheet.scss';
-
-import { Gio, GLib, Meta } from '@gi.ext';
-import { logger } from '@utils/logger';
+import { Extension } from './polyfill'; // must stay at the top
+import { Gio, GLib, Meta } from './gi/ext';
+import { logger } from './utils/logger';
 import {
     filterUnfocusableWindows,
     getMonitors,
     getWindows,
     squaredEuclideanDistance,
-} from '@/utils/ui';
+} from './utils/ui';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { TilingManager } from '@/components/tilingsystem/tilingManager';
-import Settings from '@settings/settings';
+import { TilingManager } from './components/tilingsystem/tilingManager';
+import Settings from './settings/settings';
 import SignalHandling from './utils/signalHandling';
 import GlobalState from './utils/globalState';
 import Indicator from './indicator/indicator';
 import { ExtensionMetadata } from 'resource:///org/gnome/shell/extensions/extension.js';
 import DBus from './dbus';
-import KeyBindings, {
-    KeyBindingsDirection,
-    FocusSwitchDirection,
-} from './keybindings';
-import SettingsOverride from '@settings/settingsOverride';
-import { ResizingManager } from '@components/tilingsystem/resizeManager';
-import OverriddenWindowMenu from '@components/window_menu/overriddenWindowMenu';
-import Tile from '@components/layout/Tile';
-import { WindowBorderManager } from '@components/windowBorderManager';
-import TilingShellWindowManager from '@components/windowManager/tilingShellWindowManager';
-import ExtendedWindow from '@components/tilingsystem/extendedWindow';
-import { Extension } from '@polyfill';
-import OverriddenAltTab from '@components/altTab/overriddenAltTab';
-import { LayoutSwitcherPopup } from '@components/layoutSwitcher/layoutSwitcher';
-import { unmaximizeWindow } from '@utils/gnomesupport';
+import { KeyBindingsDirection, FocusSwitchDirection } from './keybindings';
+import KeyBindings from './keybindings';
+import SettingsOverride from './settings/settingsOverride';
+import { ResizingManager } from './components/tilingsystem/resizeManager';
+import OverriddenWindowMenu from './components/window_menu/overriddenWindowMenu';
+import Tile from './components/layout/Tile';
+import { WindowBorderManager } from './components/windowBorder/windowBorderManager';
+import TilingShellWindowManager from './components/windowManager/tilingShellWindowManager';
+import ExtendedWindow from './components/tilingsystem/extendedWindow';
+import OverriddenAltTab from './components/altTab/overriddenAltTab';
+import { LayoutSwitcherPopup } from './components/layoutSwitcher/layoutSwitcher';
+import { unmaximizeWindow } from './utils/gnomesupport';
 import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 
 const debug = logger('extension');
@@ -66,7 +62,7 @@ export default class TilingShellExtension extends Extension {
     private _keybindings: KeyBindings | null;
     private _resizingManager: ResizingManager | null;
     private _windowBorderManager: WindowBorderManager | null;
-
+    
     constructor(metadata: ExtensionMetadata) {
         super(metadata);
         this._signals = null;

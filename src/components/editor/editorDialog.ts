@@ -1,19 +1,23 @@
-import Settings from '@settings/settings';
-import { registerGObjectClass } from '@/utils/gjs';
-import { St, Clutter, Gio } from '@gi.ext';
+import Settings from '../../settings/settings';
+import { registerGObjectClass } from '../../utils/gjs';
+import { St, Clutter, Gio } from '../../gi/ext';
 import LayoutButton from '../../indicator/layoutButton';
-import GlobalState from '@utils/globalState';
-import Layout from '@/components/layout/Layout';
+import GlobalState from '../../utils/globalState';
+import Layout from '../../components/layout/Layout';
 
-import Tile from '@/components/layout/Tile';
+import Tile from '../../components/layout/Tile';
 import * as ModalDialog from 'resource:///org/gnome/shell/ui/modalDialog.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { enableScalingFactorSupport, getMonitorScalingFactor } from '@utils/ui';
+import {
+    enableScalingFactorSupport,
+    getMonitorScalingFactor,
+} from '../../utils/ui';
 import { _ } from '../../translations';
-import { widgetOrientation } from '@utils/gnomesupport';
+import { widgetOrientation } from '../../utils/gnomesupport';
 
-@registerGObjectClass
 export default class EditorDialog extends ModalDialog.ModalDialog {
+    static { registerGObjectClass(this) }
+
     private readonly _layoutHeight: number = 72;
     private readonly _layoutWidth: number = 128; // 16:9 ratio. -> (16*layoutHeight) / 9 and then rounded to int
     private readonly _gapsSize: number = 3;
@@ -22,8 +26,8 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
 
     constructor(params: {
         enableScaling: boolean;
-        onDeleteLayout: (ind: number, lay: Layout) => void;
-        onSelectLayout: (ind: number, lay: Layout) => void;
+        onDeleteLayout: (_ind: number, _lay: Layout) => void;
+        onSelectLayout: (_ind: number, _lay: Layout) => void;
         onNewLayout: () => void;
         legend: boolean;
         onClose: () => void;
@@ -225,8 +229,8 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
 
     private _drawLayouts(params: {
         layouts: Layout[];
-        onDeleteLayout: (ind: number, lay: Layout) => void;
-        onSelectLayout: (ind: number, lay: Layout) => void;
+        onDeleteLayout: (_ind: number, _lay: Layout) => void;
+        onSelectLayout: (_ind: number, _lay: Layout) => void;
         onNewLayout: () => void;
         onClose: () => void;
         path: string;

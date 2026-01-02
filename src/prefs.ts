@@ -1,4 +1,3 @@
-// eslint-disable-next-line spaced-comment
 /*!
  * Tiling Shell: advanced and modern window management for GNOME
  *
@@ -20,36 +19,18 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { Gtk, Adw, Gio, GLib, Gdk, GObject } from '@gi.prefs';
-import Settings, { ActivationKey } from './settings/settings';
+import { Gtk, Adw, Gio, GLib, Gdk, GObject } from './gi/prefs';
+import Settings from './settings/settings';
+import { ActivationKey } from './settings/settings';
 import { logger } from './utils/logger';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
-import Layout from '@components/layout/Layout';
-import SettingsExport from '@settings/settingsExport';
+import Layout from './components/layout/Layout';
+import SettingsExport from './settings/settingsExport';
 import { gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 // @ts-expect-error "Module exists"
 import * as Config from 'resource:///org/gnome/Shell/Extensions/js/misc/config.js';
 
 const debug = logger('prefs');
-
-/**
- * This function is called when the preferences window is first created to build
- * and return a GTK4 widget. Prior to version 42, the prefs.js needed a
- * buildPrefsWidget function, returning a GtkWidget to be inserted in the
- * preferences dialog.
- *
- * The preferences window will be a `Adw.PreferencesWindow`, and the widget
- * returned by this function will be added to an `Adw.PreferencesPage` or
- * `Adw.PreferencesGroup` if necessary.
- *
- * @returns {Gtk.Widget} the preferences widget
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function buildPrefsWidget(): Gtk.Widget {
-    return new Gtk.Label({
-        label: 'Preferences',
-    });
-}
 
 export default class TilingShellExtensionPreferences extends ExtensionPreferences {
     private GNOME_VERSION_MAJOR = Number(Config.PACKAGE_VERSION.split('.')[0]);
@@ -1179,7 +1160,7 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
     _buildScaleRow(
         title: string,
         subtitle: string,
-        onChange: (scale: Gtk.Scale) => void,
+        onChange: (_scale: Gtk.Scale) => void,
         initialValue: number,
         min: number,
         max: number,
@@ -1216,7 +1197,7 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
 
     _buildColorButton(
         rgba: Gdk.RGBA,
-        onChange: (s: string) => void,
+        onChange: (_s: string) => void,
     ): Gtk.ColorButton {
         const colorButton = new Gtk.ColorButton({
             rgba,
@@ -1261,7 +1242,7 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
         filter: Gtk.FileFilter,
         onResponse: (
             _source: Gtk.FileChooserNative,
-            response_id: number,
+            _response_id: number,
         ) => void,
     ): Gtk.FileChooserNative {
         const fc = new Gtk.FileChooserNative({

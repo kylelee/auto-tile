@@ -1,7 +1,6 @@
 type ObjectWithSignals = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    connect: (...args: any[]) => number;
-    disconnect: (id: number) => void;
+    connect: (..._args: any[]) => number;
+    disconnect: (_id: number) => void;
 };
 
 export default class SignalHandling {
@@ -23,7 +22,7 @@ export default class SignalHandling {
     }
 
     public disconnect(): boolean;
-    public disconnect(obj: ObjectWithSignals): boolean;
+    public disconnect(_obj: ObjectWithSignals): boolean;
     public disconnect(obj?: ObjectWithSignals) {
         if (!obj) {
             const toDelete: string[] = [];

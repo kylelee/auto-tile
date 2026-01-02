@@ -2,18 +2,16 @@ import {
     buildRectangle,
     isPointInsideRect,
     clampPointInsideRect,
-} from '@utils/ui';
-import { GObject, Mtk, St } from '@gi.ext';
-import Settings from '@settings/settings';
-import { registerGObjectClass } from '@utils/gjs';
-import { logger } from '@utils/logger';
+} from '../../utils/ui';
+import { GObject, Mtk } from '../../gi/ext';
+import Settings from '../../settings/settings';
+import { registerGObjectClass } from '../../utils/gjs';
 
 const TOP_EDGE_TILING_OFFSET = 8;
 const QUARTER_PERCENTAGE = 0.5;
 
-@registerGObjectClass
 export default class EdgeTilingManager extends GObject.Object {
-    static metaInfo: GObject.MetaInfo<unknown, unknown, unknown> = {
+    static { registerGObjectClass(this, {
         GTypeName: 'EdgeTilingManager',
         Properties: {
             quarterActivationPercentage: GObject.ParamSpec.uint(
@@ -35,7 +33,8 @@ export default class EdgeTilingManager extends GObject.Object {
                 16,
             ),
         },
-    };
+    })};
+
     private _workArea: Mtk.Rectangle;
     private _quarterActivationPercentage: number;
     private _edgeTilingOffset: number;
@@ -149,9 +148,13 @@ export default class EdgeTilingManager extends GObject.Object {
             pointerPos.x <= this._workArea.x + this._edgeTilingOffset ||
             pointerPos.y <= this._workArea.y + TOP_EDGE_TILING_OFFSET ||
             pointerPos.x >=
-                this._workArea.x + this._workArea.width - this._edgeTilingOffset ||
+                this._workArea.x +
+                    this._workArea.width -
+                    this._edgeTilingOffset ||
             pointerPos.y >=
-                this._workArea.y + this._workArea.height - this._edgeTilingOffset
+                this._workArea.y +
+                    this._workArea.height -
+                    this._edgeTilingOffset
         );
     }
 
