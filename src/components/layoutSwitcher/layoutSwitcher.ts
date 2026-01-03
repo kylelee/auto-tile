@@ -81,7 +81,7 @@ class LayoutSwitcherList extends SwitcherPopup.SwitcherList {
 
 export class LayoutSwitcherPopup extends SwitcherPopup.SwitcherPopup {
     static { registerGObjectClass(this) }
-    
+
     // those are defined in the parent but we lack them in the type definition
     // @esbuild-drop-next-line
     private _switcherList: LayoutSwitcherList;
@@ -91,12 +91,14 @@ export class LayoutSwitcherPopup extends SwitcherPopup.SwitcherPopup {
     private _selectedIndex!: number;
 
     private _action: number;
+    private _backwardAction: number;
 
-    constructor(action: number, enableScaling: boolean) {
+    constructor(action: number, backwardAction: number, enableScaling: boolean) {
         // @ts-expect-error "Parent can take a list"
         super(GlobalState.get().layouts);
 
         this._action = action;
+        this._backwardAction = backwardAction;
         // handle scale factor of the monitor
         const monitorScalingFactor = enableScaling
             ? getMonitorScalingFactor(this._getCurrentMonitorIndex())
@@ -116,6 +118,7 @@ export class LayoutSwitcherPopup extends SwitcherPopup.SwitcherPopup {
         this._selectedIndex = GlobalState.get().layouts.findIndex(
             (lay) => lay.id === selectedLay.id,
         );
+        // backward is the one passed to show function
         if (backward) this._select(this._previous());
         else this._select(this._next());
     }
@@ -123,8 +126,9 @@ export class LayoutSwitcherPopup extends SwitcherPopup.SwitcherPopup {
     _keyPressHandler(keysym: number, action: number) {
         if (keysym === Clutter.KEY_Left) this._select(this._previous());
         else if (keysym === Clutter.KEY_Right) this._select(this._next());
-        else if (action !== this._action) return Clutter.EVENT_PROPAGATE;
-        else this._select(this._next());
+        else if (action === this._action) this._select(this._next());
+        else if (action === this._backwardAction) this._select(this._previous());
+        else return Clutter.EVENT_PROPAGATE;
 
         return Clutter.EVENT_STOP;
     }

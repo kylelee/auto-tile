@@ -47,7 +47,7 @@ def configure_gnome_vm(vm_config, box_name)
       echo 'deltarpm=true' | sudo tee -a /etc/dnf/dnf.conf
 
       dnf -y update
-      dnf install -y gnome-shell gnome-session gdm \
+      dnf install -y gnome-shell gnome-session gdm glib2-devel \
           gnome-extensions-app gnome-terminal \
           nautilus gnome-backgrounds nodejs npm
 

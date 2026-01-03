@@ -9,6 +9,12 @@ export enum ActivationKey {
     SUPER,
 }
 
+export enum EdgeTilingMode {
+    DEFAULT = 'default',
+    ADAPTIVE = 'adaptive',
+    GRANULAR = 'granular',
+}
+
 /** ------------- Utility functions ------------- */
 function get_string(key: string): string {
     return (
@@ -82,6 +88,7 @@ export default class Settings {
     static KEY_WINDOW_USE_CUSTOM_BORDER_COLOR = 'window-use-custom-border-color';
     static KEY_TILING_SYSTEM = 'enable-tiling-system';
     static KEY_SNAP_ASSIST = 'enable-snap-assist';
+    static KEY_SNAP_ASSIST_SYNC_LAYOUT = 'snap-assist-sync-layout';
     static KEY_SHOW_INDICATOR = 'show-indicator';
     static KEY_TILING_SYSTEM_ACTIVATION_KEY = 'tiling-system-activation-key';
     static KEY_TILING_SYSTEM_DEACTIVATION_KEY = 'tiling-system-deactivation-key';
@@ -95,6 +102,7 @@ export default class Settings {
     static KEY_ENABLE_BLUR_SELECTED_TILEPREVIEW = 'enable-blur-selected-tilepreview';
     static KEY_ENABLE_MOVE_KEYBINDINGS = 'enable-move-keybindings';
     static KEY_ENABLE_AUTO_TILING = 'enable-autotiling';
+    static KEY_RAISE_TOGETHER = 'raise-together';
     static KEY_ACTIVE_SCREEN_EDGES = 'active-screen-edges';
     static KEY_TOP_EDGE_MAXIMIZE = 'top-edge-maximize';
     static KEY_OVERRIDE_WINDOW_MENU = 'override-window-menu';
@@ -114,6 +122,7 @@ export default class Settings {
     static KEY_ENABLE_TILING_SYSTEM_WINDOWS_SUGGESTIONS = 'enable-tiling-system-windows-suggestions';
     static KEY_ENABLE_SNAP_ASSISTANT_WINDOWS_SUGGESTIONS = 'enable-snap-assistant-windows-suggestions';
     static KEY_ENABLE_SCREEN_EDGES_WINDOWS_SUGGESTIONS = 'enable-screen-edges-windows-suggestions';
+    static KEY_EDGE_TILING_MODE = 'edge-tiling-mode';
 
     static SETTING_MOVE_WINDOW_RIGHT = 'move-window-right';
     static SETTING_MOVE_WINDOW_LEFT = 'move-window-left';
@@ -134,6 +143,7 @@ export default class Settings {
     static SETTING_FOCUS_WINDOW_PREV = 'focus-window-prev';
     static SETTING_HIGHLIGHT_CURRENT_WINDOW = 'highlight-current-window';
     static SETTING_CYCLE_LAYOUTS = 'cycle-layouts';
+    static SETTING_CYCLE_LAYOUTS_BACKWARD = 'cycle-layouts-backward';
 
     static initialize(settings: Gio.Settings) {
         if (this._is_initialized) return;
@@ -192,6 +202,14 @@ export default class Settings {
 
     static set SNAP_ASSIST(val: boolean) {
         set_boolean(Settings.KEY_SNAP_ASSIST, val);
+    }
+
+    static get SNAP_ASSIST_SYNC_LAYOUT(): boolean {
+        return get_boolean(Settings.KEY_SNAP_ASSIST_SYNC_LAYOUT);
+    }
+
+    static set SNAP_ASSIST_SYNC_LAYOUT(val: boolean) {
+        set_boolean(Settings.KEY_SNAP_ASSIST_SYNC_LAYOUT, val);
     }
 
     static get SHOW_INDICATOR(): boolean {
@@ -321,6 +339,14 @@ export default class Settings {
 
     static set ENABLE_AUTO_TILING(val: boolean) {
         set_boolean(Settings.KEY_ENABLE_AUTO_TILING, val);
+    }
+
+    static get RAISE_TOGETHER(): boolean {
+        return get_boolean(Settings.KEY_RAISE_TOGETHER);
+    }
+
+    static set RAISE_TOGETHER(val: boolean) {
+        set_boolean(Settings.KEY_RAISE_TOGETHER, val);
     }
 
     static get ACTIVE_SCREEN_EDGES(): boolean {
@@ -466,6 +492,18 @@ export default class Settings {
 
     static set ENABLE_SCREEN_EDGES_WINDOWS_SUGGESTIONS(val: boolean) {
         set_boolean(Settings.KEY_ENABLE_SCREEN_EDGES_WINDOWS_SUGGESTIONS, val);
+    }
+
+    static get EDGE_TILING_MODE(): EdgeTilingMode {
+        const value = get_string(Settings.KEY_EDGE_TILING_MODE);
+        if (Object.values(EdgeTilingMode).includes(value as EdgeTilingMode))
+            return value as EdgeTilingMode;
+
+        return EdgeTilingMode.DEFAULT;
+    }
+
+    static set EDGE_TILING_MODE(val: EdgeTilingMode) {
+        set_string(Settings.KEY_EDGE_TILING_MODE, val);
     }
 
     static get_inner_gaps(scaleFactor: number = 1): {

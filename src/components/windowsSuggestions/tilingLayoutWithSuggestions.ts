@@ -1,7 +1,7 @@
 import { registerGObjectClass } from '../../utils/gjs';
 import { Clutter, Mtk, Meta } from '../../gi/ext';
 import Layout from '../layout/Layout';
-import { buildRectangle } from '../../utils/ui';
+import { buildRectangle, isPointInsideRect } from '../../utils/ui';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import GlobalState from '../../utils/globalState';
 import ExtendedWindow from '../tilingsystem/extendedWindow';
@@ -11,18 +11,20 @@ import LayoutWidget from '../../components/layout/LayoutWidget';
 import SignalHandling from '../../utils/signalHandling';
 import SuggestionsTilePreview from '../../components/windowsSuggestions/suggestionsTilePreview';
 import TilingShellWindowManager from '../../components/windowManager/tilingShellWindowManager';
-import { unmaximizeWindow } from '../../utils/gnomesupport';
+import { getEventCoords, unmaximizeWindow } from '../../utils/gnomesupport';
+import TouchEventHelper from '../../utils/touch';
 
 const ANIMATION_SPEED = 200;
 const MASONRY_LAYOUT_ROW_HEIGHT = 0.31;
 
 export default class TilingLayoutWithSuggestions extends LayoutWidget<SuggestionsTilePreview> {
     static { registerGObjectClass(this) }
-    
+
     private _signals: SignalHandling;
     private _lastTiledWindow: Meta.Window | null;
     private _showing: boolean;
     private _oldPreviews: SuggestionsTilePreview[];
+    private _touchHelper: TouchEventHelper;
 
     constructor(
         innerGaps: Clutter.Margin,
@@ -45,6 +47,7 @@ export default class TilingLayoutWithSuggestions extends LayoutWidget<Suggestion
         this._showing = false;
         this._oldPreviews = [];
         this.connect('destroy', () => this._signals.disconnect());
+        this._touchHelper = new TouchEventHelper();
     }
 
     protected override buildTile(
@@ -79,7 +82,21 @@ export default class TilingLayoutWithSuggestions extends LayoutWidget<Suggestion
 
         this._signals.disconnect();
         this._signals.connect(this, 'key-focus-out', () => this.close());
-        this._signals.connect(this, 'button-press-event', () => {
+        this._signals.connect(
+            this,
+            'touch-event',
+            (_, event: Clutter.Event) => {
+                // if a window clone is touched, it will stop propagating the event
+                // then if this is called it is not a window clone that was pressed
+                if (event.type() === Clutter.EventType.TOUCH_END) {
+                    this.close();
+                    return Clutter.EVENT_STOP;
+                }
+
+                return Clutter.EVENT_PROPAGATE;
+            },
+        );
+        this._signals.connect(this, 'button-release-event', () => {
             // if a window clone is pressed by a button, it will stop propagating the event
             // then if this is called it is not a window clone that was pressed
             this.close();
@@ -187,64 +204,37 @@ export default class TilingLayoutWithSuggestions extends LayoutWidget<Suggestion
             });
 
             // when the clone is selected by the user
-            winClone.connect('button-press-event', () => {
-                // we will focus it later, after the animation and if any other window is tiled
-                this._lastTiledWindow = nonTiledWin;
-                // place this window on TOP of everyone ()
-                if (
-                    nonTiledWin.maximizedHorizontally ||
-                    nonTiledWin.maximizedVertically
-                )
-                    unmaximizeWindow(nonTiledWin);
+            winClone.connect(
+                'button-release-event',
+                (act: Clutter.Actor, event: Clutter.Event) => {
+                    return this._onSuggestionPress(
+                        nonTiledWin,
+                        winClone,
+                        event,
+                        nontiledWindows,
+                        monitorIndex,
+                        preview,
+                    );
+                },
+            );
+            winClone.connect(
+                'touch-event',
+                (act: Clutter.Actor, event: Clutter.Event) => {
+                    if (event.type() === Clutter.EventType.TOUCH_END) {
+                        return this._onSuggestionPress(
+                            nonTiledWin,
+                            winClone,
+                            event,
+                            nontiledWindows,
+                            monitorIndex,
+                            preview,
+                        );
+                    }
 
-                if (nonTiledWin.is_fullscreen())
-                    nonTiledWin.unmake_fullscreen();
-                if (nonTiledWin.minimized) nonTiledWin.unminimize();
+                    return Clutter.EVENT_STOP;
+                },
+            );
 
-                const winRect = nonTiledWin.get_frame_rect();
-                (nonTiledWin as ExtendedWindow).originalSize = winRect.copy();
-
-                // create a static clone and hide the live clone
-                // then we can change the actual window size
-                // without showing that to the user
-                const cl = winClone.get_window_clone() ?? winClone;
-                const [x, y] = cl.get_transformed_position();
-                const allocation = cl.get_allocation_box();
-                TilingShellWindowManager.easeMoveWindow({
-                    window: nonTiledWin,
-                    from: buildRectangle({
-                        x,
-                        y,
-                        width: allocation.x2 - allocation.x1,
-                        height: allocation.y2 - allocation.y1,
-                    }),
-                    to: buildRectangle({
-                        x: preview.innerX,
-                        y: preview.innerY,
-                        width: preview.innerWidth,
-                        height: preview.innerHeight,
-                    }),
-                    duration: ANIMATION_SPEED * 1.8,
-                    monitorIndex,
-                });
-                // finally assign the tile to the window
-                (nonTiledWin as ExtendedWindow).assignedTile = new Tile({
-                    ...preview.tile,
-                });
-                // hide the live clone, since we have a clone animating on top of it
-                winClone.opacity = 0;
-                // begin hiding the preview. Destroy it when it is hidden
-                // and recursively show popup on the next vacant tile
-                const removed = this._previews.splice(
-                    this._previews.indexOf(preview),
-                    1,
-                );
-                this._oldPreviews.push(...removed);
-                nontiledWindows.splice(nontiledWindows.indexOf(nonTiledWin), 1);
-                preview.close(true);
-                this._recursivelyShowPopup(nontiledWindows, monitorIndex);
-                return Clutter.EVENT_STOP; // Blocca la propagazione
-            });
             return winClone;
         });
 
@@ -303,5 +293,78 @@ export default class TilingLayoutWithSuggestions extends LayoutWidget<Suggestion
                 this._previews.forEach((prev) => prev.open());
             },
         });
+    }
+
+    private _onSuggestionPress(
+        nonTiledWin: Meta.Window,
+        suggestedWin: SuggestedWindowPreview,
+        event: Clutter.Event,
+        nontiledWindows: Meta.Window[],
+        monitorIndex: number,
+        preview: SuggestionsTilePreview,
+    ): boolean {
+        const [eventX, eventY] = getEventCoords(event);
+        const cl = suggestedWin.get_window_clone() ?? suggestedWin;
+        const [x, y] = cl.get_transformed_position();
+        const allocation = cl.get_allocation_box();
+        const cloneRect = buildRectangle({
+            x,
+            y,
+            width: allocation.x2 - allocation.x1,
+            height: allocation.y2 - allocation.y1,
+        });
+
+        // check if it is a button release/touch end outside the window suggestion
+        if (!isPointInsideRect({ x: eventX, y: eventY }, cloneRect))
+            return Clutter.EVENT_STOP;
+
+        // we will focus it later, after the animation and if any other window is tiled
+        this._lastTiledWindow = nonTiledWin;
+        // place this window on TOP of everyone ()
+        if (
+            nonTiledWin.maximizedHorizontally ||
+            nonTiledWin.maximizedVertically
+        )
+            unmaximizeWindow(nonTiledWin);
+
+        if (nonTiledWin.is_fullscreen()) nonTiledWin.unmake_fullscreen();
+        if (nonTiledWin.minimized) nonTiledWin.unminimize();
+
+        const winRect = nonTiledWin.get_frame_rect();
+        (nonTiledWin as ExtendedWindow).originalSize = winRect.copy();
+
+        // create a static clone and hide the live clone
+        // then we can change the actual window size
+        // without showing that to the user
+        TilingShellWindowManager.easeMoveWindow({
+            window: nonTiledWin,
+            from: cloneRect,
+            to: buildRectangle({
+                x: preview.innerX,
+                y: preview.innerY,
+                width: preview.innerWidth,
+                height: preview.innerHeight,
+            }),
+            duration: ANIMATION_SPEED * 1.8,
+            monitorIndex,
+        });
+        // finally assign the tile to the window
+        (nonTiledWin as ExtendedWindow).assignedTile = new Tile({
+            ...preview.tile,
+        });
+        // hide the live clone, since we have a clone animating on top of it
+        suggestedWin.opacity = 0;
+        // begin hiding the preview. Destroy it when it is hidden
+        // and recursively show popup on the next vacant tile
+        const removed = this._previews.splice(
+            this._previews.indexOf(preview),
+            1,
+        );
+        this._oldPreviews.push(...removed);
+        nontiledWindows.splice(nontiledWindows.indexOf(nonTiledWin), 1);
+        preview.close(true);
+        this._recursivelyShowPopup(nontiledWindows, monitorIndex);
+
+        return Clutter.EVENT_STOP; // Do not propagate, we managed this event
     }
 }

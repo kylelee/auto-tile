@@ -50,6 +50,7 @@ import OverriddenAltTab from './components/altTab/overriddenAltTab';
 import { LayoutSwitcherPopup } from './components/layoutSwitcher/layoutSwitcher';
 import { unmaximizeWindow } from './utils/gnomesupport';
 import * as Config from 'resource:///org/gnome/shell/misc/config.js';
+import { RaiseTogetherManager } from './components/raiseTogether/raiseTogetherManager';
 
 const debug = logger('extension');
 
@@ -62,7 +63,8 @@ export default class TilingShellExtension extends Extension {
     private _keybindings: KeyBindings | null;
     private _resizingManager: ResizingManager | null;
     private _windowBorderManager: WindowBorderManager | null;
-    
+    private _raiseTogetherManager: RaiseTogetherManager | null;
+
     constructor(metadata: ExtensionMetadata) {
         super(metadata);
         this._signals = null;
@@ -73,6 +75,7 @@ export default class TilingShellExtension extends Extension {
         this._keybindings = null;
         this._resizingManager = null;
         this._windowBorderManager = null;
+        this._raiseTogetherManager = null;
     }
 
     createIndicator() {
@@ -88,6 +91,15 @@ export default class TilingShellExtension extends Extension {
             // keep using the custom border instead of using the accent color by default
             Settings.WINDOW_USE_CUSTOM_BORDER_COLOR =
                 Settings.ENABLE_WINDOW_BORDER;
+        }
+
+        if (Settings.LAST_VERSION_NAME_INSTALLED !== '17.3') {
+            debug('apply compatibility changes for 17.3');
+
+            // if users used cycle layouts keybinding, enable the backwards one
+            Settings.gioSetting.set_strv(Settings.SETTING_CYCLE_LAYOUTS_BACKWARD, [
+                `<Shift>${Settings.gioSetting.get_strv(Settings.SETTING_CYCLE_LAYOUTS)}`
+            ]);
         }
     }
 
@@ -157,6 +169,9 @@ export default class TilingShellExtension extends Extension {
             !this._fractionalScalingEnabled,
         );
         this._windowBorderManager.enable();
+
+        this._raiseTogetherManager = new RaiseTogetherManager();
+        this._raiseTogetherManager.enable();
 
         this.createIndicator();
 
@@ -322,17 +337,19 @@ export default class TilingShellExtension extends Extension {
                 this._keybindings,
                 'cycle-layouts',
                 (
-                    _: KeyBindings,
+                    kb: KeyBindings,
                     dp: Meta.Display,
-                    action: number,
-                    mask: number,
+                    currentAction: number,
+                    mask: number
                 ) => {
+                    const backwardAction = kb.cycleLayoutsBackwardAction;
                     const switcher = new LayoutSwitcherPopup(
-                        action,
+                        kb.cycleLayoutsAction!,
+                        backwardAction!,
                         !this._fractionalScalingEnabled,
                     );
 
-                    if (!switcher.show(false, '', mask)) switcher.destroy();
+                    if (!switcher.show(currentAction === backwardAction, '', mask)) switcher.destroy();
                 },
             );
         }
@@ -766,6 +783,9 @@ export default class TilingShellExtension extends Extension {
 
         this._windowBorderManager?.destroy();
         this._windowBorderManager = null;
+
+        this._raiseTogetherManager?.destroy();
+        this._raiseTogetherManager = null;
 
         // disable dbus
         this._dbus?.disable();

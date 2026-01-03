@@ -53,13 +53,15 @@ export default class KeyBindings extends GObject.Object {
                 param_types: [
                     Meta.Display.$gtype,
                     GObject.TYPE_INT,
-                    GObject.TYPE_INT,
-                ], // Meta.Display, number, number
+                    GObject.TYPE_INT
+                ], // Meta.Display, action number, mask number
             },
         },
     })};
 
     private _signals: SignalHandling;
+    private _cycleLayoutsAction?: number;
+    private _cycleLayoutsBackwardAction?: number;
 
     constructor(extensionSettings: Gio.Settings) {
         super();
@@ -75,6 +77,14 @@ export default class KeyBindings extends GObject.Object {
         );
         if (Settings.ENABLE_MOVE_KEYBINDINGS)
             this._setupKeyBindings(extensionSettings);
+    }
+
+    public get cycleLayoutsAction(){
+        return this._cycleLayoutsAction;
+    }
+
+    public get cycleLayoutsBackwardAction(){
+        return this._cycleLayoutsBackwardAction;
     }
 
     private _setupKeyBindings(extensionSettings: Gio.Settings) {
@@ -241,23 +251,40 @@ export default class KeyBindings extends GObject.Object {
             },
         );
 
-        const action = Main.wm.addKeybinding(
+        this._cycleLayoutsAction = Main.wm.addKeybinding(
             Settings.SETTING_CYCLE_LAYOUTS,
             extensionSettings,
             Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL,
             (
                 display: Meta.Display,
-                _,
+                _unused,
                 event: Clutter.Event,
                 binding: Meta.KeyBinding,
             ) => {
-                const mask = event.get_mask
-                    ? event.get_mask()
-                    : binding.get_mask();
-                this.emit('cycle-layouts', display, action, mask);
+                this._onCycleLayouts(display, event, binding, this._cycleLayoutsAction!);
             },
         );
+
+        this._cycleLayoutsBackwardAction = Main.wm.addKeybinding(
+            Settings.SETTING_CYCLE_LAYOUTS_BACKWARD,
+            extensionSettings,
+            Meta.KeyBindingFlags.IS_REVERSED,
+            Shell.ActionMode.NORMAL,
+            (
+                display: Meta.Display,
+                _unused,
+                event: Clutter.Event,
+                binding: Meta.KeyBinding,
+            ) => {
+                this._onCycleLayouts(display, event, binding, this._cycleLayoutsBackwardAction!);
+            },
+        );
+    }
+
+    private _onCycleLayouts(display: Meta.Display, event: Clutter.Event, binding: Meta.KeyBinding, action: number) {
+        const mask = event.get_mask ? event.get_mask() : binding.get_mask();
+        this.emit('cycle-layouts', display, action, mask);
     }
 
     private _overrideNatives(extensionSettings: Gio.Settings) {
@@ -355,6 +382,7 @@ export default class KeyBindings extends GObject.Object {
         Main.wm.removeKeybinding(Settings.SETTING_FOCUS_WINDOW_PREV);
         Main.wm.removeKeybinding(Settings.SETTING_HIGHLIGHT_CURRENT_WINDOW);
         Main.wm.removeKeybinding(Settings.SETTING_CYCLE_LAYOUTS);
+        Main.wm.removeKeybinding(Settings.SETTING_CYCLE_LAYOUTS_BACKWARD);
     }
 
     private _restoreNatives() {

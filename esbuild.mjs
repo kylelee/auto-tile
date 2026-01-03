@@ -56,8 +56,9 @@ function init(meta) {
 const prefsBanner = `// For GNOME Shell version before 45
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 class ExtensionPreferences {
-    constructor(metadata) {
+    constructor(metadata, path) {
         this.metadata = metadata;
+        this.path = path;
     }
 
     getSettings() {
@@ -73,7 +74,7 @@ function init() {
 
 function fillPreferencesWindow(window) {
     const metadata = imports.misc.extensionUtils.getCurrentExtension().metadata;
-    const prefs = new TilingShellExtensionPreferences(metadata);
+    const prefs = new TilingShellExtensionPreferences(metadata, Me.dir.get_path());
     prefs.fillPreferencesWindow(window);
 }
 `;
@@ -302,7 +303,7 @@ async function processLegacyFiles(files) {
 // build extension
 build({
     logLevel: "info",
-    entryPoints: ['src/**/*.ts', 'src/styles/stylesheet.scss', 'src/prefs.ts'],
+    entryPoints: ['src/**/*.ts', 'src/styles/stylesheet.scss', 'src/styles/prefs.scss', 'src/prefs.ts'],
     outdir: distDir,
     bundle: false,
     treeShaking: false,
@@ -318,6 +319,8 @@ build({
 
     // Post-build sync steps
     fsSync.renameSync(path.resolve(distDir, "styles/stylesheet.css"), path.resolve(distDir, "stylesheet.css"));
+    fsSync.cpSync(resourcesDir, distDir, { recursive: true });
+    fsSync.renameSync(path.resolve(distDir, "styles/prefs.css"), path.resolve(distDir, "prefs.css"));
     fsSync.cpSync(resourcesDir, distDir, { recursive: true });
 
     // preprocess extension files in parallel

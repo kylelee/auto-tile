@@ -15,7 +15,7 @@ import {
 import TilingLayout from '../../components/tilingsystem/tilingLayout';
 import SnapAssist from '../snapassist/snapAssist';
 import SelectionTilePreview from '../tilepreview/selectionTilePreview';
-import { ActivationKey } from '../../settings/settings';
+import { ActivationKey, EdgeTilingMode } from '../../settings/settings';
 import Settings from '../../settings/settings';
 import SignalHandling from '../../utils/signalHandling';
 import Layout from '../layout/Layout';
@@ -102,6 +102,7 @@ export class TilingManager {
             `Work area for monitor ${this._monitor.index}: ${this._workArea.x} ${this._workArea.y} ${this._workArea.width}x${this._workArea.height}`,
         );
         this._edgeTilingManager = new EdgeTilingManager(this._workArea);
+        this._edgeTilingManager.monitorIndex = this._monitor.index;
 
         // handle scale factor of the monitor
         const monitorScalingFactor = this._enableScaling
@@ -388,7 +389,7 @@ export class TilingManager {
             };
         } else if (window.get_monitor() === this._monitor.index) {
             const enlargeFactor = Math.max(
-                64, // if the gaps are all 0 we choose 8 instead
+                64, // if the gaps are all 0 we choose 64 instead
                 tilingLayout.innerGaps.right,
                 tilingLayout.innerGaps.left,
                 tilingLayout.innerGaps.right,
@@ -507,6 +508,32 @@ export class TilingManager {
                 TouchPointer.get().onTouchEvent(x, y);
             },
         );
+        // Add Wacom tablet support, listen to tablet events
+        this._signals.connect(
+            global.stage,
+            'captured-event',
+            (_source, event: Clutter.Event) => {
+                const device = event.get_source_device();
+                if (!device) return;
+
+                const deviceType = device.get_device_type();
+
+                // Check for tablet device types
+                if (deviceType === Clutter.InputDeviceType.TABLET_DEVICE ||
+                    deviceType === Clutter.InputDeviceType.PEN_DEVICE) {
+
+                    const eventType = event.type();
+                    // Capture motion events from tablet
+                    if (eventType === Clutter.EventType.MOTION) {
+                        const [x, y] = event.get_coords();
+                        TouchPointer.get().onTouchEvent(x, y);
+                        // Move the actual mouse cursor to match tablet position
+                        const seat = Clutter.get_default_backend().get_default_seat();
+                        seat.warp_pointer(x, y);
+                    }
+                }
+            },
+        );
 
         // workaround for gnome-shell bug https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/2857
         if (
@@ -544,19 +571,19 @@ export class TilingManager {
     ): boolean {
         if (key === ActivationKey.NONE) return true;
 
-        let val = 2;
+        let mask = Clutter.ModifierType.CONTROL_MASK;
         switch (key) {
             case ActivationKey.CTRL:
-                val = 2; // Clutter.ModifierType.CONTROL_MASK
+                mask = Clutter.ModifierType.CONTROL_MASK;
                 break;
             case ActivationKey.ALT:
-                val = 3; // Clutter.ModifierType.MOD1_MASK
+                mask = Clutter.ModifierType.MOD1_MASK;
                 break;
             case ActivationKey.SUPER:
-                val = 6; // Clutter.ModifierType.SUPER_MASK
+                mask = Clutter.ModifierType.SUPER_MASK;
                 break;
         }
-        return (modifier & (1 << val)) !== 0;
+        return (modifier & mask) === mask;
     }
 
     private _onMovingWindow(window: Meta.Window, grabOp: number) {
@@ -569,6 +596,8 @@ export class TilingManager {
         const currentWs = window.get_workspace();
         const tilingLayout = this._workspaceTilingLayout.get(currentWs);
         if (!tilingLayout) return GLib.SOURCE_REMOVE;
+
+        this._edgeTilingManager.workspaceIndex = currentWs.index();
 
         // if the window was moved into another monitor and it is still grabbed
         if (
@@ -846,54 +875,36 @@ export class TilingManager {
         });
         this._easeWindowRect(window, desiredWindowRect);
 
+        // Sync the desktop layout to match the snap-assisted layout if enabled
+        if (wasSnapAssistingLayout && Settings.SNAP_ASSIST_SYNC_LAYOUT) {
+            GlobalState.get().setSelectedLayoutOfMonitor(
+                wasSnapAssistingLayout.id,
+                this._monitor.index,
+            );
+        }
+
         if (!tilingLayout || !canShowTilingSuggestions) return;
 
         // retrieve the current layout for the monitor and workspace
         // were the window was tiled
         const layout = wasEdgeTiling
-            ? new Layout(
-                  [
-                      // top-left
-                      new Tile({
-                          x: 0,
-                          y: 0,
-                          width: 0.5,
-                          height: 0.5,
-                          groups: [],
-                      }),
-                      // top-right
-                      new Tile({
-                          x: 0.5,
-                          y: 0,
-                          width: 0.5,
-                          height: 0.5,
-                          groups: [],
-                      }),
-                      // bottom-left
-                      new Tile({
-                          x: 0,
-                          y: 0.5,
-                          width: 0.5,
-                          height: 0.5,
-                          groups: [],
-                      }),
-                      // bottom-right
-                      new Tile({
-                          x: 0.5,
-                          y: 0.5,
-                          width: 0.5,
-                          height: 0.5,
-                          groups: [],
-                      }),
-                  ],
-                  'edge-tiling-layout',
-              )
-            : wasSnapAssistingLayout
+            ? (Settings.EDGE_TILING_MODE === EdgeTilingMode.DEFAULT
+                ? new Layout([
+                    new Tile({ x: 0, y: 0, height: 0.5, width: 0.5, groups: []}),
+                    new Tile({ x: 0.5, y: 0, height: 0.5, width: 0.5, groups: []}),
+                    new Tile({ x: 0, y: 0.5, height: 0.5, width: 0.5, groups: []}),
+                    new Tile({ x: 0.5, y: 0.5, height: 0.5, width: 0.5, groups: []})],
+                    "quarters"
+                )
+                : GlobalState.get().getSelectedLayoutOfMonitor(
+                  this._monitor.index,
+                  window.get_workspace().index())
+            ): (wasSnapAssistingLayout
               ? wasSnapAssistingLayout
               : GlobalState.get().getSelectedLayoutOfMonitor(
                     this._monitor.index,
                     window.get_workspace().index(),
-                );
+                ));
         this._openWindowsSuggestions(
             window,
             desiredWindowRect,
@@ -971,7 +982,7 @@ export class TilingManager {
 
         // apply animations when tiling the window
         windowActor.remove_all_transitions();
-        // @ts-expect-error "Main.wm has the private function _prepareAnimationInfo"
+        // @ts-expect-error "Main.wm has the "private" function _prepareAnimationInfo"
         Main.wm._prepareAnimationInfo(
             global.windowManager,
             windowActor,

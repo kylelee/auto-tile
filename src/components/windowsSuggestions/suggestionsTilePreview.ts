@@ -4,6 +4,7 @@ import TilePreview from '../tilepreview/tilePreview';
 import { buildBlurEffect, widgetOrientation } from '../../utils/gnomesupport';
 import Tile from '../../components/layout/Tile';
 import MasonryLayoutManager from './masonryLayoutManager';
+import TouchEventHelper from '../../utils/touch';
 
 const MASONRY_LAYOUT_SPACING = 32;
 const SCROLLBARS_SHOW_ANIM_DURATION = 100; // ms
@@ -25,6 +26,7 @@ export default class SuggestionsTilePreview extends TilePreview {
     private _blur: boolean;
     private _container: St.BoxLayout;
     private _scrollView: St.ScrollView;
+    private _touchHelper: TouchEventHelper;
 
     constructor(params: {
         parent: Clutter.Actor;
@@ -93,6 +95,8 @@ export default class SuggestionsTilePreview extends TilePreview {
             // @ts-expect-error "get_vscroll_bar is valid for GNOME < 48"
             this._scrollView.get_vscroll_bar().opacity = 0;
         }
+
+        this._touchHelper = new TouchEventHelper();
     }
 
     set blur(value: boolean) {
@@ -126,6 +130,8 @@ export default class SuggestionsTilePreview extends TilePreview {
         this.add_effect(effect);
 
         this.add_style_class_name('selection-tile-preview');
+
+        this._setupTouchScrolling();
     }
 
     _recolor() {
@@ -241,5 +247,14 @@ export default class SuggestionsTilePreview extends TilePreview {
 
     public removeAllWindows() {
         this._container.destroy_all_children();
+    }
+
+    private _setupTouchScrolling() {
+        this.connect('touch-event', (_, event: Clutter.Event) => {
+            return this._touchHelper.convertPanToScroll(
+                event,
+                this._scrollView,
+            );
+        });
     }
 }

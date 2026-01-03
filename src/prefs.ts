@@ -21,7 +21,7 @@
 
 import { Gtk, Adw, Gio, GLib, Gdk, GObject } from './gi/prefs';
 import Settings from './settings/settings';
-import { ActivationKey } from './settings/settings';
+import { EdgeTilingMode, ActivationKey } from './settings/settings';
 import { logger } from './utils/logger';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 import Layout from './components/layout/Layout';
@@ -31,9 +31,28 @@ import { gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensio
 import * as Config from 'resource:///org/gnome/Shell/Extensions/js/misc/config.js';
 
 const debug = logger('prefs');
+const RESOURCES_PREFIX = "/org/gnome/Shell/Extensions/tilingshell"; // must match the prefix in resources.gresources.xml
 
 export default class TilingShellExtensionPreferences extends ExtensionPreferences {
     private GNOME_VERSION_MAJOR = Number(Config.PACKAGE_VERSION.split('.')[0]);
+
+    loadCssAndResources() {
+        const resource = Gio.Resource.load(`${this.path}/resources.gresource`);
+        Gio.resources_register(resource);
+
+        const provider = new Gtk.CssProvider();
+        provider.load_from_path(`${this.path}/prefs.css`);
+
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(),
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        );
+
+        Gtk.IconTheme
+            .get_for_display(Gdk.Display.get_default())
+            .add_resource_path(`${RESOURCES_PREFIX}/icons/scalable/actions`);
+    }
 
     /**
      * This function is called when the preferences window is first created to fill
@@ -43,6 +62,7 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
      */
     fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
         Settings.initialize(this.getSettings());
+        this.loadCssAndResources();
 
         const prefsPage = new Adw.PreferencesPage({
             name: 'general',
@@ -64,7 +84,6 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
             _('Whether to show the panel indicator'),
         );
         appearenceGroup.add(showIndicatorRow);
-
         const innerGapsRow = this._buildSpinButtonRow(
             Settings.KEY_INNER_GAPS,
             _('Inner gaps'),
@@ -129,7 +148,7 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
             this._buildSwitchRow(
                 Settings.KEY_ENABLE_SMART_WINDOW_BORDER_RADIUS,
                 _('Smart border radius'),
-                _('Dynamically adapt to the window’s actual border radius'),
+                _("Dynamically adapt to the window's actual border radius"),
             ),
         );
         windowBorderExpanderRow.add_row(
@@ -199,6 +218,20 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
             _('Move the window on top of the screen to snap assist it'),
         );
         behaviourGroup.add(snapAssistRow);
+
+        const snapAssistSyncLayoutRow = this._buildSwitchRow(
+            Settings.KEY_SNAP_ASSIST_SYNC_LAYOUT,
+            _('Sync layout when tiling with Snap Assistant'),
+            _(
+                'Change the active layout to match the layout used when tiling a window with Snap Assistant',
+            ),
+        );
+        Settings.bind(
+            Settings.KEY_SNAP_ASSIST,
+            snapAssistSyncLayoutRow,
+            'sensitive',
+        );
+        behaviourGroup.add(snapAssistSyncLayoutRow);
 
         const enableTilingSystemRow = this._buildSwitchRow(
             Settings.KEY_TILING_SYSTEM,
@@ -278,6 +311,15 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
         );
         behaviourGroup.add(overrideAltTabRow);
 
+        const raiseTogetherRow = this._buildSwitchRow(
+            Settings.KEY_RAISE_TOGETHER,
+            _('Raise tiled windows together'),
+            _(
+                'When one tiled window is raised, raise all tiled windows into the foreground together',
+            ),
+        );
+        behaviourGroup.add(raiseTogetherRow);
+
         // Screen Edges section
         const activeScreenEdgesGroup = new Adw.PreferencesGroup({
             title: _('Screen Edges'),
@@ -343,6 +385,13 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
         );
         activeScreenEdgesGroup.add(edgeTilingOffset);
 
+        // Create dropdown for edge tiling mode
+        const edgeTilingBehaviourRow = this._buildEdgeTilingBehaviourRow(
+            Settings.EDGE_TILING_MODE,
+            (newMode: EdgeTilingMode) => Settings.EDGE_TILING_MODE = newMode,
+        );
+        activeScreenEdgesGroup.add(edgeTilingBehaviourRow);
+
         prefsPage.add(activeScreenEdgesGroup);
 
         // Windows suggestions section
@@ -372,9 +421,9 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
 
         const screenEdgesWindowSuggestionRow = this._buildSwitchRow(
             Settings.KEY_ENABLE_SCREEN_EDGES_WINDOWS_SUGGESTIONS,
-            _('Enable window suggestions for screen edge snapping'),
+            _('Enable window suggestions for screen edge tiling'),
             _(
-                'Suggests windows to occupy empty tiles when snapping to screen edges',
+                'Suggests windows to occupy empty tiles when tiling to screen edges',
             ),
         );
         windowsSuggestionsGroup.add(screenEdgesWindowSuggestionRow);
@@ -697,6 +746,10 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
             ],
         ];
 
+        const backwardSettingsKey: Map<string, string> = new Map([
+            [Settings.SETTING_CYCLE_LAYOUTS, Settings.SETTING_CYCLE_LAYOUTS_BACKWARD],
+        ]);
+
         // set if the keybinding was set or not by the user
         for (let i = 0; i < keybindings.length; i++) {
             keybindings[i][3] =
@@ -710,6 +763,7 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
 
                 const row = this._buildShortcutButtonRow(
                     settingsKey,
+                    backwardSettingsKey.get(settingsKey),
                     gioSettings,
                     title,
                     subtitle,
@@ -764,6 +818,7 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
         keybindings.forEach(([settingsKey, title, subtitle]) => {
             const row = this._buildShortcutButtonRow(
                 settingsKey,
+                backwardSettingsKey.get(settingsKey),
                 gioSettings,
                 title,
                 subtitle,
@@ -985,6 +1040,111 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
         return Promise.resolve();
     }
 
+    _createEdgeTilingBehaviourOption(title: string, subtitle: string, iconName: string) {
+        const button = new Gtk.ToggleButton({
+            canFocus: true,
+            valign: Gtk.Align.FILL,
+            cssClasses: ['option'],
+            hexpand: true,
+            vexpand: false,
+        });
+
+        const distance = 12;
+
+        const content = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            margin_top: 0,
+            margin_bottom: distance,
+            margin_start: 0,
+            margin_end: 0,
+        });
+
+        const settings = Gtk.Settings.get_default();
+        const iconNameByTheme = settings?.gtk_application_prefer_dark_theme ? iconName : `${iconName}-dark`;
+
+        const image = new Gtk.Image({
+            iconName: iconNameByTheme,
+            pixel_size: 96,
+            margin_top: distance,
+            margin_bottom: distance,
+            margin_start: 0,
+            margin_end: 0,
+            cssClasses: ['image']
+        });
+
+        const titleLabel = new Gtk.Label({
+            label: title,
+            wrap: true,
+            xalign: 0,
+            css_classes: ['title']
+        });
+
+        const subtitleLabel = new Gtk.Label({
+            label: subtitle,
+            wrap: true,
+            xalign: 0,
+            css_classes: ['caption']
+        });
+
+        content.append(image);
+        content.append(titleLabel);
+        content.append(subtitleLabel);
+
+        button.set_child(content);
+
+        return button;
+    }
+
+    _buildEdgeTilingBehaviourRow(currentMode: EdgeTilingMode, onModeChange: (newMode: EdgeTilingMode) => void) {
+        const row = new Adw.ActionRow({
+            activatable: false,
+            title: _("Choose how windows snap to screen edges"),
+            cssClasses: ['edge-tiling-behaviour']
+        });
+        (row.get_child() as Gtk.Box).set_orientation(Gtk.Orientation.VERTICAL);
+
+        const content = new Gtk.Box({
+            orientation: Gtk.Orientation.HORIZONTAL,
+            halign: Gtk.Align.FILL,
+            valign: Gtk.Align.FILL,
+            homogeneous: true, // all children same size
+            spacing: 2,
+            cssClasses: ['content'],
+            margin_bottom: 6,
+        });
+        const defaultBtn = this._createEdgeTilingBehaviourOption(
+            _('Default'),
+            _('Follow quarters or screen halves'),
+            'edge-default-symbolic'
+        );
+        defaultBtn.connect("toggled", () => onModeChange(EdgeTilingMode.DEFAULT));
+        const adaptiveBtn = this._createEdgeTilingBehaviourOption(
+            _('Adaptive'),
+            _('Follow corners of selected layout or screen halves'),
+            'edge-adaptive-symbolic'
+        );
+        adaptiveBtn.connect("toggled", () => onModeChange(EdgeTilingMode.ADAPTIVE));
+        const granularBtn = this._createEdgeTilingBehaviourOption(
+            _('Granular'),
+            _('Follow currently selected layout'),
+            'edge-granular-symbolic'
+        );
+        granularBtn.connect("toggled", () => onModeChange(EdgeTilingMode.GRANULAR));
+        content.append(defaultBtn);
+        content.append(adaptiveBtn);
+        content.append(granularBtn);
+        // make them mutually exclusive
+        defaultBtn.set_group(adaptiveBtn);
+        granularBtn.set_group(adaptiveBtn);
+        // set the currently activated one
+        if (currentMode === EdgeTilingMode.ADAPTIVE) adaptiveBtn.set_active(true);
+        else if (currentMode === EdgeTilingMode.GRANULAR) granularBtn.set_active(true);
+        else defaultBtn.set_active(true);
+        (row.get_child() as Gtk.Box).append(content);
+
+        return row;
+    }
+
     _buildSwitchRow(
         settingsKey: string,
         title: string,
@@ -1138,12 +1298,13 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
 
     _buildShortcutButtonRow(
         settingsKey: string,
+        backwardKey: string | undefined,
         gioSettings: Gio.Settings,
         title: string,
         subtitle: string | undefined,
         styleClass?: string,
     ) {
-        const btn = new ShortcutSettingButton(settingsKey, gioSettings);
+        const btn = new ShortcutSettingButton(settingsKey, gioSettings, backwardKey);
         if (styleClass) btn.add_css_class(styleClass);
         btn.set_vexpand(false);
         btn.set_valign(Gtk.Align.CENTER);
@@ -1292,8 +1453,9 @@ const ShortcutSettingButton = class extends Gtk.Button {
     private _shortcut: string;
     private _settingsKey: string;
     private _gioSettings: Gio.Settings;
+    private _backwardKey: string | undefined;
 
-    constructor(settingsKey: string, gioSettings: Gio.Settings) {
+    constructor(settingsKey: string, gioSettings: Gio.Settings, backwardKey: string | undefined = undefined) {
         super({
             halign: Gtk.Align.CENTER,
             hexpand: false,
@@ -1311,6 +1473,7 @@ const ShortcutSettingButton = class extends Gtk.Button {
             hexpand: false,
             vexpand: false,
         });
+        this._backwardKey = backwardKey;
 
         // Bind signals
         this.connect('clicked', this._onActivated.bind(this));
@@ -1403,6 +1566,10 @@ const ShortcutSettingButton = class extends Gtk.Button {
         this.shortcut = val;
         this._label.set_accelerator(this.shortcut);
         this._gioSettings.set_strv(this._settingsKey, [this.shortcut]);
+        if (this._backwardKey) {
+            // also update the backward settings key by prepending <Shift>
+            this._gioSettings.set_strv(this._backwardKey, [`<Shift>${this.shortcut}`]);
+        }
         this.emit('changed', this.shortcut);
     }
 

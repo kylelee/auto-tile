@@ -313,6 +313,6 @@ running Vagrant:
 
 If you are running on a NTFS file system then you have to move out the key:
 ```
-mv /path/to/gnome46/virtualbox/private_key $HOME/.ssh/vagrant_key
-ln -sr $HOME/.ssh/vagrant_key /path/to/gnome46/virtualbox/private_key
+mv /path/to/box/virtualbox/private_key $HOME/.ssh/vagrant_key
+ln -sr $HOME/.ssh/vagrant_key /path/to/box/virtualbox/private_key
 ```
