@@ -54,6 +54,19 @@ class SnapAssistingInfo {
     }
 }
 
+const REASSERT_SCHEDULE_MS = [50, 150, 300];
+const REASSERT_TOLERANCE_PX = 1;
+
+interface WindowReassertState {
+    expectedRect: Mtk.Rectangle;
+    monitorIndex: number | undefined;
+    attemptsLeft: number;
+    nextStepIndex: number;
+    sourceId: number; // pending GLib source id, 0 = none
+    unmanagedSignalId: number;
+    grabSignalId: number;
+}
+
 export class TilingManager {
     private readonly _monitor: Monitor;
 
@@ -76,6 +89,9 @@ export class TilingManager {
     private _getTilingManager?: (index: number) => TilingManager | undefined;
 
     private _movingWindowTimerId: number | null = null;
+
+    private _reassertingWindows: Map<Meta.Window, WindowReassertState> =
+        new Map();
 
     private readonly _signals: SignalHandling;
     private readonly _debug: (..._content: unknown[]) => void;
@@ -474,6 +490,9 @@ export class TilingManager {
             GLib.Source.remove(this._movingWindowTimerId);
             this._movingWindowTimerId = null;
         }
+        [...this._reassertingWindows.keys()].forEach(win =>
+            this._cancelWindowReassert(win)
+        );
         this._signals.disconnect();
         this._isGrabbingWindow = false;
         this._snapAssistingInfo.update(undefined);
@@ -1006,6 +1025,114 @@ export class TilingManager {
             destRect.width,
             destRect.height,
         );
+        this._reassertWindowRect(window, destRect, this._monitor.index);
+    }
+
+    /**
+     * Verify (复核) that a window actually reached the expected frame rect after
+     * a tile placement, and re-apply the geometry if Mutter or the client
+     * shifted it. Bounded: at most 1 + REASSERT_SCHEDULE_MS.length checks.
+     */
+    private _reassertWindowRect(
+        window: Meta.Window,
+        expectedRect: Mtk.Rectangle,
+        targetMonitorIndex?: number
+    ): void {
+        this._cancelWindowReassert(window);
+
+        const state: WindowReassertState = {
+            expectedRect: expectedRect.copy(),
+            monitorIndex: targetMonitorIndex,
+            attemptsLeft: 1 + REASSERT_SCHEDULE_MS.length,
+            nextStepIndex: 0,
+            sourceId: 0,
+            unmanagedSignalId: 0,
+            grabSignalId: 0,
+        };
+        this._reassertingWindows.set(window, state);
+
+        const cancel = () => this._cancelWindowReassert(window);
+
+        state.unmanagedSignalId = window.connect('unmanaged', cancel);
+        state.grabSignalId = global.display.connect(
+            'grab-op-begin',
+            (_display: Meta.Display, grabWindow: Meta.Window) => {
+                if (grabWindow === window) cancel();
+            }
+        );
+
+        const check = (): boolean => {
+            state.sourceId = 0;
+            // the placement is void if the window changed state meanwhile
+            if (
+                window.minimized ||
+                window.maximizedHorizontally ||
+                window.maximizedVertically ||
+                window.is_fullscreen()
+            ) {
+                cancel();
+                return GLib.SOURCE_REMOVE;
+            }
+            if (
+                state.monitorIndex !== undefined &&
+                window.get_monitor() !== state.monitorIndex
+            )
+                window.move_to_monitor(state.monitorIndex);
+
+            const current = window.get_frame_rect();
+            const expected = state.expectedRect;
+            const drifted =
+                Math.abs(current.x - expected.x) > REASSERT_TOLERANCE_PX ||
+                Math.abs(current.y - expected.y) > REASSERT_TOLERANCE_PX ||
+                Math.abs(current.width - expected.width) >
+                    REASSERT_TOLERANCE_PX ||
+                Math.abs(current.height - expected.height) >
+                    REASSERT_TOLERANCE_PX;
+            if (!drifted) {
+                cancel();
+                return GLib.SOURCE_REMOVE;
+            }
+
+            this._debug(
+                `re-asserting window geometry: delta x=${current.x - expected.x} y=${current.y - expected.y} width=${current.width - expected.width} height=${current.height - expected.height}`
+            );
+            window.move_resize_frame(
+                false,
+                expected.x,
+                expected.y,
+                expected.width,
+                expected.height
+            );
+
+            state.attemptsLeft--;
+            if (
+                state.attemptsLeft <= 0 ||
+                state.nextStepIndex >= REASSERT_SCHEDULE_MS.length
+            ) {
+                cancel();
+                return GLib.SOURCE_REMOVE;
+            }
+
+            const delay = REASSERT_SCHEDULE_MS[state.nextStepIndex++];
+            state.sourceId = GLib.timeout_add(
+                GLib.PRIORITY_DEFAULT,
+                delay,
+                check
+            );
+            return GLib.SOURCE_REMOVE;
+        };
+
+        state.sourceId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, check);
+    }
+
+    private _cancelWindowReassert(window: Meta.Window): void {
+        const state = this._reassertingWindows.get(window);
+        if (!state) return;
+        this._reassertingWindows.delete(window);
+
+        if (state.sourceId) GLib.Source.remove(state.sourceId);
+        if (state.unmanagedSignalId) window.disconnect(state.unmanagedSignalId);
+        if (state.grabSignalId) global.display.disconnect(state.grabSignalId);
     }
 
     private _onSnapAssist(_: SnapAssist, tile: Tile, layoutId: string) {
@@ -1249,6 +1376,11 @@ export class TilingManager {
                 destinationRect.y,
                 destinationRect.width,
                 destinationRect.height,
+            );
+            this._reassertWindowRect(
+                window,
+                destinationRect,
+                targetMonitorIndex ?? this._monitor.index
             );
         } else {
             this._easeWindowRect(window, destinationRect);
