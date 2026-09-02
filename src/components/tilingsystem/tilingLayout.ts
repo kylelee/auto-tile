@@ -448,6 +448,24 @@ export default class TilingLayout extends LayoutWidget<DynamicTilePreview> {
     public findNearestTile(
         source: Mtk.Rectangle,
     ): { rect: Mtk.Rectangle; tile: Tile } | undefined {
+        const previewFound = this._findNearestPreview(source);
+        if (!previewFound) return undefined;
+
+        return {
+            rect: buildRectangle({
+                x: previewFound.innerX,
+                y: previewFound.innerY,
+                width: previewFound.innerWidth,
+                height: previewFound.innerHeight,
+            }),
+            tile: previewFound.tile,
+        };
+    }
+
+    private _findNearestPreview(
+        source: Mtk.Rectangle,
+        isCandidate?: (preview: DynamicTilePreview) => boolean,
+    ): DynamicTilePreview | undefined {
         let previewFound: DynamicTilePreview | undefined;
         let bestDistance = -1;
 
@@ -458,6 +476,7 @@ export default class TilingLayout extends LayoutWidget<DynamicTilePreview> {
 
         for (let i = 0; i < this._previews.length; i++) {
             const preview = this._previews[i];
+            if (isCandidate && !isCandidate(preview)) continue;
 
             const previewCenter = {
                 x: preview.innerX + preview.innerWidth / 2,
@@ -475,6 +494,33 @@ export default class TilingLayout extends LayoutWidget<DynamicTilePreview> {
             }
         }
 
+        return previewFound;
+    }
+
+    // find the nearest tile that does not overlap any occupied rect
+    // (occupancy = frame rects of tiled windows); returns undefined when
+    // every tile is occupied
+    public findNearestFreeTile(
+        source: Mtk.Rectangle,
+        occupiedRects: Mtk.Rectangle[],
+    ): { rect: Mtk.Rectangle; tile: Tile } | undefined {
+        const previewFound = this._findNearestPreview(
+            source,
+            (preview) => {
+                // use apply_props(tile, containerRect) — NOT preview.rect —
+                // for exact parity with _findEmptyTile's occupancy test
+                // (preview.rect extends edge tiles by the outer gaps in
+                // LayoutWidget.draw_layout, which diverges whenever outer
+                // gaps > 0) — review round 1, finding 2
+                const tileRect = TileUtils.apply_props(
+                    preview.tile,
+                    this._containerRect,
+                );
+                return !occupiedRects.some((occupied) =>
+                    tileRect.overlap(occupied),
+                );
+            },
+        );
         if (!previewFound) return undefined;
 
         return {
