@@ -67,6 +67,14 @@ interface WindowReassertState {
     grabSignalId: number;
 }
 
+// Module-level on purpose: ALL TilingManager instances share ONE pending
+// re-assert per window. A new placement routed through ANY monitor's
+// manager must replace a re-assert registered by another manager for the
+// same window (e.g. a rapid cross-monitor keyboard-move reversal within
+// the ~500ms schedule) — the cancel-on-entry below only works if the
+// registry is global to the module.
+const _reassertingWindows = new Map<Meta.Window, WindowReassertState>();
+
 export class TilingManager {
     private readonly _monitor: Monitor;
 
@@ -89,9 +97,6 @@ export class TilingManager {
     private _getTilingManager?: (index: number) => TilingManager | undefined;
 
     private _movingWindowTimerId: number | null = null;
-
-    private _reassertingWindows: Map<Meta.Window, WindowReassertState> =
-        new Map();
 
     private readonly _signals: SignalHandling;
     private readonly _debug: (..._content: unknown[]) => void;
@@ -490,7 +495,8 @@ export class TilingManager {
             GLib.Source.remove(this._movingWindowTimerId);
             this._movingWindowTimerId = null;
         }
-        [...this._reassertingWindows.keys()].forEach(win =>
+        // cancels every pending re-assert: managers are destroyed together and their expected rects would be stale anyway
+        [..._reassertingWindows.keys()].forEach(win =>
             this._cancelWindowReassert(win)
         );
         this._signals.disconnect();
@@ -1032,6 +1038,7 @@ export class TilingManager {
      * Verify (复核) that a window actually reached the expected frame rect after
      * a tile placement, and re-apply the geometry if Mutter or the client
      * shifted it. Bounded: at most 1 + REASSERT_SCHEDULE_MS.length checks.
+     * The registry is shared across all TilingManager instances: scheduling a re-assert for a window always cancels any pending one, even one registered by another monitor's manager.
      */
     private _reassertWindowRect(
         window: Meta.Window,
@@ -1049,7 +1056,7 @@ export class TilingManager {
             unmanagedSignalId: 0,
             grabSignalId: 0,
         };
-        this._reassertingWindows.set(window, state);
+        _reassertingWindows.set(window, state);
 
         const cancel = () => this._cancelWindowReassert(window);
 
@@ -1126,9 +1133,9 @@ export class TilingManager {
     }
 
     private _cancelWindowReassert(window: Meta.Window): void {
-        const state = this._reassertingWindows.get(window);
+        const state = _reassertingWindows.get(window);
         if (!state) return;
-        this._reassertingWindows.delete(window);
+        _reassertingWindows.delete(window);
 
         if (state.sourceId) GLib.Source.remove(state.sourceId);
         if (state.unmanagedSignalId) window.disconnect(state.unmanagedSignalId);
