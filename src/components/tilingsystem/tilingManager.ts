@@ -75,6 +75,11 @@ interface WindowReassertState {
 // registry is global to the module.
 const _reassertingWindows = new Map<Meta.Window, WindowReassertState>();
 
+// Windows currently being placed by this module. The guard suppresses the
+// window-entered-monitor re-tiling while our own placement (which calls
+// move_to_monitor) is synchronously emitting monitor-crossed signals.
+const _windowsUnderPlacement = new Set<Meta.Window>();
+
 export class TilingManager {
     private readonly _monitor: Monitor;
 
@@ -999,6 +1004,7 @@ export class TilingManager {
         user_op: boolean = false,
         force: boolean = false,
     ) {
+        _windowsUnderPlacement.add(window);
         const windowActor = window.get_compositor_private() as Clutter.Actor;
 
         const beforeRect = window.get_frame_rect();
@@ -1008,8 +1014,10 @@ export class TilingManager {
             destRect.y === beforeRect.y &&
             destRect.width === beforeRect.width &&
             destRect.height === beforeRect.height
-        )
+        ) {
+            _windowsUnderPlacement.delete(window);
             return;
+        }
 
         // apply animations when tiling the window
         windowActor.remove_all_transitions();
@@ -1032,6 +1040,7 @@ export class TilingManager {
             destRect.height,
         );
         this._reassertWindowRect(window, destRect, this._monitor.index);
+        _windowsUnderPlacement.delete(window);
     }
 
     /**
@@ -1370,6 +1379,7 @@ export class TilingManager {
             this._workArea,
         );
         if (skipAnimation) {
+            _windowsUnderPlacement.add(window);
             // on Wayland, target-monitor coordinates alone do not migrate a
             // window: the explicit move is mandatory before resizing
             if (
@@ -1389,6 +1399,7 @@ export class TilingManager {
                 destinationRect,
                 targetMonitorIndex ?? this._monitor.index
             );
+            _windowsUnderPlacement.delete(window);
         } else {
             this._easeWindowRect(window, destinationRect);
         }
@@ -1400,6 +1411,54 @@ export class TilingManager {
 
     public autoTileWindowToTile(tile: Tile, window: Meta.Window): void {
         this._easeWindowRectFromTile(tile, window, true, this._monitor.index);
+    }
+
+    /**
+     * Re-tile a window that just entered this monitor through a NON
+     * Tiling-Shell path (e.g. GNOME's built-in "move window one monitor
+     * up/down" shortcuts). Only already-tiled windows are handled: they keep
+     * being tiled on the destination monitor, per the destination layout.
+     */
+    public onWindowEnteredMonitor(window: Meta.Window): void {
+        if (window.get_monitor() !== this._monitor.index) return;
+        if (_windowsUnderPlacement.has(window)) return; // our own placement
+        if (this._isGrabbingWindow) return; // user is dragging windows
+        if (
+            window.windowType !== Meta.WindowType.NORMAL ||
+            window.get_transient_for() !== null ||
+            window.is_attached_dialog() ||
+            window.minimized ||
+            window.maximizedHorizontally ||
+            window.maximizedVertically ||
+            window.is_fullscreen()
+        )
+            return;
+
+        const extWin = window as ExtendedWindow;
+        if (!extWin.assignedTile) return; // floating windows keep GNOME's behavior
+
+        // detach from the old tile first so the window's own current rect does
+        // not count as an occupier when searching the destination layout
+        // (same pattern as _autoTile) ...
+        extWin.assignedTile = undefined;
+
+        const ws = window.get_workspace();
+        const tile = this._findEmptyTile(
+            window,
+            this._monitor.index,
+            ws ? ws.index() : 0
+        );
+        if (!tile) return; // destination full: leave it floating (consistent with the all-full design)
+
+        this._debug(
+            `window entered monitor ${this._monitor.index}: re-tiling per destination layout`
+        );
+        // ... but remember the TRUE original size for a future untile:
+        // _easeWindowRectFromTile overwrites originalSize when assignedTile is
+        // unset, and we just cleared it
+        const originalSize = extWin.originalSize;
+        this.autoTileWindowToTile(tile, window);
+        if (originalSize) extWin.originalSize = originalSize;
     }
 
     public onSpanAllTiles(window: Meta.Window) {

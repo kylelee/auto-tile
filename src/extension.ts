@@ -223,6 +223,28 @@ export default class TilingShellExtension extends Extension {
             }
         });
 
+        let userGrabbingWindow = false;
+        this._signals.connect(global.display, 'grab-op-begin', () => {
+            userGrabbingWindow = true;
+        });
+        this._signals.connect(global.display, 'grab-op-end', () => {
+            userGrabbingWindow = false;
+        });
+        this._signals.connect(
+            global.display,
+            'window-entered-monitor',
+            (
+                _display: Meta.Display,
+                monitorIndex: number,
+                window: Meta.Window
+            ) => {
+                if (userGrabbingWindow) return; // mid-drag: do not fight the user
+                this._tilingManagers[monitorIndex]?.onWindowEnteredMonitor(
+                    window
+                );
+            }
+        );
+
         this._signals.connect(
             new Gio.Settings({ schema: 'org.gnome.mutter' }),
             'changed::experimental-features',
