@@ -594,6 +594,13 @@ export default class TilingShellExtension extends Extension {
             false,
             spanFlag,
             neighborMonitorIndex === -1, // clamp if there is NOT a monitor in this direction
+            // for UP, defer the at-edge maximize to the neighbor fallback so a
+            // free tile on the monitor above wins first (user decision)
+            {
+                deferEdgeToNeighbor:
+                    direction === KeyBindingsDirection.UP &&
+                    neighborMonitorIndex !== -1,
+            },
         );
 
         if (
@@ -603,6 +610,7 @@ export default class TilingShellExtension extends Extension {
         )
             return;
 
+        let wasMaximizedBeforeMove = false;
         // if the window is maximized, direction is UP and there is a monitor above, minimize the window
         if (
             (focus_window.maximizedHorizontally ||
@@ -612,6 +620,7 @@ export default class TilingShellExtension extends Extension {
             Main.wm.skipNextEffect(focus_window.get_compositor_private());
             unmaximizeWindow(focus_window);
             (focus_window as ExtendedWindow).assignedTile = undefined;
+            wasMaximizedBeforeMove = true;
         }
 
         const neighborTilingManager =
@@ -624,6 +633,14 @@ export default class TilingShellExtension extends Extension {
             true,
             spanFlag,
             false,
+            {
+                // non-maximized UP edge: free tile or (inside the neighbor
+                // manager) maximize — no nearest-tile stacking. Maximized
+                // origin keeps the historical free-tile-else-nearest-tile.
+                freeTileOnly:
+                    direction === KeyBindingsDirection.UP &&
+                    !wasMaximizedBeforeMove,
+            },
         );
     }
 
