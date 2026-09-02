@@ -364,6 +364,7 @@ export class TilingManager {
         force: boolean,
         spanFlag: boolean,
         clamp: boolean,
+        opts: { deferEdgeToNeighbor?: boolean; freeTileOnly?: boolean } = {},
     ): boolean {
         let destination: { rect: Mtk.Rectangle; tile: Tile } | undefined;
         const isMaximized =
@@ -393,9 +394,14 @@ export class TilingManager {
         // maximize the window using keybindings
         if (
             direction === KeyBindingsDirection.UP &&
+            window.get_monitor() === this._monitor.index &&
             extWin.assignedTile &&
             extWin.assignedTile?.y === 0
         ) {
+            // defer to the neighbor-monitor fallback (it may find a free
+            // tile on the monitor above; if not, its no-destination path
+            // maximizes below)
+            if (opts.deferEdgeToNeighbor) return false;
             maximizeWindow(window);
             return true;
         }
@@ -434,7 +440,15 @@ export class TilingManager {
                 enlargeFactor,
             );
         } else {
-            destination = tilingLayout.findNearestTile(windowRectCopy);
+            // the window comes from another monitor: prefer a FREE tile of
+            // this monitor's layout; keep the historical nearest-tile
+            // fallback unless the caller requires a free tile (UP edge)
+            destination = tilingLayout.findNearestFreeTile(
+                windowRectCopy,
+                this._getTiledWindowRects(currentWs),
+            );
+            if (!destination && !opts.freeTileOnly)
+                destination = tilingLayout.findNearestTile(windowRectCopy);
         }
 
         // if the window is already on the desired tile
@@ -460,7 +474,8 @@ export class TilingManager {
             // handle maximize of window
             if (
                 direction === KeyBindingsDirection.UP &&
-                window.can_maximize()
+                window.can_maximize() &&
+                !opts.deferEdgeToNeighbor
             ) {
                 maximizeWindow(window);
                 return true;
@@ -1534,22 +1549,31 @@ export class TilingManager {
         });
     }
 
+    // frame rects of tiled windows (assigned tile, not minimized, not
+    // maximized) — the single source of truth for tile occupancy.
+    // Without a workspace this scans the ACTIVE workspace (matches the
+    // historical getWindows() default used by _findEmptyTile).
+    private _getTiledWindowRects(
+        workspace: Meta.Workspace | undefined = undefined,
+    ): Mtk.Rectangle[] {
+        return getWindows(workspace)
+            .filter(
+                (window) =>
+                    window &&
+                    (window as ExtendedWindow).assignedTile &&
+                    !window.minimized &&
+                    !window.maximizedVertically &&
+                    !window.maximizedHorizontally,
+            )
+            .map((window) => window.get_frame_rect());
+    }
+
     private _findEmptyTile(
         window: Meta.Window,
         monitorIndex: number = window.get_monitor(),
         wsIndex: number = window.get_workspace().index(),
     ): Tile | undefined {
-        const tiledWindows: ExtendedWindow[] = getWindows()
-            .filter((otherWindow) => {
-                return (
-                    otherWindow &&
-                    (otherWindow as ExtendedWindow).assignedTile &&
-                    !otherWindow.minimized &&
-                    !otherWindow.maximizedVertically &&
-                    !otherWindow.maximizedHorizontally
-                );
-            })
-            .map((w) => w as ExtendedWindow);
+        const occupiedRects = this._getTiledWindowRects();
         const tiles = GlobalState.get().getSelectedLayoutOfMonitor(
             monitorIndex,
             wsIndex,
@@ -1557,9 +1581,7 @@ export class TilingManager {
         const workArea = Main.layoutManager.getWorkAreaForMonitor(monitorIndex);
         const vacantTiles = tiles.filter((t) => {
             const tileRect = TileUtils.apply_props(t, workArea);
-            return !tiledWindows.find((win) =>
-                tileRect.overlap(win.get_frame_rect()),
-            );
+            return !occupiedRects.find((rect) => tileRect.overlap(rect));
         });
 
         if (vacantTiles.length === 0) return undefined;
