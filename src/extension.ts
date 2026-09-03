@@ -52,6 +52,7 @@ import { LayoutSwitcherPopup } from './components/layoutSwitcher/layoutSwitcher'
 import { unmaximizeWindow } from './utils/gnomesupport';
 import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 import { RaiseTogetherManager } from './components/raiseTogether/raiseTogetherManager';
+import { FocusOnCloseManager } from './components/focusOnClose/focusOnCloseManager';
 
 const debug = logger('extension');
 
@@ -65,6 +66,7 @@ export default class TilingShellExtension extends Extension {
     private _resizingManager: ResizingManager | null;
     private _windowBorderManager: WindowBorderManager | null;
     private _raiseTogetherManager: RaiseTogetherManager | null;
+    private _focusOnCloseManager: FocusOnCloseManager | null;
 
     constructor(metadata: ExtensionMetadata) {
         super(metadata);
@@ -77,6 +79,7 @@ export default class TilingShellExtension extends Extension {
         this._resizingManager = null;
         this._windowBorderManager = null;
         this._raiseTogetherManager = null;
+        this._focusOnCloseManager = null;
     }
 
     createIndicator() {
@@ -174,6 +177,10 @@ export default class TilingShellExtension extends Extension {
 
         this._raiseTogetherManager = new RaiseTogetherManager();
         this._raiseTogetherManager.enable();
+
+        if (this._focusOnCloseManager) this._focusOnCloseManager.destroy();
+        this._focusOnCloseManager = new FocusOnCloseManager();
+        this._focusOnCloseManager.enable();
 
         this.createIndicator();
 
@@ -972,6 +979,9 @@ export default class TilingShellExtension extends Extension {
 
         this._raiseTogetherManager?.destroy();
         this._raiseTogetherManager = null;
+
+        this._focusOnCloseManager?.destroy();
+        this._focusOnCloseManager = null;
 
         // disable dbus
         this._dbus?.disable();
