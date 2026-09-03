@@ -21,6 +21,13 @@ import SignalHandling from '../../utils/signalHandling';
 import Layout from '../layout/Layout';
 import Tile from '../layout/Tile';
 import TileUtils from '../layout/TileUtils';
+import {
+    buildWorkspaceChain,
+    planInsertion,
+    ChainInputs,
+    ChainSlot,
+    InsertionPlan,
+} from './insertionPlanner';
 import GlobalState from '../../utils/globalState';
 import { Monitor } from 'resource:///org/gnome/shell/ui/layout.js';
 import ExtendedWindow from './extendedWindow';
@@ -62,6 +69,24 @@ const CENTERING_TIE_EPSILON = 1e-9;
 // window-entered-monitor re-tiling while our own placement (which calls
 // move_to_monitor) is synchronously emitting monitor-crossed signals.
 const _windowsUnderPlacement = new Set<Meta.Window>();
+
+// FUTURE FEATURE CONTRACT (user constraint, 2026-09): the planned "move
+// windows from right-side workspaces to refill free tiles of the current
+// workspace" feature MUST NOT react to any free tile while
+// _insertionShiftInProgress is true. The insert-after-focused behavior
+// structurally and transiently frees slots: the insertion slot behind the
+// anchor, plus every slot a shifted window is about to leave while a plan
+// is being executed.
+let _insertionShiftInProgress = false;
+
+/**
+ * Whether an insert-after-focused plan is currently in flight (from
+ * planning inside the first-frame handler until the whole plan has been
+ * executed by the idle callback). See the FUTURE FEATURE CONTRACT above.
+ */
+export function isInsertionShiftInProgress(): boolean {
+    return _insertionShiftInProgress;
+}
 
 export class TilingManager {
     private readonly _monitor: Monitor;
@@ -1423,42 +1448,51 @@ export class TilingManager {
             return;
         }
 
+        // capture the pre-creation focus anchor synchronously: at
+        // window-created time the new window is neither mapped nor
+        // focused, so the focused window is normally the previously
+        // focused one
+        let anchorCandidate: Meta.Window | undefined =
+            global.display.get_focus_window() ?? undefined;
+        let anchorFromFocus = anchorCandidate !== undefined;
+        if (anchorCandidate === undefined || anchorCandidate === window) {
+            // Wayland timing defense (not verified on every mutter
+            // version): fall back to the MRU head of the birth workspace,
+            // excluding the new window itself
+            anchorCandidate = getWindows(window.get_workspace()).find(
+                (win) => win !== window,
+            );
+            anchorFromFocus = false;
+        }
+        this._debug(
+            `insertion: anchor source=${anchorFromFocus ? 'focus' : 'mru'}`,
+        );
+
+        // the create -> first-frame gap can be long (delayed-mapping apps
+        // are not rare): property access on a released Meta.Window throws
+        // in GJS, so clear the candidate as soon as the anchor dies. The
+        // new window's own hook releases the anchor hook when the new
+        // window is destroyed before its first frame (signal-leak guard).
+        const anchorUnmanagedId =
+            anchorCandidate !== undefined
+                ? anchorCandidate.connect('unmanaged', () => {
+                      anchorCandidate = undefined;
+                  })
+                : 0;
+        const newWindowUnmanagedId = window.connect('unmanaged', () => {
+            if (anchorCandidate !== undefined && anchorUnmanagedId !== 0)
+                anchorCandidate.disconnect(anchorUnmanagedId);
+        });
+
         const windowActor = window.get_compositor_private() as Meta.WindowActor;
         const id = windowActor.connect('first-frame', () => {
             windowActor.disconnect(id);
 
-            // the window state may have changed since its creation
-            if (
-                window.minimized ||
-                window.maximizedHorizontally ||
-                window.maximizedVertically ||
-                window.get_transient_for() !== null ||
-                window.is_attached_dialog()
-            )
-                return;
-
-            // search the monitors row by row from top to bottom and, within
-            // a row, from left to right: the first monitor with an empty
-            // tile wins
-            for (const monitorIndex of this._getMonitorsInRowOrder()) {
-                const manager =
-                    monitorIndex === this._monitor.index
-                        ? this
-                        : this._getTilingManager?.(monitorIndex);
-                if (!manager) continue;
-                const tile = this._findEmptyTile(window, monitorIndex);
-                if (tile) {
-                    manager.autoTileWindowToTile(tile, window);
-                    return;
-                }
-            }
-            // the overflow search must not run inside the first-frame
-            // emission: switching workspaces and moving the window while
-            // mutter's frame is still in progress aborts the compositor
-            // (invalidate_top_window_actor_for_views). Run it from the
-            // main loop once the current frame is done.
-            GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-                // the window state may have changed since the first frame
+            // release BOTH unmanaged hooks on every exit path of this
+            // callback, the early returns included: the disconnection must
+            // never depend on reaching the insertion block below
+            try {
+                // the window state may have changed since its creation
                 if (
                     window.minimized ||
                     window.maximizedHorizontally ||
@@ -1466,53 +1500,448 @@ export class TilingManager {
                     window.get_transient_for() !== null ||
                     window.is_attached_dialog()
                 )
-                    return GLib.SOURCE_REMOVE;
+                    return;
 
-                if (!Settings.ENABLE_AUTO_TILING_OTHER_WORKSPACES)
-                    return GLib.SOURCE_REMOVE;
-                if (window.is_on_all_workspaces())
-                    return GLib.SOURCE_REMOVE; // sticky windows just float
+                // insert-after-focused: plan against the anchor captured
+                // at window-created time; when this returns true the
+                // window was fully handled (placed, or left floating by
+                // an aborted plan) and the vacancy searches below stay
+                // unreachable for it
+                if (this._runInsertionAfterFocused(window, anchorCandidate))
+                    return;
 
-                const vacancy = this._findVacancyInOtherWorkspaces(window);
-                if (vacancy) {
-                    this._debug(
-                        `all monitors full on this workspace: found free tile on workspace ${vacancy.ws.index()}`,
-                    );
-                    this._placeWindowOnWorkspace(window, vacancy);
-                    return GLib.SOURCE_REMOVE;
-                }
-
-                if (Meta.prefs_get_dynamic_workspaces()) {
-                    const ws = global.workspaceManager.append_new_workspace(
-                        false,
-                        global.get_current_time(),
-                    );
-                    const tile = this._findEmptyTile(
-                        window,
-                        this._monitor.index,
-                        ws.index(),
-                    );
+                // search the monitors row by row from top to bottom and, within
+                // a row, from left to right: the first monitor with an empty
+                // tile wins
+                for (const monitorIndex of this._getMonitorsInRowOrder()) {
+                    const manager =
+                        monitorIndex === this._monitor.index
+                            ? this
+                            : this._getTilingManager?.(monitorIndex);
+                    if (!manager) continue;
+                    const tile = this._findEmptyTile(window, monitorIndex);
                     if (tile) {
-                        this._debug(
-                            `all workspaces full: auto-tiling window to new workspace ${ws.index()}`,
-                        );
-                        this._placeWindowOnWorkspace(window, {
-                            ws,
-                            monitorIndex: this._monitor.index,
-                            tile,
-                        });
+                        manager.autoTileWindowToTile(tile, window);
+                        return;
                     }
-                    return GLib.SOURCE_REMOVE;
                 }
+                // the overflow search must not run inside the first-frame
+                // emission: switching workspaces and moving the window while
+                // mutter's frame is still in progress aborts the compositor
+                // (invalidate_top_window_actor_for_views). Run it from the
+                // main loop once the current frame is done.
+                GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                    // the window state may have changed since the first frame
+                    if (
+                        window.minimized ||
+                        window.maximizedHorizontally ||
+                        window.maximizedVertically ||
+                        window.get_transient_for() !== null ||
+                        window.is_attached_dialog()
+                    )
+                        return GLib.SOURCE_REMOVE;
 
-                this._debug(
-                    'all monitors are full on every workspace: leaving the window floating (fixed workspaces)',
-                );
-                return GLib.SOURCE_REMOVE;
-            });
-            // all monitors are full and workspaces are fixed: the window floats
-            // on its birth monitor (decided asynchronously, see idle above)
+                    if (!Settings.ENABLE_AUTO_TILING_OTHER_WORKSPACES)
+                        return GLib.SOURCE_REMOVE;
+                    if (window.is_on_all_workspaces())
+                        return GLib.SOURCE_REMOVE; // sticky windows just float
+
+                    const vacancy = this._findVacancyInOtherWorkspaces(window);
+                    if (vacancy) {
+                        this._debug(
+                            `all monitors full on this workspace: found free tile on workspace ${vacancy.ws.index()}`,
+                        );
+                        this._placeWindowOnWorkspace(window, vacancy);
+                        return GLib.SOURCE_REMOVE;
+                    }
+
+                    if (Meta.prefs_get_dynamic_workspaces()) {
+                        const ws = global.workspaceManager.append_new_workspace(
+                            false,
+                            global.get_current_time(),
+                        );
+                        const tile = this._findEmptyTile(
+                            window,
+                            this._monitor.index,
+                            ws.index(),
+                        );
+                        if (tile) {
+                            this._debug(
+                                `all workspaces full: auto-tiling window to new workspace ${ws.index()}`,
+                            );
+                            this._placeWindowOnWorkspace(window, {
+                                ws,
+                                monitorIndex: this._monitor.index,
+                                tile,
+                            });
+                        }
+                        return GLib.SOURCE_REMOVE;
+                    }
+
+                    this._debug(
+                        'all monitors are full on every workspace: leaving the window floating (fixed workspaces)',
+                    );
+                    return GLib.SOURCE_REMOVE;
+                });
+                // all monitors are full and workspaces are fixed: the window floats
+                // on its birth monitor (decided asynchronously, see idle above)
+            } finally {
+                if (anchorCandidate !== undefined && anchorUnmanagedId !== 0)
+                    anchorCandidate.disconnect(anchorUnmanagedId);
+                window.disconnect(newWindowUnmanagedId);
+            }
         });
+    }
+
+    // Anchor eligibility for insert-after-focused. Every condition mirrors
+    // the default-path eligibility checks: a minimized/maximized/fullscreen/
+    // sticky/dialog anchor holds no meaningful tile slot, and an anchor on
+    // another workspace would break the same-workspace insertion premise.
+    private _isEligibleInsertionAnchor(
+        anchor: Meta.Window | undefined,
+        window: Meta.Window,
+    ): anchor is Meta.Window {
+        if (anchor === undefined || anchor === window) return false;
+        if (anchor.windowType !== Meta.WindowType.NORMAL) return false;
+        if (anchor.get_transient_for() !== null) return false;
+        if (anchor.is_attached_dialog()) return false;
+        if (anchor.minimized) return false;
+        if (anchor.maximizedHorizontally || anchor.maximizedVertically)
+            return false;
+        if (anchor.is_fullscreen()) return false;
+        if (anchor.is_on_all_workspaces()) return false;
+        if ((anchor as ExtendedWindow).assignedTile === undefined)
+            return false;
+        if (anchor.get_workspace().index() !== window.get_workspace().index())
+            return false;
+        return true;
+    }
+
+    // The manager of an insertion slot's OWN monitor. NEVER falls back to
+    // `this` for a foreign monitor: a wrong manager's work area and monitor
+    // index would produce wrong geometry and drag windows onto the wrong
+    // monitor.
+    private _getInsertionTargetManager(
+        monitorIndex: number,
+    ): TilingManager | undefined {
+        if (monitorIndex === this._monitor.index) return this;
+        return this._getTilingManager?.(monitorIndex);
+    }
+
+    // Slot occupancy truth for the insertion re-checks: the very same
+    // conditions as the tiled-window-rects query backing the vacancy
+    // searches.
+    private _isInsertionSlotOccupied(
+        ws: Meta.Workspace,
+        tileRect: Mtk.Rectangle,
+    ): boolean {
+        return this._getTiledWindowRects(ws).some((rect) =>
+            tileRect.overlap(rect),
+        );
+    }
+
+    // Insert-after-focused: validate the captured anchor, plan through the
+    // pure insertion planner and dispatch the result. Returns true when
+    // the insertion path fully handled the window (direct placement done,
+    // an idle plan registered, or an abort that deliberately leaves the
+    // window floating) — the caller must then short-circuit the default
+    // vacancy searches. Returns false when the default behavior must run
+    // (no eligible anchor, mutex deferral, or a planner fallback).
+    private _runInsertionAfterFocused(
+        window: Meta.Window,
+        anchorCandidate: Meta.Window | undefined,
+    ): boolean {
+        if (!this._isEligibleInsertionAnchor(anchorCandidate, window)) {
+            this._debug('insertion: no anchor, default behavior');
+            return false;
+        }
+        const anchor = anchorCandidate;
+
+        // mutex: a plan already sits in the first-frame -> idle gap, so the
+        // occupancy truth is stale; a second plan would double-move the
+        // same occupants and stack windows on the same slots
+        if (_insertionShiftInProgress) {
+            this._debug('insertion: deferred, another insertion in flight');
+            return false;
+        }
+
+        // every bit of shell access the pure planner needs is injected
+        const chainInputs: ChainInputs = {
+            monitorsInRowOrder: this._getMonitorsInRowOrder(),
+            getWorkAreaForMonitor: (m: number) =>
+                Main.layoutManager.getWorkAreaForMonitor(m),
+            getTilesForMonitor: (m: number, ws: number) =>
+                GlobalState.get().getSelectedLayoutOfMonitor(m, ws).tiles,
+            getWindows: (ws: Meta.Workspace) => getWindows(ws),
+            rectFromTile: (tile: Tile, container: Mtk.Rectangle) =>
+                TileUtils.apply_props(tile, container),
+        };
+        // chains are built lazily and at most once per workspace
+        const chainCache = new Map<number, ChainSlot[]>();
+        const getChain = (wsIndex: number): ChainSlot[] => {
+            const cached = chainCache.get(wsIndex);
+            if (cached) return cached;
+            const chain = buildWorkspaceChain(wsIndex, chainInputs);
+            chainCache.set(wsIndex, chain);
+            return chain;
+        };
+
+        const result = planInsertion(anchor, {
+            allowCrossWorkspace: Settings.ENABLE_AUTO_TILING_OTHER_WORKSPACES,
+            allowAppend:
+                Settings.ENABLE_AUTO_TILING_OTHER_WORKSPACES &&
+                Meta.prefs_get_dynamic_workspaces(),
+            getChain,
+            nWorkspaces: global.workspaceManager.get_n_workspaces(),
+            inputs: chainInputs,
+            getWorkspaceByIndex: (i: number) =>
+                global.workspaceManager.get_workspace_by_index(i),
+        });
+
+        if ('fallback' in result) {
+            switch (result.fallback) {
+                case 'no-vacancy':
+                    this._debug('insertion: fallback, no vacancy available');
+                    break;
+                case 'immovable-occupant':
+                    this._debug('insertion: fallback, immovable occupant');
+                    break;
+                case 'anchor-unmapped':
+                    this._debug('insertion: no anchor, default behavior');
+                    break;
+            }
+            return false;
+        }
+        const plan = result;
+
+        const anchorWs = anchor.get_workspace().index();
+        const anchorChain = getChain(anchorWs);
+        // the anchor's last occupied slot: when the new window target is
+        // on the anchor's workspace it sits exactly one slot behind the
+        // anchor's end slot; a target on another workspace means the
+        // anchor sits on the chain tail
+        const anchorSlotIndex =
+            plan.newWindowTarget.wsIndex === anchorWs
+                ? plan.newWindowTarget.slot.slotIndex - 1
+                : anchorChain.length - 1;
+        this._debug(`insertion: anchor ws=${anchorWs} slot=${anchorSlotIndex}`);
+
+        // FORM ONE — zero-move direct placement: the only insertion shape
+        // allowed to run synchronously inside the first-frame emission
+        // (pure existing precedent: the default search below also places
+        // the new window itself right here)
+        if (
+            plan.moves.length === 0 &&
+            !plan.switchView &&
+            !plan.appendWorkspace
+        ) {
+            _insertionShiftInProgress = true;
+            try {
+                const manager = this._getInsertionTargetManager(
+                    plan.newWindowTarget.slot.monitorIndex,
+                );
+                if (!manager) {
+                    this._debug(
+                        'insertion: fallback, monitor manager unavailable',
+                    );
+                    return true; // handled: the window stays floating
+                }
+                manager.autoTileWindowToTile(
+                    plan.newWindowTarget.slot.tile,
+                    window,
+                );
+                this._debug(
+                    `insertion: direct placement ws=${plan.newWindowTarget.wsIndex} slot=${plan.newWindowTarget.slot.slotIndex} moves=0`,
+                );
+            } finally {
+                _insertionShiftInProgress = false;
+            }
+            return true;
+        }
+
+        // FORM TWO — every other plan (any move, a workspace append, a
+        // view switch): only eligibility and planning happen here; the
+        // WHOLE plan executes in a one-shot idle callback, because moving
+        // windows or switching workspaces inside the first-frame emission
+        // crashes the compositor (see the comment below the default
+        // search)
+        const absorbTarget =
+            plan.moves.length > 0
+                ? plan.moves[0].target // largest target key: exactly E
+                : plan.newWindowTarget;
+        this._debug(
+            `insertion: shifting ${plan.moves.length} windows, absorb at ws=${absorbTarget.wsIndex} slot=${absorbTarget.slot.slotIndex}`,
+        );
+        _insertionShiftInProgress = true;
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            try {
+                this._executeInsertionPlan(window, plan);
+                return GLib.SOURCE_REMOVE;
+            } finally {
+                _insertionShiftInProgress = false;
+            }
+        });
+        return true;
+    }
+
+    // Executes a FORM TWO plan inside its idle callback: every move plus
+    // the new-window placement, with fresh-state re-checks first (the plan
+    // was computed inside the first-frame handler; the world may have
+    // changed in the gap). Any failed re-check aborts the whole plan and
+    // leaves the new window floating: the default searches were
+    // short-circuited, and a partially executed plan would stack windows
+    // on occupied slots. A single failed move occupant aborts too — NEVER
+    // skip-and-continue: a skipped occupant would stay wedged between the
+    // insertion slot and the absorb vacancy.
+    private _executeInsertionPlan(
+        window: Meta.Window,
+        plan: InsertionPlan,
+    ): void {
+        if (
+            window.get_compositor_private() === null || // destroyed: property access would throw
+            window.minimized ||
+            window.maximizedHorizontally ||
+            window.maximizedVertically ||
+            window.get_transient_for() !== null ||
+            window.is_attached_dialog()
+        ) {
+            this._debug('insertion: aborted, window state changed');
+            return;
+        }
+
+        // every workspace the plan refers to must still exist: dynamic
+        // workspaces can recycle trailing empty ones in the gap. A
+        // workspace the append flag will create is resolved at placement
+        // time below instead.
+        const referencedWsIndices = new Set<number>();
+        for (const move of plan.moves)
+            referencedWsIndices.add(move.target.wsIndex);
+        if (!plan.appendWorkspace)
+            referencedWsIndices.add(plan.newWindowTarget.wsIndex);
+        for (const wsIndex of referencedWsIndices) {
+            if (
+                global.workspaceManager.get_workspace_by_index(wsIndex) ===
+                null
+            ) {
+                this._debug('insertion: aborted, workspace vanished');
+                return;
+            }
+        }
+
+        // the absorb slot must still be free: a concurrent default-path
+        // placement may have filled it in the gap, and the tail move would
+        // then stack its occupant on top
+        const absorbTarget =
+            plan.moves.length > 0
+                ? plan.moves[0].target
+                : plan.newWindowTarget;
+        if (!plan.appendWorkspace) {
+            const absorbWs = global.workspaceManager.get_workspace_by_index(
+                absorbTarget.wsIndex,
+            );
+            if (
+                absorbWs !== null &&
+                this._isInsertionSlotOccupied(
+                    absorbWs,
+                    absorbTarget.slot.tileRect,
+                )
+            ) {
+                this._debug('insertion: aborted, target occupied');
+                return;
+            }
+        }
+
+        for (const move of plan.moves) {
+            const win = move.window;
+            if (
+                win.get_compositor_private() === null ||
+                win.minimized ||
+                win.maximizedHorizontally ||
+                win.maximizedVertically
+            ) {
+                this._debug('insertion: aborted, occupant vanished');
+                return;
+            }
+            if (win.get_workspace().index() !== move.target.wsIndex) {
+                const targetWs =
+                    global.workspaceManager.get_workspace_by_index(
+                        move.target.wsIndex,
+                    );
+                if (targetWs === null) {
+                    this._debug('insertion: aborted, workspace vanished');
+                    return;
+                }
+                win.change_workspace(targetWs);
+                this._debug(
+                    `insertion: overflow window -> ws=${move.target.wsIndex}`,
+                );
+            }
+            const manager = this._getInsertionTargetManager(
+                move.target.slot.monitorIndex,
+            );
+            if (!manager) {
+                this._debug(
+                    'insertion: fallback, monitor manager unavailable',
+                );
+                return;
+            }
+            manager.autoTileWindowToTile(move.target.tile, win);
+
+            // geometry verification only: a FAIL never rolls back, it must
+            // merely be logged (pre-execution failures use the abort lines
+            // above and never reach this)
+            const movedOk = win
+                .get_frame_rect()
+                .overlap(move.target.slot.tileRect);
+            this._debug(
+                `insertion: move ${movedOk ? 'ok' : 'FAIL'} ws=${move.target.wsIndex} slot=${move.target.slot.slotIndex}`,
+            );
+        }
+
+        // final leg: the new window itself. A plan with appendWorkspace
+        // would create its target workspace here first (cross-workspace
+        // wave); until that lands such plans degrade to the
+        // workspace-vanished abort just below.
+        const newTargetWs = global.workspaceManager.get_workspace_by_index(
+            plan.newWindowTarget.wsIndex,
+        );
+        if (newTargetWs === null) {
+            this._debug('insertion: aborted, workspace vanished');
+            return;
+        }
+        // its target slot must still be free too: another new window may
+        // have taken it through the default path in the gap
+        if (
+            this._isInsertionSlotOccupied(
+                newTargetWs,
+                plan.newWindowTarget.slot.tileRect,
+            )
+        ) {
+            this._debug('insertion: aborted, target occupied');
+            return;
+        }
+        if (window.get_workspace().index() !== plan.newWindowTarget.wsIndex)
+            window.change_workspace(newTargetWs);
+        if (plan.switchView) {
+            // mirrors _placeWindowOnWorkspace: the activation also
+            // synchronously creates the target workspace's tiling layouts,
+            // which the placement below depends on
+            this._debug(
+                `insertion: view switch to ws=${plan.newWindowTarget.wsIndex}`,
+            );
+            newTargetWs.activate_with_focus(window, global.get_current_time());
+        }
+        const newManager = this._getInsertionTargetManager(
+            plan.newWindowTarget.slot.monitorIndex,
+        );
+        if (!newManager) {
+            this._debug('insertion: fallback, monitor manager unavailable');
+            return;
+        }
+        newManager.autoTileWindowToTile(
+            plan.newWindowTarget.slot.tile,
+            window,
+        );
     }
 
     // frame rects of tiled windows (assigned tile, not minimized, not
