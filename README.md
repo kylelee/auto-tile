@@ -136,6 +136,8 @@ You can select your favorite layout for each workspace of each monitor.
 
 When a window is created, it is automatically moved to the best tile according to where other windows are tiled and the current layout. This is disabled by default and can be enabled in the preferences.
 
+When every monitor on the current workspace is full, the window can also be auto-tiled to the first free tile on another workspace (switching the view to it), and a new workspace is created first when dynamic workspaces are enabled — controlled by the 'Search other workspaces when auto tiling' preference.
+
 [automatic_tiling](https://github.com/user-attachments/assets/76abc53f-2c6d-47ab-bee3-bbcdd946f2a1)
 
 ### Export and import layouts ###
