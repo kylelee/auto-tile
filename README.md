@@ -102,6 +102,8 @@ You can resize adjacent tiled windows together!
 
 Move window through the tiles using keyboard shortcuts (<kbd>SUPER</kbd>+<kbd>←</kbd>/<kbd>↑</kbd>/<kbd>↓</kbd>/<kbd>→</kbd>). They can be customized from the preferences!
 
+Moving toward an occupied tile swaps the positions of the two windows, even across monitors, while free tiles are taken as-is in the movement direction.
+
 [Tile with Keyboard Video](https://github.com/user-attachments/assets/6f8dedbb-2733-41d8-8a94-0fa62dffb915)
 
 > It can be enabled/disabled from the preferences
