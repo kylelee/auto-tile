@@ -107,6 +107,11 @@
             <summary>Enable auto tiling</summary>
             <description>Automatically tile a new window to the best tile according to the current layout.</description>
         </key>
+        <key name="enable-autotiling-other-workspaces" type="b">
+            <default>true</default>
+            <summary>Search other workspaces when auto tiling</summary>
+            <description>When every monitor is full, move a new window to the first free tile on another workspace, creating a new workspace first if dynamic workspaces are enabled, and switch to it.</description>
+        </key>
         <key name="raise-together" type="b">
             <default>false</default>
             <summary>Raise tiled windows together</summary>

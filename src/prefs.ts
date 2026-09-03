@@ -275,6 +275,20 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
         );
         behaviourGroup.add(autoTilingRow);
 
+        const autoTilingOtherWorkspacesRow = this._buildSwitchRow(
+            Settings.KEY_ENABLE_AUTO_TILING_OTHER_WORKSPACES,
+            _('Search other workspaces when full'),
+            _(
+                'When every monitor is full, move a new window to a free tile on another workspace and switch to it',
+            ),
+        );
+        Settings.bind(
+            Settings.KEY_ENABLE_AUTO_TILING,
+            autoTilingOtherWorkspacesRow,
+            'sensitive',
+        );
+        behaviourGroup.add(autoTilingOtherWorkspacesRow);
+
         const resizeComplementingRow = this._buildSwitchRow(
             Settings.KEY_RESIZE_COMPLEMENTING_WINDOWS,
             _('Enable auto-resize of the complementing tiled windows'),
