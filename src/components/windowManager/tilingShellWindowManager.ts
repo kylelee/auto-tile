@@ -5,8 +5,12 @@ import { GObject, Meta, Mtk, Clutter, Graphene } from '../../gi/ext';
 class CachedWindowProperties {
     private _is_initialized: boolean = false;
     public maximized: boolean = false;
+    // last-known workspace: must stay an object, dynamic workspace removals
+    // renumber survivors without firing per-window signals (an index goes stale)
+    public workspace: Meta.Workspace | null = null;
 
     constructor(window: Meta.Window, manager: TilingShellWindowManager) {
+        this.workspace = window.get_workspace();
         this.update(window, manager);
         this._is_initialized = true;
     }
@@ -39,12 +43,23 @@ export default class TilingShellWindowManager extends GObject.Object {
             maximized: {
                 param_types: [Meta.Window.$gtype],
             },
+            'window-unmanaged': {
+                param_types: [Meta.Window.$gtype],
+            },
+            'window-workspace-changed': {
+                param_types: [
+                    Meta.Window.$gtype,
+                    GObject.TYPE_INT,
+                    GObject.TYPE_INT,
+                ], // Meta.Window, old workspace index, new workspace index
+            },
         },
     })};
 
     private static _instance: TilingShellWindowManager | null;
 
     private readonly _signals: SignalHandling;
+    private readonly _windowSignals: SignalHandling;
 
     static get(): TilingShellWindowManager {
         if (!this._instance) this._instance = new TilingShellWindowManager();
@@ -55,6 +70,7 @@ export default class TilingShellWindowManager extends GObject.Object {
     static destroy() {
         if (this._instance) {
             this._instance._signals.disconnect();
+            this._instance._windowSignals.disconnect();
             this._instance = null;
         }
     }
@@ -63,9 +79,11 @@ export default class TilingShellWindowManager extends GObject.Object {
         super();
 
         this._signals = new SignalHandling();
+        this._windowSignals = new SignalHandling();
         global.get_window_actors().forEach((winActor) => {
             (winActor.metaWindow as WindowWithCachedProps).__ts_cached =
                 new CachedWindowProperties(winActor.metaWindow, this);
+            this._trackWindowSignals(winActor.metaWindow);
         });
 
         this._signals.connect(
@@ -74,6 +92,7 @@ export default class TilingShellWindowManager extends GObject.Object {
             (_, window: Meta.Window) => {
                 (window as WindowWithCachedProps).__ts_cached =
                     new CachedWindowProperties(window, this);
+                this._trackWindowSignals(window);
             },
         );
         this._signals.connect(
@@ -107,6 +126,57 @@ export default class TilingShellWindowManager extends GObject.Object {
                 );
             },
         );
+    }
+
+    private _trackWindowSignals(window: Meta.Window) {
+        const workspaceChangedId = this._windowSignals.connect(
+            window,
+            'workspace-changed',
+            () => {
+                this._onWindowWorkspaceChanged(window);
+            },
+        );
+        const unmanagedId = this._windowSignals.connect(
+            window,
+            'unmanaged',
+            () => {
+                window.disconnect(workspaceChangedId);
+                window.disconnect(unmanagedId);
+                this.emit('window-unmanaged', window);
+            },
+        );
+    }
+
+    private _onWindowWorkspaceChanged(window: Meta.Window) {
+        const cached = (window as WindowWithCachedProps).__ts_cached;
+        if (!cached) return;
+
+        let oldIdx = -1;
+        if (cached.workspace) {
+            try {
+                oldIdx = cached.workspace.index();
+            } catch (e) {
+                // calling index() on a disposed workspace wrapper throws:
+                // reset the tracker to the current workspace and skip emission
+                cached.workspace = window.get_workspace();
+                console.warn(
+                    'TilingShell: tracked workspace of window',
+                    window.get_id(),
+                    'was disposed, resetting it',
+                    e,
+                );
+                return;
+            }
+        }
+
+        const newIdx = window.get_workspace()?.index() ?? -1;
+        if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx)
+            this.emit('window-workspace-changed', window, oldIdx, newIdx);
+
+        // emit happens before this refresh, so handlers could still read the
+        // true old workspace object from the cache; null-tracked windows
+        // bootstrap their tracker here too
+        cached.workspace = window.get_workspace();
     }
 
     public static easeMoveWindow(params: {
