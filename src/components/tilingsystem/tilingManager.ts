@@ -1580,6 +1580,16 @@ export class TilingManager {
     }
 
     public scheduleAutoFill(wsIndex: number, exclude?: Meta.Window): void {
+        // insertion-shift contract: an in-flight insert-after-focused plan
+        // transiently frees slots (the insertion slot plus every seat a
+        // shifted window is about to leave); reacting to them would pull
+        // windows into seats that are about to be taken
+        if (isInsertionShiftInProgress()) {
+            this._debug(
+                'auto-fill deferred: insert-after-focused shift in flight',
+            );
+            return;
+        }
         this._freeTileFiller?.scheduleFill(wsIndex, exclude);
     }
 
@@ -1614,6 +1624,10 @@ export class TilingManager {
         // suppression depth is positive; without this gate the enforcement
         // would revert exactly the moves the cascade is allowed to make
         if (isAutoFillSuppressed()) return;
+        // insertion-shift contract (same gate as scheduleAutoFill): the
+        // shifted windows fire workspace-changed/monitor-left synchronously
+        // while the plan executes; reverting them would tear the shift apart
+        if (isInsertionShiftInProgress()) return;
         if (!Settings.ENABLE_AUTO_FILL_FREED_TILES) return;
         if (!origin.tiled) return;
         if (!origin.tile) return;
