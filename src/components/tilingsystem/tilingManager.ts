@@ -87,6 +87,14 @@ interface GrabOrigin {
     tile: Tile | undefined;
 }
 
+// per-call behavior of enforceTiledPlacement: the window-workspace-changed
+// wire passes ignoreGeometry because a workspace-only move leaves the frame
+// rect unchanged (still inside its tile) — the geometry test can never see
+// it, so the workspace change itself is the gate there
+export interface EnforceTiledPlacementOptions {
+    ignoreGeometry?: boolean;
+}
+
 export class TilingManager {
     private readonly _monitor: Monitor;
 
@@ -403,8 +411,10 @@ export class TilingManager {
                 // tile-lock enforcement: the workspace change itself is the
                 // gate — overview drops and native Super+Shift-arrow moves
                 // of tiled windows revert to their origin workspace/tile.
-                // The geometry legit test is NOT consulted here (a
-                // workspace-only move leaves the frame rect unchanged);
+                // Per the plan this path is geometry-blind to
+                // workspace-only moves: the legit test is bypassed via
+                // ignoreGeometry (the frame rect is unchanged by a pure
+                // workspace move, so the geometry test could never see it);
                 // mid-drag switches must not fight the ongoing drag and
                 // sticky "always on visible workspace" is a membership
                 // change that must not be fought either
@@ -428,14 +438,18 @@ export class TilingManager {
                         trackedWs = null;
                     }
                     if (assignedTile && trackedWs) {
-                        this.enforceTiledPlacement(window, {
+                        this.enforceTiledPlacement(
                             window,
-                            tiled: true,
-                            monitorIndex: window.get_monitor(),
-                            ws: trackedWs,
-                            wsIndex: oldIdx,
-                            tile: new Tile({ ...assignedTile }),
-                        });
+                            {
+                                window,
+                                tiled: true,
+                                monitorIndex: window.get_monitor(),
+                                ws: trackedWs,
+                                wsIndex: oldIdx,
+                                tile: new Tile({ ...assignedTile }),
+                            },
+                            { ignoreGeometry: true },
+                        );
                     }
                 }
 
@@ -1555,6 +1569,7 @@ export class TilingManager {
     public enforceTiledPlacement(
         window: Meta.Window,
         origin: GrabOrigin,
+        opts?: EnforceTiledPlacementOptions,
     ): void {
         // dying-window guards, before everything else (even the suppression
         // check, so re-entrances on dying windows are cheaply dropped): an
@@ -1586,13 +1601,18 @@ export class TilingManager {
         // legit test: the drop still conforms to a tile — the current
         // assignedTile if the drop re-tiled it (a spanned drop selection's
         // union tile passes the 50% test), else the drag's origin tile
-        // (in-tile nudges keep passing; free-form drops fail)
-        const referenceTile = extWin.assignedTile ?? origin.tile;
-        const normalizedFrameRect = TileUtils.build_tile(
-            window.get_frame_rect(),
-            Main.layoutManager.getWorkAreaForMonitor(monitorIdx),
-        );
-        if (rectMostlyInsideTile(normalizedFrameRect, referenceTile)) return;
+        // (in-tile nudges keep passing; free-form drops fail). The
+        // ignoreGeometry bypass (wire 2) matches the plan: that path is
+        // geometry-blind to workspace-only moves
+        if (!opts?.ignoreGeometry) {
+            const referenceTile = extWin.assignedTile ?? origin.tile;
+            const normalizedFrameRect = TileUtils.build_tile(
+                window.get_frame_rect(),
+                Main.layoutManager.getWorkAreaForMonitor(monitorIdx),
+            );
+            if (rectMostlyInsideTile(normalizedFrameRect, referenceTile))
+                return;
+        }
 
         this._debug('enforcing tiled placement: reverting window to origin');
 
@@ -1782,7 +1802,15 @@ export class TilingManager {
                 if (!manager) continue;
                 const tile = this._findEmptyTile(window, monitorIndex);
                 if (tile) {
-                    manager.autoTileWindowToTile(tile, window);
+                    // suppressed: on a cross-monitor hit,
+                    // _easeWindowRectFromTile assigns the tile BEFORE
+                    // move_to_monitor, so the monitor-left wire would
+                    // otherwise see a transient "tiled window off its
+                    // tile" and revert our own placement (same hazard as
+                    // _placeWindowOnWorkspace)
+                    withAutoFillSuppressed(() => {
+                        manager.autoTileWindowToTile(tile, window);
+                    });
                     return;
                 }
             }
@@ -2023,12 +2051,18 @@ export class TilingManager {
         this._debug(
             `auto-tiling window to workspace ${target.ws.index()} monitor ${target.monitorIndex}`,
         );
-        window.change_workspace(target.ws);
-        // switch the view and focus the window; this also synchronously fires
-        // each manager's active-workspace-changed handler which creates the
-        // target workspace's TilingLayout — the placement below depends on it
-        target.ws.activate_with_focus(window, global.get_current_time());
-        manager.autoTileWindowToTile(target.tile, window);
+        // suppressed: the relocation's change_workspace/move_to_monitor
+        // fires the workspace-changed/monitor-left wires while the window
+        // transiently carries its just-assigned tile but not yet its
+        // geometry — enforcement would revert our own overflow placement
+        withAutoFillSuppressed(() => {
+            window.change_workspace(target.ws);
+            // switch the view and focus the window; this also synchronously fires
+            // each manager's active-workspace-changed handler which creates the
+            // target workspace's TilingLayout — the placement below depends on it
+            target.ws.activate_with_focus(window, global.get_current_time());
+            manager.autoTileWindowToTile(target.tile, window);
+        });
     }
 
     private _getMonitorsInRowOrder(): number[] {
