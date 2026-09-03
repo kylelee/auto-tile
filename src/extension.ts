@@ -265,17 +265,22 @@ export default class TilingShellExtension extends Extension {
                 // geometry legit test DOES govern (a monitor move can leave
                 // the rect off-tile) and the suppression gate inside exempts
                 // keyboard swap legs
-                const assignedTile = (window as ExtendedWindow).assignedTile;
-                oldMonitorTilingManager.enforceTiledPlacement(window, {
-                    window,
-                    tiled: true,
-                    monitorIndex,
-                    ws: window.get_workspace() ?? undefined,
-                    wsIndex: window.get_workspace()?.index(),
-                    tile: assignedTile
-                        ? new Tile({ ...assignedTile })
-                        : undefined,
-                });
+                // a dying window emits monitor signals during teardown with
+                // its workspace already torn to null: never enforce on it
+                // (compositor abort on not-settled windows)
+                if (window.get_workspace()) {
+                    const assignedTile = (window as ExtendedWindow).assignedTile;
+                    oldMonitorTilingManager.enforceTiledPlacement(window, {
+                        window,
+                        tiled: true,
+                        monitorIndex,
+                        ws: window.get_workspace() ?? undefined,
+                        wsIndex: window.get_workspace()?.index(),
+                        tile: assignedTile
+                            ? new Tile({ ...assignedTile })
+                            : undefined,
+                    });
+                }
                 // monitorIndex is the OLD monitor: this signal fires before
                 // 'window-entered-monitor'; exclude the transitioning window
                 // so mid-transition occupancy is not confused

@@ -412,7 +412,8 @@ export class TilingManager {
                     Settings.ENABLE_AUTO_FILL_FREED_TILES &&
                     !this._isGrabbingWindow &&
                     !isAutoFillSuppressed() &&
-                    !window.is_on_all_workspaces()
+                    !window.is_on_all_workspaces() &&
+                    window.get_workspace() !== null
                 ) {
                     const assignedTile = (window as ExtendedWindow).assignedTile;
                     // the tracked workspace OBJECT read at signal time is
@@ -1555,6 +1556,19 @@ export class TilingManager {
         window: Meta.Window,
         origin: GrabOrigin,
     ): void {
+        // dying-window guards, before everything else (even the suppression
+        // check, so re-entrances on dying windows are cheaply dropped): an
+        // unmanaging window has its workspace torn to null and its monitor
+        // torn to -1 while the GObject wrapper is still alive — get_id()
+        // only throws AFTER 'unmanaged'. A LIVE tiled window always has
+        // both a workspace and a valid monitor; window-management calls on
+        // a not-settled window abort the whole compositor.
+        if (!this._isWindowAlive(window)) return;
+        if (!window.get_workspace()) return;
+        const monitorIdx = window.get_monitor();
+        if (monitorIdx < 0 || monitorIdx >= global.display.get_n_monitors())
+            return;
+
         // MANDATORY FIRST: the filler's own change_workspace/move_to_monitor
         // calls re-enter the monitor-left/workspace-changed wires while the
         // suppression depth is positive; without this gate the enforcement
@@ -1576,7 +1590,7 @@ export class TilingManager {
         const referenceTile = extWin.assignedTile ?? origin.tile;
         const normalizedFrameRect = TileUtils.build_tile(
             window.get_frame_rect(),
-            Main.layoutManager.getWorkAreaForMonitor(window.get_monitor()),
+            Main.layoutManager.getWorkAreaForMonitor(monitorIdx),
         );
         if (rectMostlyInsideTile(normalizedFrameRect, referenceTile)) return;
 
