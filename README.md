@@ -140,6 +140,8 @@ When a window is created, it is automatically moved to the best tile according t
 
 When every monitor on the current workspace is full, the window can also be auto-tiled to the first free tile on another workspace (switching the view to it), and a new workspace is created first when dynamic workspaces are enabled — controlled by the 'Search other workspaces when auto tiling' preference.
 
+When auto-tiling is enabled and the focused window is tiled, a new window is placed on the tile right after the currently focused window: the tiled windows behind it shift one slot forward along the global top-to-bottom/left-to-right order, cascading across monitors and — when the 'Search other workspaces when auto tiling' preference is enabled — across workspaces. When the focused window is not tiled, the new window is moved to the nearest free tile as before.
+
 [automatic_tiling](https://github.com/user-attachments/assets/76abc53f-2c6d-47ab-bee3-bbcdd946f2a1)
 
 ### Export and import layouts ###
