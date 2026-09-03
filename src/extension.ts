@@ -261,6 +261,21 @@ export default class TilingShellExtension extends Extension {
                 const oldMonitorTilingManager =
                     this._tilingManagers[monitorIndex];
                 if (!oldMonitorTilingManager) return;
+                // tile-lock enforcement while auto-fill is on: here the
+                // geometry legit test DOES govern (a monitor move can leave
+                // the rect off-tile) and the suppression gate inside exempts
+                // keyboard swap legs
+                const assignedTile = (window as ExtendedWindow).assignedTile;
+                oldMonitorTilingManager.enforceTiledPlacement(window, {
+                    window,
+                    tiled: true,
+                    monitorIndex,
+                    ws: window.get_workspace() ?? undefined,
+                    wsIndex: window.get_workspace()?.index(),
+                    tile: assignedTile
+                        ? new Tile({ ...assignedTile })
+                        : undefined,
+                });
                 // monitorIndex is the OLD monitor: this signal fires before
                 // 'window-entered-monitor'; exclude the transitioning window
                 // so mid-transition occupancy is not confused

@@ -31,6 +31,11 @@ import { KeyBindingsDirection } from '../../keybindings';
 import TilingShellWindowManager from '../../components/windowManager/tilingShellWindowManager';
 import TilingLayoutWithSuggestions from '../windowsSuggestions/tilingLayoutWithSuggestions';
 import { maximizeWindow, unmaximizeWindow } from '../../utils/gnomesupport';
+import { rectMostlyInsideTile } from './freeTileFillPlanner';
+import {
+    isAutoFillSuppressed,
+    withAutoFillSuppressed,
+} from './autoFillSuppression';
 
 const MINIMUM_DISTANCE_TO_RESTORE_ORIGINAL_SIZE = 90;
 
@@ -72,7 +77,7 @@ interface WindowWithCachedProps extends Meta.Window {
 
 // Snapshot of where a drag started, taken before the first _onMovingWindow
 // pass clears assignedTile (recording after it would always see tiled=false).
-// Consumed by _onGrabEndFollowUp and by task 7's enforceTiledPlacement
+// Consumed by _onGrabEndFollowUp and by enforceTiledPlacement
 interface GrabOrigin {
     window: Meta.Window;
     tiled: boolean;
@@ -394,6 +399,44 @@ export class TilingManager {
                 if (!(window as ExtendedWindow).assignedTile) return;
                 if (oldIdx === newIdx) return;
                 if (window.get_monitor() !== this._monitor.index) return;
+
+                // tile-lock enforcement: the workspace change itself is the
+                // gate — overview drops and native Super+Shift-arrow moves
+                // of tiled windows revert to their origin workspace/tile.
+                // The geometry legit test is NOT consulted here (a
+                // workspace-only move leaves the frame rect unchanged);
+                // mid-drag switches must not fight the ongoing drag and
+                // sticky "always on visible workspace" is a membership
+                // change that must not be fought either
+                if (
+                    Settings.ENABLE_AUTO_FILL_FREED_TILES &&
+                    !this._isGrabbingWindow &&
+                    !isAutoFillSuppressed() &&
+                    !window.is_on_all_workspaces()
+                ) {
+                    const assignedTile = (window as ExtendedWindow).assignedTile;
+                    // the tracked workspace OBJECT read at signal time is
+                    // still the OLD workspace (the tracker is refreshed
+                    // only after this signal is emitted)
+                    let trackedWs: Meta.Workspace | null = null;
+                    try {
+                        trackedWs =
+                            (window as WindowWithCachedProps).__ts_cached
+                                ?.workspace ?? null;
+                    } catch (_e) {
+                        trackedWs = null;
+                    }
+                    if (assignedTile && trackedWs) {
+                        this.enforceTiledPlacement(window, {
+                            window,
+                            tiled: true,
+                            monitorIndex: window.get_monitor(),
+                            ws: trackedWs,
+                            wsIndex: oldIdx,
+                            tile: new Tile({ ...assignedTile }),
+                        });
+                    }
+                }
 
                 this.scheduleAutoFill(oldIdx);
             },
@@ -1140,7 +1183,7 @@ export class TilingManager {
         // all managers see grab signals: only the origin's manager proceeds
         if (!origin || this._monitor.index !== origin.monitorIndex) return;
 
-        // TODO(task-7): this.enforceTiledPlacement(window, origin) — enforcement BEFORE fill check
+        this.enforceTiledPlacement(window, origin);
         if (
             origin.wsIndex !== undefined &&
             (window.get_monitor() !== origin.monitorIndex ||
@@ -1498,6 +1541,120 @@ export class TilingManager {
 
     public scheduleAutoFill(wsIndex: number, exclude?: Meta.Window): void {
         this._freeTileFiller?.scheduleFill(wsIndex, exclude);
+    }
+
+    /**
+     * Tile-lock enforcement: while the freed-tile auto-fill feature is
+     * on, a tiled window that a drag (or a native workspace/monitor
+     * move) pulled off its tile is pushed back to its origin tile.
+     * Maximized windows and drops still conforming to a tile are left
+     * alone; the whole revert runs under auto-fill suppression so it
+     * never fights the filler's own moves.
+     */
+    public enforceTiledPlacement(
+        window: Meta.Window,
+        origin: GrabOrigin,
+    ): void {
+        // MANDATORY FIRST: the filler's own change_workspace/move_to_monitor
+        // calls re-enter the monitor-left/workspace-changed wires while the
+        // suppression depth is positive; without this gate the enforcement
+        // would revert exactly the moves the cascade is allowed to make
+        if (isAutoFillSuppressed()) return;
+        if (!Settings.ENABLE_AUTO_FILL_FREED_TILES) return;
+        if (!origin.tiled) return;
+        if (!origin.tile) return;
+        if (origin.window !== window) return;
+
+        // maximize via top-edge drag stays allowed (existing feature)
+        if (window.maximizedHorizontally || window.maximizedVertically) return;
+
+        const extWin = window as ExtendedWindow;
+        // legit test: the drop still conforms to a tile — the current
+        // assignedTile if the drop re-tiled it (a spanned drop selection's
+        // union tile passes the 50% test), else the drag's origin tile
+        // (in-tile nudges keep passing; free-form drops fail)
+        const referenceTile = extWin.assignedTile ?? origin.tile;
+        const normalizedFrameRect = TileUtils.build_tile(
+            window.get_frame_rect(),
+            Main.layoutManager.getWorkAreaForMonitor(window.get_monitor()),
+        );
+        if (rectMostlyInsideTile(normalizedFrameRect, referenceTile)) return;
+
+        this._debug('enforcing tiled placement: reverting window to origin');
+
+        const originTile: Tile = origin.tile;
+        const originMonitorIndex = origin.monitorIndex;
+        const originWs = origin.ws;
+        const originWsIndex = origin.wsIndex;
+
+        withAutoFillSuppressed(() => {
+            // the monitor/workspace moves below synchronously re-enter
+            // onWindowEnteredMonitor once the grab has ended: the guard
+            // keeps our own placement from clearing assignedTile and
+            // re-tiling to a foreign tile
+            _windowsUnderPlacement.add(window);
+            try {
+                if (window.get_monitor() !== originMonitorIndex)
+                    window.move_to_monitor(originMonitorIndex);
+
+                // resolve the target workspace BY OBJECT: a stale index can
+                // resolve to a live-but-different workspace, and index() on
+                // a disposed wrapper throws before === even evaluates
+                const wsIndexOf = (candidate: Meta.Workspace): number => {
+                    try {
+                        return candidate.index();
+                    } catch (_e) {
+                        return -1;
+                    }
+                };
+                let ws: Meta.Workspace | null = null;
+                if (originWs !== undefined) {
+                    ws =
+                        global.workspaceManager.get_workspace_by_index(
+                            wsIndexOf(originWs),
+                        ) === originWs
+                            ? originWs
+                            : null;
+                } else if (originWsIndex !== undefined) {
+                    ws = global.workspaceManager.get_workspace_by_index(
+                        originWsIndex,
+                    );
+                }
+
+                if (!ws) {
+                    // the origin workspace vanished (dynamic collapse):
+                    // re-seat on the window's current workspace
+                    console.warn(
+                        'TilingShell: origin workspace of enforced window vanished, re-seating on the current one',
+                    );
+                    const tile = this._findEmptyTile(
+                        window,
+                        originMonitorIndex,
+                        window.get_workspace().index(),
+                    );
+                    if (tile) {
+                        const originalSize = extWin.originalSize;
+                        this.autoTileWindowToTile(tile, window);
+                        if (originalSize) extWin.originalSize = originalSize;
+                    }
+                    return;
+                }
+
+                if (window.get_workspace() !== ws) {
+                    this._ensureTilingLayout(ws);
+                    window.change_workspace(ws);
+                }
+
+                // re-tile to the origin tile, preserving the TRUE pre-tile
+                // size for a future untile (same snapshot pattern as
+                // onWindowEnteredMonitor)
+                const originalSize = extWin.originalSize;
+                this.autoTileWindowToTile(new Tile({ ...originTile }), window);
+                if (originalSize) extWin.originalSize = originalSize;
+            } finally {
+                _windowsUnderPlacement.delete(window);
+            }
+        });
     }
 
     /**
