@@ -419,6 +419,7 @@ export class TilingManager {
             layout,
             innerGaps,
             outerGaps,
+            this._workArea,
             monitorScalingFactor,
         );
         this._workspaceTilingLayout.set(ws, tilingLayout);
@@ -1102,6 +1103,17 @@ export class TilingManager {
         );
     }
 
+    // any introspected method call on a disposed GObject wrapper throws in
+    // GJS, which makes get_id() a safe liveness probe
+    private _isWindowAlive(window: Meta.Window): boolean {
+        try {
+            window.get_id();
+            return true;
+        } catch (_e) {
+            return false;
+        }
+    }
+
     /**
      * Post-placement follow-up of a window drag: flushes any auto-fill
      * trigger stashed during the grab and, on the drag's origin monitor
@@ -1110,8 +1122,9 @@ export class TilingManager {
     private _onGrabEndFollowUp(window: Meta.Window): void {
         // liveness bail: the dragged window may have been closed mid-drag
         // (mutter ends the grab on unmanage and grab-op-end still fires;
-        // calling into a disposed wrapper throws)
-        if (!(window as WindowWithCachedProps).__ts_cached) {
+        // __ts_cached is never deleted on unmanaged, so only a probe can
+        // detect the disposed wrapper)
+        if (!this._isWindowAlive(window)) {
             this._grabOrigin = null;
             this._freeTileFiller?.flushPending();
             return;
