@@ -358,6 +358,121 @@ const scenarios: [string, () => void][] = [
             );
         },
     ],
+    [
+        '10. multi-monitor same-ws compaction: a free tile on one monitor is filled from another monitor (both directions, global pixel rects)',
+        () => {
+            // two side-by-side 1000x1000 monitors, each with a top and a
+            // bottom half tile. Global reading order (rows first, then
+            // left-to-right): L-top=0, R-top=1, L-bottom=2, R-bottom=3
+            const sideBySide: TileLike[] = [
+                rect(0, 0, 1000, 500), // L-top
+                rect(1000, 0, 1000, 500), // R-top
+                rect(0, 500, 1000, 500), // L-bottom
+                rect(1000, 500, 1000, 500), // R-bottom
+            ];
+
+            // right-monitor window fills the free LEFT-monitor tile
+            // (L-top free; R-top and L-bottom blocked; R-bottom movable)
+            deepEqual(
+                planFillCascade(
+                    snapshotOf({
+                        0: {
+                            tiles: sideBySide,
+                            windowRects: [
+                                sideBySide[2],
+                                sideBySide[1],
+                                sideBySide[3],
+                            ],
+                            movableWindowIndexes: [2],
+                        },
+                    })
+                ),
+                [
+                    {
+                        kind: 'compact',
+                        fromWs: 0,
+                        toWs: 0,
+                        windowIndex: 2,
+                        fromTileIndex: 3,
+                        tileIndex: 0,
+                    },
+                ]
+            );
+
+            // mirror: left-monitor window fills the free RIGHT-monitor tile
+            // (R-top free, earlier in reading order; L-top and R-bottom
+            // blocked; L-bottom movable)
+            deepEqual(
+                planFillCascade(
+                    snapshotOf({
+                        0: {
+                            tiles: sideBySide,
+                            windowRects: [
+                                sideBySide[0],
+                                sideBySide[3],
+                                sideBySide[2],
+                            ],
+                            movableWindowIndexes: [2],
+                        },
+                    })
+                ),
+                [
+                    {
+                        kind: 'compact',
+                        fromWs: 0,
+                        toWs: 0,
+                        windowIndex: 2,
+                        fromTileIndex: 2,
+                        tileIndex: 1,
+                    },
+                ]
+            );
+        },
+    ],
+    [
+        '11. multi-monitor cross-ws pull: a window tiled on the TOP monitor of a right workspace fills the free tile on the BOTTOM monitor of the trigger workspace',
+        () => {
+            // two stacked 1000x1000 monitors, each with a top and a bottom
+            // half tile. Global reading order: T-top=0, T-bottom=1,
+            // B-top=2, B-bottom=3
+            const stacked: TileLike[] = [
+                rect(0, 0, 1000, 500), // T-top
+                rect(0, 500, 1000, 500), // T-bottom
+                rect(0, 1000, 1000, 500), // B-top
+                rect(0, 1500, 1000, 500), // B-bottom
+            ];
+
+            // trigger ws: every tile occupied except the bottom monitor's
+            // lower tile; the occupants are not movable
+            // right ws: a single movable window on the top monitor
+            deepEqual(
+                planFillCascade(
+                    snapshotOf({
+                        0: {
+                            tiles: stacked,
+                            windowRects: [stacked[0], stacked[1], stacked[2]],
+                            movableWindowIndexes: [],
+                        },
+                        1: {
+                            tiles: stacked,
+                            windowRects: [stacked[0]],
+                            movableWindowIndexes: [0],
+                        },
+                    })
+                ),
+                [
+                    {
+                        kind: 'pull',
+                        fromWs: 1,
+                        windowIndex: 0,
+                        toWs: 0,
+                        tileIndex: 3,
+                        fromTileIndex: 0,
+                    },
+                ]
+            );
+        },
+    ],
 ];
 
 let passed = 0;

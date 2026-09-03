@@ -1,18 +1,22 @@
 /**
- * Executor of the "auto-fill freed tiles from next workspaces" cascade.
+ * Executor of the "auto-fill freed tiles" cascade.
  *
  * TilingManager signal handlers funnel every freed-tile trigger into
  * scheduleFill(); this class defers the actual pass to a GLib idle (never
  * mutating windows inside a first-frame signal emission), builds the
- * occupancy/movable snapshots of each workspace, lets the pure
- * freeTileFillPlanner compute the cascade, and applies the resulting moves
- * through the injected tiling callbacks - without switching the workspace
- * view, without stealing focus and without touching other monitors.
+ * occupancy/movable snapshots of each workspace across EVERY managed
+ * monitor, lets the pure freeTileFillPlanner compute the cascade, and
+ * applies the resulting moves through the tiling callbacks of the
+ * DESTINATION monitor's manager - without switching the workspace view
+ * and without stealing focus. A free tile on any monitor can therefore
+ * be filled from a window tiled on any other monitor, both within the
+ * trigger workspace and from the workspaces to its right.
  *
- * Geometry parity: window frame rects are normalized to workArea
- * proportions with TileUtils.build_tile (the exact inverse of the
- * TileUtils.apply_props formula used to convert tiles back to pixels);
- * layout tiles are already proportion-space and are passed as-is.
+ * Geometry space: the planner needs ONE consistent rect space, and
+ * per-monitor proportion rects of different monitors would overlap each
+ * other. This executor feeds GLOBAL PIXEL rects: window frame rects
+ * as-is, and layout tiles scaled through TileUtils.apply_props with
+ * their own monitor's work area.
  */
 
 import { GLib, Meta, Mtk } from '../../gi/ext';
@@ -24,10 +28,10 @@ import Tile from '../layout/Tile';
 import TileUtils from '../layout/TileUtils';
 import ExtendedWindow from './extendedWindow';
 import {
+    compareTilesInReadingOrder,
     isSeatedOnSingleTile,
     planFillCascade,
     rectMostlyInsideTile,
-    sortTilesInReadingOrder,
     type CascadeMove,
     type RectLike,
     type WorkspaceSnapshot,
@@ -37,7 +41,13 @@ import {
     withAutoFillSuppressed,
 } from './autoFillSuppression';
 
-export interface FreeTileFillerDependencies {
+/**
+ * Per-monitor callbacks resolving to one managed monitor's TilingManager:
+ * tiles are read from that monitor's layout and planned moves are
+ * applied through that monitor's manager, so each window lands on its
+ * destination monitor with that monitor's work area and gaps.
+ */
+export interface FreeTileFillerMonitorContext {
     monitorIndex: number;
     getWorkArea: () => Mtk.Rectangle;
     ensureTilingLayout: (ws: Meta.Workspace) => void;
@@ -45,15 +55,32 @@ export interface FreeTileFillerDependencies {
     isInteracting: () => boolean;
 }
 
+export interface FreeTileFillerDependencies {
+    /**
+     * Live per-pass contexts of every managed monitor: monitors and
+     * their managers can come and go between two passes.
+     */
+    getMonitorContexts: () => FreeTileFillerMonitorContext[];
+}
+
 interface PendingTrigger {
     wsIndex: number;
     exclude?: Meta.Window;
 }
 
+/** one reading-order seat of a workspace snapshot, across all monitors */
+interface SnapshotTile {
+    /** global-pixel rect: the planner's tile index space */
+    rect: RectLike;
+    monitorIndex: number;
+    /** proportion-space layout tile of that monitor, for placement */
+    layoutTile: Tile;
+}
+
 /** per-workspace data kept around for the plan application pass */
 interface SnapshotWindows {
     windows: Meta.Window[];
-    sortedTiles: Tile[];
+    sortedTiles: SnapshotTile[];
 }
 
 interface ResolvedMove {
@@ -80,9 +107,11 @@ export default class FreeTileFiller {
 
     /**
      * Signal-time entry point: cheap checks only, the actual pass runs
-     * from a GLib idle. While a grab is in progress the trigger is NOT
-     * dropped: it is stashed (newer triggers overwrite older ones) and
-     * re-scheduled by flushPending() when the grab ends.
+     * from a GLib idle. While a grab is in progress on ANY managed
+     * monitor the trigger is NOT dropped: it is stashed (newer triggers
+     * overwrite older ones) and re-scheduled by flushPending() when the
+     * grab ends - the cascade moves windows on every monitor and must
+     * never fight an ongoing drag, wherever it started.
      */
     public scheduleFill(wsIndex: number, exclude?: Meta.Window): void {
         if (!Settings.ENABLE_AUTO_FILL_FREED_TILES) {
@@ -97,7 +126,11 @@ export default class FreeTileFiller {
             this._log('a fill pass is already running: ignoring trigger');
             return;
         }
-        if (this._deps.isInteracting()) {
+        if (
+            this._deps
+                .getMonitorContexts()
+                .some(context => context.isInteracting())
+        ) {
             this._log(`grab in progress: stashing trigger for ws ${wsIndex}`);
             this._pendingDuringGrab = { wsIndex, exclude };
             return;
@@ -139,12 +172,26 @@ export default class FreeTileFiller {
                 return;
             }
 
+            const contexts = this._deps.getMonitorContexts();
+            if (contexts.length === 0) {
+                this._log('no managed monitor: skipping pass');
+                return;
+            }
+            const contextsByMonitor = new Map<
+                number,
+                FreeTileFillerMonitorContext
+            >(
+                contexts.map(
+                    context => [context.monitorIndex, context] as const
+                )
+            );
+
             this._snapshotCache.clear();
             // the planner walks cascade-relative ws indexes (0 = trigger
             // workspace); wrap the snapshot with the absolute offset and add
             // it back to every returned fromWs/toWs
             const plannedMoves = planFillCascade(k =>
-                this._buildSnapshot(startWsIndex + k, exclude)
+                this._buildSnapshot(startWsIndex + k, contexts, exclude)
             ).map(move => ({
                 ...move,
                 fromWs: move.fromWs + startWsIndex,
@@ -206,18 +253,31 @@ export default class FreeTileFiller {
                         );
                         continue;
                     }
+                    const targetContext = contextsByMonitor.get(
+                        targetTile.monitorIndex
+                    );
+                    if (!targetContext) {
+                        this._log(
+                            `skipping ${move.kind} move: monitor ${targetTile.monitorIndex} is no longer managed`
+                        );
+                        continue;
+                    }
                     // copy like the assignedTile precedent: downstream
                     // placement must never share the layout's tile object
-                    const tile = new Tile({ ...targetTile });
+                    const tile = new Tile({ ...targetTile.layoutTile });
 
-                    // the target tiling layout must exist BEFORE the window
-                    // is placed there, or the placement bails out early
-                    this._deps.ensureTilingLayout(toWs);
+                    // the target monitor's tiling layout must exist BEFORE
+                    // the window is placed there, or the placement bails
+                    // out early
+                    targetContext.ensureTilingLayout(toWs);
                     if (move.kind === 'pull') window.change_workspace(toWs);
-                    this._deps.tileWindow(tile, window);
+                    // routed through the destination monitor's manager:
+                    // its work area, gaps and move_to_monitor migration
+                    targetContext.tileWindow(tile, window);
                     appliedCount++;
                     this._log(
-                        `${move.kind}: window moved to ws ${move.toWs} tile ${move.tileIndex}`
+                        `${move.kind}: window moved to ws ${move.toWs} ` +
+                            `monitor ${targetTile.monitorIndex} tile ${move.tileIndex}`
                     );
                 }
             });
@@ -230,14 +290,16 @@ export default class FreeTileFiller {
     }
 
     /**
-     * Occupancy vs movability snapshot of one workspace, in proportion
-     * space. Occupancy mirrors _getTiledWindowRects (assigned tile, not
-     * minimized, not maximized - so fullscreen/sticky/dialog tiled windows
-     * keep their tiles busy); movability mirrors the _findSwapTargetOnTile
-     * guard set plus single-seat and still-on-own-tile checks.
+     * Occupancy vs movability snapshot of one workspace across every
+     * managed monitor, in global pixel space. Occupancy mirrors
+     * _getTiledWindowRects (assigned tile, not minimized, not maximized -
+     * so fullscreen/sticky/dialog tiled windows keep their tiles busy);
+     * movability mirrors the _findSwapTargetOnTile guard set plus
+     * single-seat and still-on-own-tile checks.
      */
     private _buildSnapshot(
         wsIndex: number,
+        contexts: FreeTileFillerMonitorContext[],
         exclude?: Meta.Window
     ): WorkspaceSnapshot | null {
         if (wsIndex >= global.workspaceManager.n_workspaces) return null;
@@ -246,20 +308,39 @@ export default class FreeTileFiller {
         const ws = global.workspaceManager.get_workspace_by_index(wsIndex);
         if (!ws) return null;
 
-        const workArea = this._deps.getWorkArea();
-        const layoutTiles = GlobalState.get().getSelectedLayoutOfMonitor(
-            this._deps.monitorIndex,
-            wsIndex
-        ).tiles;
-        // reading-order tiles (planner index space), same references
-        const sortedTiles = sortTilesInReadingOrder(layoutTiles) as Tile[];
+        const workAreas = new Map<number, Mtk.Rectangle>();
+        const sortedTiles: SnapshotTile[] = [];
+        for (const context of contexts) {
+            const workArea = context.getWorkArea();
+            workAreas.set(context.monitorIndex, workArea);
+            for (const layoutTile of GlobalState.get().getSelectedLayoutOfMonitor(
+                context.monitorIndex,
+                wsIndex
+            ).tiles) {
+                const pixelRect = TileUtils.apply_props(layoutTile, workArea);
+                sortedTiles.push({
+                    rect: {
+                        x: pixelRect.x,
+                        y: pixelRect.y,
+                        width: pixelRect.width,
+                        height: pixelRect.height,
+                    },
+                    monitorIndex: context.monitorIndex,
+                    layoutTile,
+                });
+            }
+        }
+        sortedTiles.sort((a, b) => compareTilesInReadingOrder(a.rect, b.rect));
+        const sortedRects = sortedTiles.map(tile => tile.rect);
 
         const windows: Meta.Window[] = [];
         const windowRects: RectLike[] = [];
         const movableWindowIndexes: number[] = [];
 
         for (const window of getWindows(ws)) {
-            if (window.get_monitor() !== this._deps.monitorIndex) continue;
+            // -1 (dying) and unmanaged monitors have no work area here
+            const workArea = workAreas.get(window.get_monitor());
+            if (!workArea) continue;
             const extWin = window as ExtendedWindow;
             if (
                 window === exclude ||
@@ -270,12 +351,8 @@ export default class FreeTileFiller {
             )
                 continue;
 
-            // exact inverse of the apply_props pixel conversion: any other
-            // formula breaks the proportion parity the planner relies on
-            const rect = TileUtils.build_tile(
-                window.get_frame_rect(),
-                workArea
-            );
+            // global pixels: the same space as the scaled tiles above
+            const rect = window.get_frame_rect();
             windows.push(window);
             windowRects.push(rect);
 
@@ -289,17 +366,21 @@ export default class FreeTileFiller {
                 !window.is_attached_dialog() &&
                 window.allows_move() &&
                 window.allows_resize() &&
-                isSeatedOnSingleTile(rect, sortedTiles) &&
-                rectMostlyInsideTile(rect, extWin.assignedTile);
+                isSeatedOnSingleTile(rect, sortedRects) &&
+                rectMostlyInsideTile(
+                    rect,
+                    TileUtils.apply_props(extWin.assignedTile, workArea)
+                );
             if (movable) movableWindowIndexes.push(windows.length - 1);
         }
 
         this._log(
-            `ws ${wsIndex}: ${windows.length} tiled window(s), ` +
-                `${movableWindowIndexes.length} movable`
+            `ws ${wsIndex}: ${windows.length} tiled window(s) over ` +
+                `${sortedTiles.length} tile(s) of ${contexts.length} ` +
+                `monitor(s), ${movableWindowIndexes.length} movable`
         );
         this._snapshotCache.set(wsIndex, { windows, sortedTiles });
-        return { tiles: layoutTiles, windowRects, movableWindowIndexes };
+        return { tiles: sortedRects, windowRects, movableWindowIndexes };
     }
 
     private _isWorkspaceLive(ws: Meta.Workspace): boolean {

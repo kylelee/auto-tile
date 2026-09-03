@@ -32,7 +32,9 @@ import GlobalState from '../../utils/globalState';
 import { Monitor } from 'resource:///org/gnome/shell/ui/layout.js';
 import ExtendedWindow from './extendedWindow';
 import EdgeTilingManager from './edgeTilingManager';
-import FreeTileFiller from './freeTileFiller';
+import FreeTileFiller, {
+    type FreeTileFillerMonitorContext,
+} from './freeTileFiller';
 import TouchPointer from './touchPointer';
 import { KeyBindingsDirection } from '../../keybindings';
 import TilingShellWindowManager from '../../components/windowManager/tilingShellWindowManager';
@@ -376,13 +378,11 @@ export class TilingManager {
             },
         );
 
-        // auto-fill of freed tiles: one executor per monitor
+        // auto-fill of freed tiles: one executor per monitor, each
+        // planning the cascade across EVERY managed monitor so that a
+        // free tile on any monitor can be filled from any other one
         this._freeTileFiller = new FreeTileFiller({
-            monitorIndex: this._monitor.index,
-            getWorkArea: () => this._workArea,
-            ensureTilingLayout: (ws) => this._ensureTilingLayout(ws),
-            tileWindow: (tile, w) => this.autoTileWindowToTile(tile, w),
-            isInteracting: () => this._isGrabbingWindow,
+            getMonitorContexts: () => this._freeFillMonitorContexts(),
         });
 
         this._signals.connect(
@@ -1582,6 +1582,34 @@ export class TilingManager {
 
     public autoTileWindowToTile(tile: Tile, window: Meta.Window): void {
         this._easeWindowRectFromTile(tile, window, true, this._monitor.index);
+    }
+
+    /**
+     * Fill contexts of every managed monitor, resolved LIVE on each pass
+     * (monitors and their managers come and go). Each planned move is
+     * applied through the DESTINATION monitor's own manager, so its work
+     * area, gaps and move_to_monitor migration are the right ones.
+     * Private members of sibling instances are read on purpose: the fill
+     * cascade is a cross-monitor concern.
+     */
+    private _freeFillMonitorContexts(): FreeTileFillerMonitorContext[] {
+        const contexts: FreeTileFillerMonitorContext[] = [];
+        Main.layoutManager.monitors.forEach((_monitor, index) => {
+            const manager =
+                index === this._monitor.index
+                    ? this
+                    : this._getTilingManager?.(index);
+            if (!manager) return;
+            contexts.push({
+                monitorIndex: index,
+                getWorkArea: () => manager._workArea,
+                ensureTilingLayout: (ws) => manager._ensureTilingLayout(ws),
+                tileWindow: (tile, window) =>
+                    manager.autoTileWindowToTile(tile, window),
+                isInteracting: () => manager._isGrabbingWindow,
+            });
+        });
+        return contexts;
     }
 
     public scheduleAutoFill(wsIndex: number, exclude?: Meta.Window): void {

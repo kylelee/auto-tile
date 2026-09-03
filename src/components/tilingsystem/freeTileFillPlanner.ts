@@ -1,12 +1,13 @@
 /**
- * Pure, GI-free planner for the "auto-fill freed tiles from next
- * workspaces" cascade.
+ * Pure, GI-free planner for the "auto-fill freed tiles" cascade.
  *
- * Everything here works in PROPORTION space (0..1 coordinates relative
- * to a monitor work area). The executor normalizes window frame rects
- * into this space (the inverse of TileUtils.apply_props) and converts
- * planned tiles back to pixels; the planner never sees pixels, which
- * keeps it runnable under plain node with zero imports.
+ * Everything here works in ONE consistent rect space supplied by the
+ * executor: per-monitor proportions (0..1 coordinates relative to a
+ * monitor work area) for single-monitor cascades, or global pixels for
+ * cascades spanning several monitors (per-monitor proportion rects of
+ * different monitors would overlap each other). The planner itself is
+ * space-agnostic, which keeps it runnable under plain node with zero
+ * imports.
  *
  * Occupancy parity with tilingManager: a tile is occupied when ANY
  * window rect overlaps it with a positive-area intersection (the
@@ -84,7 +85,12 @@ function rectsOverlap(a: RectLike, b: RectLike): boolean {
     return intersectionArea(a, b) > AREA_EPSILON;
 }
 
-function byReadingOrder(a: TileLike, b: TileLike): number {
+/**
+ * Reading-order comparator: rows top-to-bottom, left-to-right within a
+ * row. Exported for executors that must sort (rect, provenance) pairs
+ * in the exact same order the planner uses for tile indexes.
+ */
+export function compareTilesInReadingOrder(a: TileLike, b: TileLike): number {
     return a.y - b.y || a.x - b.x;
 }
 
@@ -98,7 +104,7 @@ function byMoverRank(
 export function sortTilesInReadingOrder(tiles: TileLike[]): TileLike[] {
     // Array.prototype.sort is stable (ES2019+): equally positioned
     // tiles keep their input order
-    return [...tiles].sort(byReadingOrder);
+    return [...tiles].sort(compareTilesInReadingOrder);
 }
 
 export function matchWindowToTile(
