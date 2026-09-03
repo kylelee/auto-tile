@@ -378,6 +378,9 @@ export class TilingManager {
         force: boolean,
         spanFlag: boolean,
         clamp: boolean,
+        // freeTileOnly is superseded by uniform swap semantics (Q2 user decision)
+        // and kept only so src/extension.ts' call signature stays untouched; it
+        // has no effect for directional moves now.
         opts: { deferEdgeToNeighbor?: boolean; freeTileOnly?: boolean } = {},
     ): boolean {
         let destination: { rect: Mtk.Rectangle; tile: Tile } | undefined;
@@ -448,15 +451,31 @@ export class TilingManager {
                 enlargeFactor,
             );
         } else {
-            // the window comes from another monitor: prefer a FREE tile of
-            // this monitor's layout; keep the historical nearest-tile
-            // fallback unless the caller requires a free tile (UP edge)
-            destination = tilingLayout.findNearestFreeTile(
-                windowRectCopy,
-                this._getTiledWindowRects(currentWs),
-            );
-            if (!destination && !opts.freeTileOnly)
-                destination = tilingLayout.findNearestTile(windowRectCopy);
+            // the window comes from another monitor: the direction-adjacent tile
+            // on THIS monitor's layout is THE target - occupied -> swap (see the
+            // shared hook below), free -> move onto it. No free-tile search, no
+            // center-nearest fallback: keeps the pure "move to the next tile in
+            // the direction" mental model (user decision).
+            if (direction === KeyBindingsDirection.NODIRECTION) {
+                // structurally unreachable for ANY caller: the if-chain above
+                // (direction === NODIRECTION branch) routes NODIRECTION away from
+                // this else. Retained only to keep the legacy free-tile search
+                // code alive for future direct callers of this public method.
+                destination = tilingLayout.findNearestFreeTile(
+                    windowRectCopy,
+                    this._getTiledWindowRects(currentWs),
+                );
+                if (!destination && !opts.freeTileOnly)
+                    destination = tilingLayout.findNearestTile(windowRectCopy);
+            } else {
+                destination = tilingLayout.findNearestTileDirection(
+                    windowRectCopy,
+                    direction,
+                    true, // clamp: the offset point must land inside this monitor
+                    this._directionEnlargeFactor(tilingLayout),
+                );
+                if (!destination) return false; // defensive: no tile resolvable
+            }
         }
 
         // if the window is already on the desired tile
