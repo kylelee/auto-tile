@@ -1547,7 +1547,46 @@ export class TilingManager {
                     return;
                 }
             }
-            // all monitors are full: the window floats on its birth monitor
+            if (!Settings.ENABLE_AUTO_TILING_OTHER_WORKSPACES) return;
+            if (window.is_on_all_workspaces()) return; // sticky windows just float
+
+            const vacancy = this._findVacancyInOtherWorkspaces(window);
+            if (vacancy) {
+                this._debug(
+                    `all monitors full on this workspace: found free tile on workspace ${vacancy.ws.index()}`,
+                );
+                this._placeWindowOnWorkspace(window, vacancy);
+                return;
+            }
+
+            if (Meta.prefs_get_dynamic_workspaces()) {
+                const ws = global.workspaceManager.append_new_workspace(
+                    false,
+                    global.get_current_time(),
+                );
+                const tile = this._findEmptyTile(
+                    window,
+                    this._monitor.index,
+                    ws.index(),
+                );
+                if (tile) {
+                    this._debug(
+                        `all workspaces full: auto-tiling window to new workspace ${ws.index()}`,
+                    );
+                    this._placeWindowOnWorkspace(window, {
+                        ws,
+                        monitorIndex: this._monitor.index,
+                        tile,
+                    });
+                }
+                return;
+            }
+
+            this._debug(
+                'all monitors are full on every workspace: leaving the window floating (fixed workspaces)',
+            );
+            // all monitors are full and workspaces are fixed: the window floats
+            // on its birth monitor
         });
     }
 
@@ -1575,7 +1614,9 @@ export class TilingManager {
         monitorIndex: number = window.get_monitor(),
         wsIndex: number = window.get_workspace().index(),
     ): Tile | undefined {
-        const occupiedRects = this._getTiledWindowRects();
+        const targetWs =
+            global.workspaceManager.get_workspace_by_index(wsIndex);
+        const occupiedRects = this._getTiledWindowRects(targetWs ?? undefined);
         const tiles = GlobalState.get().getSelectedLayoutOfMonitor(
             monitorIndex,
             wsIndex,
@@ -1614,6 +1655,48 @@ export class TilingManager {
         if (bestTileIndex < 0 || bestTileIndex >= vacantTiles.length)
             return undefined;
         return vacantTiles[bestTileIndex];
+    }
+
+    private _findVacancyInOtherWorkspaces(window: Meta.Window): {
+        ws: Meta.Workspace;
+        monitorIndex: number;
+        tile: Tile;
+    } | undefined {
+        const origin = window.get_workspace().index();
+        const n = global.workspaceManager.get_n_workspaces();
+        const nMonitors = Main.layoutManager.monitors.length;
+        for (let k = 1; k < n; k++) {
+            const wsIndex = (origin + k) % n;
+            const ws = global.workspaceManager.get_workspace_by_index(wsIndex);
+            if (!ws) continue;
+            for (let m = 0; m < nMonitors; m++) {
+                if (m !== this._monitor.index && !this._getTilingManager?.(m))
+                    continue;
+                const tile = this._findEmptyTile(window, m, wsIndex);
+                if (tile) return { ws, monitorIndex: m, tile };
+            }
+        }
+        return undefined;
+    }
+
+    private _placeWindowOnWorkspace(
+        window: Meta.Window,
+        target: { ws: Meta.Workspace; monitorIndex: number; tile: Tile },
+    ): void {
+        const manager =
+            target.monitorIndex === this._monitor.index
+                ? this
+                : this._getTilingManager?.(target.monitorIndex);
+        if (!manager) return;
+        this._debug(
+            `auto-tiling window to workspace ${target.ws.index()} monitor ${target.monitorIndex}`,
+        );
+        window.change_workspace(target.ws);
+        // switch the view and focus the window; this also synchronously fires
+        // each manager's active-workspace-changed handler which creates the
+        // target workspace's TilingLayout — the placement below depends on it
+        target.ws.activate_with_focus(window, global.get_current_time());
+        manager.autoTileWindowToTile(target.tile, window);
     }
 
     private _getMonitorsInRowOrder(): number[] {
