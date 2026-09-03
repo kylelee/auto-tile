@@ -1547,46 +1547,66 @@ export class TilingManager {
                     return;
                 }
             }
-            if (!Settings.ENABLE_AUTO_TILING_OTHER_WORKSPACES) return;
-            if (window.is_on_all_workspaces()) return; // sticky windows just float
+            // the overflow search must not run inside the first-frame
+            // emission: switching workspaces and moving the window while
+            // mutter's frame is still in progress aborts the compositor
+            // (invalidate_top_window_actor_for_views). Run it from the
+            // main loop once the current frame is done.
+            GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                // the window state may have changed since the first frame
+                if (
+                    window.minimized ||
+                    window.maximizedHorizontally ||
+                    window.maximizedVertically ||
+                    window.get_transient_for() !== null ||
+                    window.is_attached_dialog()
+                )
+                    return GLib.SOURCE_REMOVE;
 
-            const vacancy = this._findVacancyInOtherWorkspaces(window);
-            if (vacancy) {
-                this._debug(
-                    `all monitors full on this workspace: found free tile on workspace ${vacancy.ws.index()}`,
-                );
-                this._placeWindowOnWorkspace(window, vacancy);
-                return;
-            }
+                if (!Settings.ENABLE_AUTO_TILING_OTHER_WORKSPACES)
+                    return GLib.SOURCE_REMOVE;
+                if (window.is_on_all_workspaces())
+                    return GLib.SOURCE_REMOVE; // sticky windows just float
 
-            if (Meta.prefs_get_dynamic_workspaces()) {
-                const ws = global.workspaceManager.append_new_workspace(
-                    false,
-                    global.get_current_time(),
-                );
-                const tile = this._findEmptyTile(
-                    window,
-                    this._monitor.index,
-                    ws.index(),
-                );
-                if (tile) {
+                const vacancy = this._findVacancyInOtherWorkspaces(window);
+                if (vacancy) {
                     this._debug(
-                        `all workspaces full: auto-tiling window to new workspace ${ws.index()}`,
+                        `all monitors full on this workspace: found free tile on workspace ${vacancy.ws.index()}`,
                     );
-                    this._placeWindowOnWorkspace(window, {
-                        ws,
-                        monitorIndex: this._monitor.index,
-                        tile,
-                    });
+                    this._placeWindowOnWorkspace(window, vacancy);
+                    return GLib.SOURCE_REMOVE;
                 }
-                return;
-            }
 
-            this._debug(
-                'all monitors are full on every workspace: leaving the window floating (fixed workspaces)',
-            );
+                if (Meta.prefs_get_dynamic_workspaces()) {
+                    const ws = global.workspaceManager.append_new_workspace(
+                        false,
+                        global.get_current_time(),
+                    );
+                    const tile = this._findEmptyTile(
+                        window,
+                        this._monitor.index,
+                        ws.index(),
+                    );
+                    if (tile) {
+                        this._debug(
+                            `all workspaces full: auto-tiling window to new workspace ${ws.index()}`,
+                        );
+                        this._placeWindowOnWorkspace(window, {
+                            ws,
+                            monitorIndex: this._monitor.index,
+                            tile,
+                        });
+                    }
+                    return GLib.SOURCE_REMOVE;
+                }
+
+                this._debug(
+                    'all monitors are full on every workspace: leaving the window floating (fixed workspaces)',
+                );
+                return GLib.SOURCE_REMOVE;
+            });
             // all monitors are full and workspaces are fixed: the window floats
-            // on its birth monitor
+            // on its birth monitor (decided asynchronously, see idle above)
         });
     }
 
