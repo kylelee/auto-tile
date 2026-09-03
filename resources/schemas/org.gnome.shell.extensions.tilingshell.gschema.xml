@@ -112,6 +112,11 @@
             <summary>Search other workspaces when auto tiling</summary>
             <description>When every monitor is full, move a new window to the first free tile on another workspace, creating a new workspace first if dynamic workspaces are enabled, and switch to it.</description>
         </key>
+        <key name="enable-auto-fill-freed-tiles" type="b">
+            <default>true</default>
+            <summary>Fill freed tiles from the next workspaces</summary>
+            <description>When a tiled window is closed or moved away, fill the freed tiles of its workspace by moving windows from the workspaces to the right, one after another, until no more windows are available.</description>
+        </key>
         <key name="raise-together" type="b">
             <default>false</default>
             <summary>Raise tiled windows together</summary>
