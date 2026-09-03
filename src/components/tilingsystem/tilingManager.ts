@@ -1662,6 +1662,46 @@ export class TilingManager {
         return candidates[0];
     }
 
+    // Swap helper for keyboard directional moves: places `swapTarget` on the
+    // tile `movingWindow` currently occupies, on the monitor `movingWindow`
+    // currently lives on, via the CANONICAL tile-placement path (gap-adjusted
+    // inner rect + assignedTile + re-assert). The caller then moves
+    // `movingWindow` through the existing destination path. Returns false
+    // (and does nothing) when the mover has no assigned tile or the origin
+    // manager is unavailable - callers then keep legacy behavior.
+    // CONSTRAINT (user, turn 4): after a swap BOTH windows must conform to
+    // their target tile's position and size - B is never placed at a raw or
+    // free-form rect, and a floating (untiled) mover never swaps.
+    private _performKeyboardSwap(
+        movingWindow: Meta.Window,
+        swapTarget: Meta.Window,
+    ): boolean {
+        const aTile = (movingWindow as ExtendedWindow).assignedTile;
+        if (!aTile) return false; // floating mover: no swap (constraint)
+
+        const sameMonitor = movingWindow.get_monitor() === this._monitor.index;
+        const originManager = sameMonitor
+            ? this
+            : this._getTilingManager?.(movingWindow.get_monitor());
+        if (!originManager) return false;
+
+        if (sameMonitor) {
+            // animated, same monitor: the drag-tiling placement path
+            originManager._easeWindowRectFromTile(aTile, swapTarget);
+        } else {
+            // skipAnimation + explicit target monitor: mirrors
+            // autoTileWindowToTile, the Wayland-verified cross-monitor tile
+            // placement used by the auto-tile monitor search
+            originManager._easeWindowRectFromTile(
+                aTile,
+                swapTarget,
+                true,
+                originManager._monitor.index,
+            );
+        }
+        return true;
+    }
+
     private _findEmptyTile(
         window: Meta.Window,
         monitorIndex: number = window.get_monitor(),
