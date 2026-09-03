@@ -717,9 +717,99 @@ export default class TilingShellExtension extends Extension {
                 }
             });
 
+        if (!bestWindow) {
+            // no window along the direction in this workspace: search the
+            // neighbor workspaces along the same direction
+            bestWindow = this._findWindowInNeighborWorkspaces(
+                focus_window,
+                direction,
+            );
+        }
+
         if (!bestWindow) return;
 
         bestWindow.activate(global.get_current_time());
+    }
+
+    /**
+     * Search the workspaces after the one of focusWindow, along direction,
+     * for the nearest workspace containing at least one selectable window.
+     * Only the horizontal directions move across workspaces. The selected
+     * window is the one on the tile nearest to the source workspace: the
+     * leftmost for RIGHT, the rightmost for LEFT. Windows on the same edge
+     * are ranked by vertical proximity to the focused window.
+     *
+     * Workspaces are never wrapped around at the ends.
+     */
+    private _findWindowInNeighborWorkspaces(
+        focusWindow: Meta.Window,
+        direction: KeyBindingsDirection | FocusSwitchDirection,
+    ): Meta.Window | undefined {
+        if (
+            direction !== KeyBindingsDirection.LEFT &&
+            direction !== KeyBindingsDirection.RIGHT
+        )
+            return undefined;
+
+        const step = direction === KeyBindingsDirection.RIGHT ? 1 : -1;
+        const startIndex = focusWindow.get_workspace().index() + step;
+        const nWorkspaces = global.workspaceManager.get_n_workspaces();
+        const onlyTiledWindows = Settings.ENABLE_DIRECTIONAL_FOCUS_TILED_ONLY;
+        const focusRect = focusWindow.get_frame_rect();
+        const focusWindowCenterY = focusRect.y + focusRect.height / 2;
+
+        for (
+            let wsIndex = startIndex;
+            wsIndex >= 0 && wsIndex < nWorkspaces;
+            wsIndex += step
+        ) {
+            const workspace =
+                global.workspaceManager.get_workspace_by_index(wsIndex);
+            if (!workspace) continue;
+
+            let candidate: Meta.Window | undefined;
+            let candidateEdge = 0; // x of the tile edge nearest to the source workspace
+            let candidateCenterDistanceY = 0;
+
+            filterUnfocusableWindows(workspace.list_windows()).forEach((win) => {
+                if (win === focusWindow || win.minimized) return;
+                if (
+                    onlyTiledWindows &&
+                    (win as ExtendedWindow).assignedTile === undefined
+                )
+                    return;
+
+                const winRect = win.get_frame_rect();
+                const edge =
+                    direction === KeyBindingsDirection.RIGHT
+                        ? winRect.x
+                        : winRect.x + winRect.width;
+                const centerDistanceY = Math.abs(
+                    winRect.y + winRect.height / 2 - focusWindowCenterY,
+                );
+
+                // RIGHT searches the leftmost tile, LEFT the rightmost one
+                const nearerEdge =
+                    direction === KeyBindingsDirection.RIGHT
+                        ? edge < candidateEdge
+                        : edge > candidateEdge;
+
+                if (
+                    !candidate ||
+                    nearerEdge ||
+                    (edge === candidateEdge &&
+                        centerDistanceY < candidateCenterDistanceY)
+                ) {
+                    candidate = win;
+                    candidateEdge = edge;
+                    candidateCenterDistanceY = centerDistanceY;
+                }
+            });
+
+            if (candidate) return candidate;
+        }
+
+        return undefined;
     }
 
     private _onKeyboardFocusWin(
