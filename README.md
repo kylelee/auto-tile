@@ -140,6 +140,10 @@ When a window is created, it is automatically moved to the best tile according t
 
 When every monitor on the current workspace is full, the window can also be auto-tiled to the first free tile on another workspace (switching the view to it), and a new workspace is created first when dynamic workspaces are enabled — controlled by the 'Search other workspaces when auto tiling' preference.
 
+When a tiled window is closed or moved away, the freed tiles of its workspace are automatically filled again by pulling windows from the workspaces to the right, one after another, so that every workspace stays continuously tiled from the top-left. This is controlled by the 'Fill freed tiles from the next workspaces' preference, which is enabled by default, and it is never triggered by the keyboard move and swap commands.
+
+While that preference is enabled, dragging can no longer un-tile a window: stray drops snap back to the tiling, and even a plain drag (without holding the tiling system key) that lands on another tile reverts to the original tile, just like moving a tiled window to another monitor natively reverts the window to its original monitor and tile. Moving a window between tiles requires the tiling system drop (holding the activation key) or the keyboard move and swap commands: only closing a window, or moving and swapping it between tiles, changes the arrangement. Turn the preference off if you want to float windows by dragging them again.
+
 [automatic_tiling](https://github.com/user-attachments/assets/76abc53f-2c6d-47ab-bee3-bbcdd946f2a1)
 
 ### Export and import layouts ###
