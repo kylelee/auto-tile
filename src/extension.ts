@@ -41,6 +41,7 @@ import { KeyBindingsDirection, FocusSwitchDirection } from './keybindings';
 import KeyBindings from './keybindings';
 import SettingsOverride from './settings/settingsOverride';
 import { ResizingManager } from './components/tilingsystem/resizeManager';
+import { withAutoFillSuppressed } from './components/tilingsystem/autoFillSuppression';
 import OverriddenWindowMenu from './components/window_menu/overriddenWindowMenu';
 import Tile from './components/layout/Tile';
 import { WindowBorderManager } from './components/windowBorder/windowBorderManager';
@@ -240,6 +241,51 @@ export default class TilingShellExtension extends Extension {
             ) => {
                 if (userGrabbingWindow) return; // mid-drag: do not fight the user
                 this._tilingManagers[monitorIndex]?.onWindowEnteredMonitor(
+                    window
+                );
+            }
+        );
+        this._signals.connect(
+            global.display,
+            'window-left-monitor',
+            (
+                _display: Meta.Display,
+                monitorIndex: number,
+                window: Meta.Window
+            ) => {
+                if (userGrabbingWindow) {
+                    debug('skip monitor-left auto-fill: user is dragging');
+                    return;
+                }
+                if (!(window as ExtendedWindow).assignedTile) return;
+                const oldMonitorTilingManager =
+                    this._tilingManagers[monitorIndex];
+                if (!oldMonitorTilingManager) return;
+                // tile-lock enforcement while auto-fill is on: here the
+                // geometry legit test DOES govern (a monitor move can leave
+                // the rect off-tile) and the suppression gate inside exempts
+                // keyboard swap legs
+                // a dying window emits monitor signals during teardown with
+                // its workspace already torn to null: never enforce on it
+                // (compositor abort on not-settled windows)
+                if (window.get_workspace()) {
+                    const assignedTile = (window as ExtendedWindow).assignedTile;
+                    oldMonitorTilingManager.enforceTiledPlacement(window, {
+                        window,
+                        tiled: true,
+                        monitorIndex,
+                        ws: window.get_workspace() ?? undefined,
+                        wsIndex: window.get_workspace()?.index(),
+                        tile: assignedTile
+                            ? new Tile({ ...assignedTile })
+                            : undefined,
+                    });
+                }
+                // monitorIndex is the OLD monitor: this signal fires before
+                // 'window-entered-monitor'; exclude the transitioning window
+                // so mid-transition occupancy is not confused
+                oldMonitorTilingManager.scheduleAutoFill(
+                    window.get_workspace()?.index() ?? 0,
                     window
                 );
             }
@@ -530,118 +576,124 @@ export default class TilingShellExtension extends Extension {
         direction: KeyBindingsDirection,
         spanFlag: boolean,
     ) {
-        const focus_window = display.get_focus_window();
-        if (
-            !focus_window ||
-            !focus_window.has_focus() ||
-            (focus_window.get_wm_class() &&
-                focus_window.get_wm_class() === 'gjs') ||
-            focus_window.is_fullscreen()
-        )
-            return;
+        // The keyboard move/swap command must never trigger the
+        // auto-fill cascade: its cross-monitor legs fire the
+        // monitor-left and workspace-changed signals synchronously,
+        // and the suppression flag is checked at signal time.
+        withAutoFillSuppressed(() => {
+            const focus_window = display.get_focus_window();
+            if (
+                !focus_window ||
+                !focus_window.has_focus() ||
+                (focus_window.get_wm_class() &&
+                    focus_window.get_wm_class() === 'gjs') ||
+                focus_window.is_fullscreen()
+            )
+                return;
 
-        // if the window is maximized, it cannot be spanned
-        if (
-            (focus_window.maximizedHorizontally ||
-                focus_window.maximizedVertically) &&
-            spanFlag
-        )
-            return;
+            // if the window is maximized, it cannot be spanned
+            if (
+                (focus_window.maximizedHorizontally ||
+                    focus_window.maximizedVertically) &&
+                spanFlag
+            )
+                return;
 
-        // handle unmaximize of maximized window
-        if (
-            (focus_window.maximizedHorizontally ||
-                focus_window.maximizedVertically) &&
-            direction === KeyBindingsDirection.DOWN
-        ) {
-            unmaximizeWindow(focus_window);
-            return;
-        }
+            // handle unmaximize of maximized window
+            if (
+                (focus_window.maximizedHorizontally ||
+                    focus_window.maximizedVertically) &&
+                direction === KeyBindingsDirection.DOWN
+            ) {
+                unmaximizeWindow(focus_window);
+                return;
+            }
 
-        const monitorTilingManager =
-            this._tilingManagers[focus_window.get_monitor()];
-        if (!monitorTilingManager) return;
+            const monitorTilingManager =
+                this._tilingManagers[focus_window.get_monitor()];
+            if (!monitorTilingManager) return;
 
-        if (
-            Settings.ENABLE_AUTO_TILING &&
-            (focus_window.maximizedHorizontally ||
-                focus_window.maximizedVertically)
-        ) {
-            unmaximizeWindow(focus_window);
-            return;
-        }
+            if (
+                Settings.ENABLE_AUTO_TILING &&
+                (focus_window.maximizedHorizontally ||
+                    focus_window.maximizedVertically)
+            ) {
+                unmaximizeWindow(focus_window);
+                return;
+            }
 
-        let displayDirection = Meta.DisplayDirection.DOWN;
-        switch (direction) {
-            case KeyBindingsDirection.LEFT:
-                displayDirection = Meta.DisplayDirection.LEFT;
-                break;
-            case KeyBindingsDirection.RIGHT:
-                displayDirection = Meta.DisplayDirection.RIGHT;
-                break;
-            case KeyBindingsDirection.UP:
-                displayDirection = Meta.DisplayDirection.UP;
-                break;
-        }
-        const neighborMonitorIndex = display.get_monitor_neighbor_index(
-            focus_window.get_monitor(),
-            displayDirection,
-        );
+            let displayDirection = Meta.DisplayDirection.DOWN;
+            switch (direction) {
+                case KeyBindingsDirection.LEFT:
+                    displayDirection = Meta.DisplayDirection.LEFT;
+                    break;
+                case KeyBindingsDirection.RIGHT:
+                    displayDirection = Meta.DisplayDirection.RIGHT;
+                    break;
+                case KeyBindingsDirection.UP:
+                    displayDirection = Meta.DisplayDirection.UP;
+                    break;
+            }
+            const neighborMonitorIndex = display.get_monitor_neighbor_index(
+                focus_window.get_monitor(),
+                displayDirection,
+            );
 
-        const success = monitorTilingManager.onKeyboardMoveWindow(
-            focus_window,
-            direction,
-            false,
-            spanFlag,
-            neighborMonitorIndex === -1, // clamp if there is NOT a monitor in this direction
-            // for UP, defer the at-edge maximize to the neighbor fallback so a
-            // free tile on the monitor above wins first (user decision)
-            {
-                deferEdgeToNeighbor:
-                    direction === KeyBindingsDirection.UP &&
-                    neighborMonitorIndex !== -1,
-            },
-        );
+            const success = monitorTilingManager.onKeyboardMoveWindow(
+                focus_window,
+                direction,
+                false,
+                spanFlag,
+                neighborMonitorIndex === -1, // clamp if there is NOT a monitor in this direction
+                // for UP, defer the at-edge maximize to the neighbor fallback so a
+                // free tile on the monitor above wins first (user decision)
+                {
+                    deferEdgeToNeighbor:
+                        direction === KeyBindingsDirection.UP &&
+                        neighborMonitorIndex !== -1,
+                },
+            );
 
-        if (
-            success ||
-            direction === KeyBindingsDirection.NODIRECTION ||
-            neighborMonitorIndex === -1
-        )
-            return;
+            if (
+                success ||
+                direction === KeyBindingsDirection.NODIRECTION ||
+                neighborMonitorIndex === -1
+            )
+                return;
 
-        let wasMaximizedBeforeMove = false;
-        // if the window is maximized, direction is UP and there is a monitor above, minimize the window
-        if (
-            (focus_window.maximizedHorizontally ||
-                focus_window.maximizedVertically) &&
-            direction === KeyBindingsDirection.UP
-        ) {
-            Main.wm.skipNextEffect(focus_window.get_compositor_private());
-            unmaximizeWindow(focus_window);
-            (focus_window as ExtendedWindow).assignedTile = undefined;
-            wasMaximizedBeforeMove = true;
-        }
+            let wasMaximizedBeforeMove = false;
+            // if the window is maximized, direction is UP and there is a monitor above, minimize the window
+            if (
+                (focus_window.maximizedHorizontally ||
+                    focus_window.maximizedVertically) &&
+                direction === KeyBindingsDirection.UP
+            ) {
+                Main.wm.skipNextEffect(focus_window.get_compositor_private());
+                unmaximizeWindow(focus_window);
+                (focus_window as ExtendedWindow).assignedTile = undefined;
+                wasMaximizedBeforeMove = true;
+            }
 
-        const neighborTilingManager =
-            this._tilingManagers[neighborMonitorIndex];
-        if (!neighborTilingManager) return;
+            const neighborTilingManager =
+                this._tilingManagers[neighborMonitorIndex];
+            if (!neighborTilingManager) return;
 
-        neighborTilingManager.onKeyboardMoveWindow(
-            focus_window,
-            direction,
-            true,
-            spanFlag,
-            false,
-            {
-                // non-maximized UP edge: free tile or (inside the neighbor
-                // manager) maximize — no nearest-tile stacking. Maximized
-                // origin keeps the historical free-tile-else-nearest-tile.
-                freeTileOnly:
-                    direction === KeyBindingsDirection.UP &&
-                    !wasMaximizedBeforeMove,
-            },
-        );
+            neighborTilingManager.onKeyboardMoveWindow(
+                focus_window,
+                direction,
+                true,
+                spanFlag,
+                false,
+                {
+                    // non-maximized UP edge: free tile or (inside the neighbor
+                    // manager) maximize — no nearest-tile stacking. Maximized
+                    // origin keeps the historical free-tile-else-nearest-tile.
+                    freeTileOnly:
+                        direction === KeyBindingsDirection.UP &&
+                        !wasMaximizedBeforeMove,
+                },
+            );
+        });
     }
 
     private _onKeyboardFocusWinDirection(

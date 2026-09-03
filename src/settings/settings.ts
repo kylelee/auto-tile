@@ -103,6 +103,7 @@ export default class Settings {
     static KEY_ENABLE_MOVE_KEYBINDINGS = 'enable-move-keybindings';
     static KEY_ENABLE_AUTO_TILING = 'enable-autotiling';
     static KEY_ENABLE_AUTO_TILING_OTHER_WORKSPACES = 'enable-autotiling-other-workspaces';
+    static KEY_ENABLE_AUTO_FILL_FREED_TILES = 'enable-auto-fill-freed-tiles';
     static KEY_RAISE_TOGETHER = 'raise-together';
     static KEY_ACTIVE_SCREEN_EDGES = 'active-screen-edges';
     static KEY_TOP_EDGE_MAXIMIZE = 'top-edge-maximize';
@@ -348,6 +349,14 @@ export default class Settings {
 
     static set ENABLE_AUTO_TILING_OTHER_WORKSPACES(val: boolean) {
         set_boolean(Settings.KEY_ENABLE_AUTO_TILING_OTHER_WORKSPACES, val);
+    }
+
+    static get ENABLE_AUTO_FILL_FREED_TILES(): boolean {
+        return get_boolean(Settings.KEY_ENABLE_AUTO_FILL_FREED_TILES);
+    }
+
+    static set ENABLE_AUTO_FILL_FREED_TILES(val: boolean) {
+        set_boolean(Settings.KEY_ENABLE_AUTO_FILL_FREED_TILES, val);
     }
 
     static get RAISE_TOGETHER(): boolean {

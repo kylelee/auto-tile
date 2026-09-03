@@ -289,6 +289,15 @@ export default class TilingShellExtensionPreferences extends ExtensionPreference
         );
         behaviourGroup.add(autoTilingOtherWorkspacesRow);
 
+        const autoFillFreedTilesRow = this._buildSwitchRow(
+            Settings.KEY_ENABLE_AUTO_FILL_FREED_TILES,
+            _('Fill freed tiles from the next workspaces'),
+            _(
+                'When a tiled window is closed or moved away, fill the freed tiles of its workspace by moving windows from the workspaces to the right, one after another, until no more windows are available',
+            ),
+        );
+        behaviourGroup.add(autoFillFreedTilesRow);
+
         const resizeComplementingRow = this._buildSwitchRow(
             Settings.KEY_RESIZE_COMPLEMENTING_WINDOWS,
             _('Enable auto-resize of the complementing tiled windows'),
