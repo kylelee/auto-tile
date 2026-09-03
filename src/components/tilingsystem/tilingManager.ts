@@ -362,6 +362,16 @@ export class TilingManager {
         (window as ExtendedWindow).assignedTile = undefined;
     }
 
+    private _directionEnlargeFactor(tilingLayout: TilingLayout): number {
+        return Math.max(
+            64, // if the gaps are all 0 we choose 64 instead
+            tilingLayout.innerGaps.right,
+            tilingLayout.innerGaps.left,
+            tilingLayout.innerGaps.right,
+            tilingLayout.innerGaps.bottom,
+        );
+    }
+
     public onKeyboardMoveWindow(
         window: Meta.Window,
         direction: KeyBindingsDirection,
@@ -430,13 +440,7 @@ export class TilingManager {
                 tile: TileUtils.build_tile(rect, this._workArea),
             };
         } else if (window.get_monitor() === this._monitor.index) {
-            const enlargeFactor = Math.max(
-                64, // if the gaps are all 0 we choose 64 instead
-                tilingLayout.innerGaps.right,
-                tilingLayout.innerGaps.left,
-                tilingLayout.innerGaps.right,
-                tilingLayout.innerGaps.bottom,
-            );
+            const enlargeFactor = this._directionEnlargeFactor(tilingLayout);
             destination = tilingLayout.findNearestTileDirection(
                 windowRectCopy,
                 direction,
@@ -496,6 +500,27 @@ export class TilingManager {
                 destination.rect,
                 this._workArea,
             );
+        }
+
+        // directional swap: the destination tile is occupied -> exchange positions
+        // with its topmost swappable window (same monitor and neighbor monitor
+        // alike; see _performKeyboardSwap for the canonical tile-placement leg).
+        // The mover must itself be tiled: after a swap BOTH windows must conform
+        // to their target tiles (user constraint) - a floating mover keeps the
+        // legacy stacking move.
+        if (
+            !spanFlag &&
+            !isMaximized &&
+            direction !== KeyBindingsDirection.NODIRECTION &&
+            destination &&
+            (window as ExtendedWindow).assignedTile
+        ) {
+            const swapTarget = this._findSwapTargetOnTile(
+                destination.tile,
+                currentWs,
+                window,
+            );
+            if (swapTarget) this._performKeyboardSwap(window, swapTarget);
         }
 
         if (isMaximized) unmaximizeWindow(window);
