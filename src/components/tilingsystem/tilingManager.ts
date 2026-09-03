@@ -1629,6 +1629,39 @@ export class TilingManager {
             .map((window) => window.get_frame_rect());
     }
 
+    private _findSwapTargetOnTile(
+        tile: Tile,
+        workspace: Meta.Workspace | undefined,
+        exclude: Meta.Window,
+    ): Meta.Window | undefined {
+        // occupancy truth MUST match _getTiledWindowRects: assignedTile set,
+        // not minimized, not maximized; tile rect MUST come from
+        // TileUtils.apply_props(tile, this._workArea) - NOT preview rects
+        // (see the parity comment in tilingLayout.ts findNearestFreeTile).
+        // getWindows() = MRU order (get_tab_list) with unfocusables already
+        // filtered, so candidates[0] is the most-recently-used window on the
+        // tile - deterministic and no extra stacking API needed.
+        const tileRect = TileUtils.apply_props(tile, this._workArea);
+        const candidates = getWindows(workspace).filter(
+            (win: Meta.Window) =>
+                !!win &&
+                win !== exclude &&
+                !!(win as ExtendedWindow).assignedTile &&
+                !win.minimized &&
+                !win.maximizedHorizontally &&
+                !win.maximizedVertically &&
+                !win.is_fullscreen() &&
+                !win.is_on_all_workspaces() &&
+                win.windowType === Meta.WindowType.NORMAL &&
+                win.get_transient_for() === null &&
+                !win.is_attached_dialog() &&
+                win.allows_move() &&
+                win.allows_resize() &&
+                win.get_frame_rect().overlap(tileRect),
+        );
+        return candidates[0];
+    }
+
     private _findEmptyTile(
         window: Meta.Window,
         monitorIndex: number = window.get_monitor(),
