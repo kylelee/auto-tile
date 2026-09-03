@@ -646,6 +646,24 @@ export default class TilingShellExtension extends Extension {
                 displayDirection,
             );
 
+            // no monitor in this direction: extend the unified "next tile
+            // in the direction" model to the adjacent WORKSPACE (LEFT/RIGHT
+            // only, never wrapping) before the clamped same-monitor move —
+            // mirrors the directional focus feature's neighbor-workspace
+            // search. Declines (floating/maximized mover, not at the edge
+            // column, workspace boundary) fall through to the legacy path.
+            if (
+                neighborMonitorIndex === -1 &&
+                !spanFlag &&
+                (direction === KeyBindingsDirection.LEFT ||
+                    direction === KeyBindingsDirection.RIGHT) &&
+                monitorTilingManager.onKeyboardMoveWindowAcrossWorkspaces(
+                    focus_window,
+                    direction,
+                )
+            )
+                return;
+
             const success = monitorTilingManager.onKeyboardMoveWindow(
                 focus_window,
                 direction,

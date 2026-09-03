@@ -71,6 +71,11 @@ class SnapAssistingInfo {
 // centered when picking the next empty tile for a new window
 const CENTERING_TIE_EPSILON = 1e-9;
 
+// proportion-of-work-area slack under which a tile counts as touching the
+// left or right edge of the monitor layout, for directional moves that
+// continue into the adjacent workspace
+const WORKSPACE_EDGE_EPSILON = 0.0001;
+
 // Windows currently being placed by this module. The guard suppresses the
 // window-entered-monitor re-tiling while our own placement (which calls
 // move_to_monitor) is synchronously emitting monitor-crossed signals.
@@ -2531,6 +2536,149 @@ export class TilingManager {
             );
         }
         return true;
+    }
+
+    // Unified directional move, workspace leg: called by the extension
+    // keybinding handler when the mover's monitor has NO neighbor monitor
+    // in the direction. The adjacent workspace's entering-edge tile is THE
+    // target - occupied -> swap the occupier back onto the mover's tile on
+    // the ORIGIN workspace (canonical _easeWindowRectFromTile placement),
+    // free -> move onto it. The view follows the mover (activate_with_focus).
+    // LEFT/RIGHT only, never wrapped; a RIGHT move off the last workspace
+    // appends a new one only under dynamic workspaces. Returns false (and
+    // does nothing) for every declined case so the caller keeps today's
+    // clamped same-monitor behavior: UP/DOWN, mover on another monitor,
+    // floating or maximized mover, mover not on the exit-edge column, or
+    // no resolvable workspace/entering tile.
+    public onKeyboardMoveWindowAcrossWorkspaces(
+        window: Meta.Window,
+        direction: KeyBindingsDirection,
+    ): boolean {
+        if (
+            direction !== KeyBindingsDirection.LEFT &&
+            direction !== KeyBindingsDirection.RIGHT
+        )
+            return false;
+        if (window.get_monitor() !== this._monitor.index) return false;
+
+        const aTile = (window as ExtendedWindow).assignedTile;
+        if (!aTile) return false; // floating mover keeps the legacy path
+        if (window.maximizedHorizontally || window.maximizedVertically)
+            return false;
+
+        // the mover must already sit on the exit-edge column of this
+        // monitor's layout in the movement direction
+        const atExitEdge =
+            direction === KeyBindingsDirection.RIGHT
+                ? aTile.x + aTile.width >= 1 - WORKSPACE_EDGE_EPSILON
+                : aTile.x <= WORKSPACE_EDGE_EPSILON;
+        if (!atExitEdge) return false;
+
+        const originWs = window.get_workspace();
+        const step = direction === KeyBindingsDirection.RIGHT ? 1 : -1;
+        const targetIndex = originWs.index() + step;
+        const nWorkspaces = global.workspaceManager.get_n_workspaces();
+        let targetWs: Meta.Workspace | undefined;
+        if (targetIndex >= 0 && targetIndex < nWorkspaces) {
+            targetWs =
+                global.workspaceManager.get_workspace_by_index(targetIndex) ??
+                undefined;
+        } else if (
+            targetIndex === nWorkspaces &&
+            step === 1 &&
+            Meta.prefs_get_dynamic_workspaces()
+        ) {
+            targetWs = global.workspaceManager.append_new_workspace(
+                false,
+                global.get_current_time(),
+            );
+            this._debug('appended a new workspace for the directional move');
+        }
+        if (!targetWs) return false; // includes LEFT off workspace 0: no wrap
+        // const capture keeps the non-undefined narrowing inside the
+        // suppression closure below (same TS quirk as aTile above)
+        const targetWorkspace = targetWs;
+
+        this._ensureWorkspaceTilingLayout(targetWs);
+
+        const enteringTile = this._findEnteringTileOnWorkspace(
+            window,
+            targetWs,
+            direction,
+        );
+        if (!enteringTile) return false; // degenerate layout
+
+        this._debug(
+            `moving window to workspace ${targetWs.index()} monitor ${this._monitor.index}`,
+        );
+        // suppressed: the relocation's change_workspace calls fire the
+        // workspace-changed wires synchronously while the windows carry
+        // stale geometry — auto-fill enforcement would revert our own move
+        withAutoFillSuppressed(() => {
+            // swap-back leg first, while the origin view is still active:
+            // the occupier of the entering tile goes to the mover's tile on
+            // the ORIGIN workspace through the canonical placement path
+            const swapTarget = this._findSwapTargetOnTile(
+                enteringTile,
+                targetWorkspace,
+                window,
+            );
+            if (swapTarget) {
+                swapTarget.change_workspace(originWs);
+                this._easeWindowRectFromTile(aTile, swapTarget);
+            }
+
+            // mover leg: relocate, switch the view with focus retained,
+            // then conform to the entering tile (writes assignedTile itself)
+            window.change_workspace(targetWorkspace);
+            targetWorkspace.activate_with_focus(
+                window,
+                global.get_current_time(),
+            );
+            this._easeWindowRectFromTile(enteringTile, window);
+        });
+        return true;
+    }
+
+    // Entering-edge tile of the target workspace's layout on THIS monitor:
+    // the leftmost tile column for RIGHT, the rightmost for LEFT, ranked by
+    // vertical proximity to the mover's frame center (work-area proportions).
+    private _findEnteringTileOnWorkspace(
+        window: Meta.Window,
+        ws: Meta.Workspace,
+        direction: KeyBindingsDirection,
+    ): Tile | undefined {
+        const tiles = GlobalState.get().getSelectedLayoutOfMonitor(
+            this._monitor.index,
+            ws.index(),
+        ).tiles;
+        if (tiles.length === 0) return undefined;
+
+        const enteringX =
+            direction === KeyBindingsDirection.RIGHT
+                ? Math.min(...tiles.map((t) => t.x))
+                : Math.max(...tiles.map((t) => t.x + t.width));
+        const column = tiles.filter((t) =>
+            direction === KeyBindingsDirection.RIGHT
+                ? t.x <= enteringX + WORKSPACE_EDGE_EPSILON
+                : t.x + t.width >= enteringX - WORKSPACE_EDGE_EPSILON,
+        );
+        if (column.length === 0) return undefined;
+
+        const frame = window.get_frame_rect();
+        const centerY =
+            (frame.y + frame.height / 2 - this._workArea.y) /
+            this._workArea.height;
+        let best = column[0];
+        let bestDistance = Infinity;
+        for (const t of column) {
+            const d = Math.abs(t.y + t.height / 2 - centerY);
+            if (d < bestDistance) {
+                best = t;
+                bestDistance = d;
+            }
+        }
+        return best;
     }
 
     private _findEmptyTile(
