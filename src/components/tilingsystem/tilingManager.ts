@@ -1503,10 +1503,13 @@ export class TilingManager {
                     return;
 
                 // insert-after-focused: plan against the anchor captured
-                // at window-created time; when this returns true the
-                // window was fully handled (placed, or left floating by
-                // an aborted plan) and the vacancy searches below stay
-                // unreachable for it
+                // at window-created time. INVARIANT: when this returns
+                // true the window was fully handled (placed, or left
+                // floating by an aborted plan), so BOTH default searches
+                // below stay unreachable for it — the synchronous
+                // row-by-row monitor search AND the GLib.idle_add
+                // other-workspace search registered further down: the
+                // return sits before both on this code path.
                 if (this._runInsertionAfterFocused(window, anchorCandidate))
                     return;
 
