@@ -102,7 +102,7 @@ You can resize adjacent tiled windows together!
 
 Move window through the tiles using keyboard shortcuts (<kbd>SUPER</kbd>+<kbd>←</kbd>/<kbd>↑</kbd>/<kbd>↓</kbd>/<kbd>→</kbd>). They can be customized from the preferences!
 
-Moving toward an occupied tile swaps the positions of the two windows, even across monitors, while free tiles are taken as-is in the movement direction.
+Moving toward an occupied tile swaps the positions of the two windows, even across monitors, while free tiles are taken as-is in the movement direction. At the last monitor's edge, LEFT/RIGHT move the window to the adjacent workspace — creating one when dynamic workspaces are enabled — and swap there too when the landing tile is occupied.
 
 [Tile with Keyboard Video](https://github.com/user-attachments/assets/6f8dedbb-2733-41d8-8a94-0fa62dffb915)
 
