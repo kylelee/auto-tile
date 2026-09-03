@@ -1643,6 +1643,41 @@ export class TilingManager {
         );
     }
 
+    // Hard precondition for non-activating cross-workspace placements:
+    // _easeWindowRectFromTile silently returns when this manager holds no
+    // TilingLayout entry for the window's workspace, and entries are
+    // otherwise only created at manager construction and on
+    // active-workspace-changed — a never-activated workspace (e.g. the
+    // trailing empty one under dynamic workspaces) has no entry anywhere,
+    // so a cross-workspace leg onto it would silently no-op. Mirrors the
+    // active-workspace-changed handler body exactly.
+    private _ensureWorkspaceTilingLayout(ws: Meta.Workspace): void {
+        if (this._workspaceTilingLayout.has(ws)) return;
+
+        const monitorScalingFactor = this._enableScaling
+            ? getMonitorScalingFactor(this._monitor.index)
+            : undefined;
+        const layout: Layout =
+            GlobalState.get().getSelectedLayoutOfMonitor(
+                this._monitor.index,
+                ws.index(),
+            );
+        const innerGaps = buildMargin(Settings.get_inner_gaps());
+        const outerGaps = buildMargin(Settings.get_outer_gaps());
+
+        this._debug('created new tiling layout for workspace');
+        this._workspaceTilingLayout.set(
+            ws,
+            new TilingLayout(
+                layout,
+                innerGaps,
+                outerGaps,
+                this._workArea,
+                monitorScalingFactor,
+            ),
+        );
+    }
+
     // Insert-after-focused: validate the captured anchor, plan through the
     // pure insertion planner and dispatch the result. Returns true when
     // the insertion path fully handled the window (direct placement done,
@@ -1778,7 +1813,7 @@ export class TilingManager {
         _insertionShiftInProgress = true;
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             try {
-                this._executeInsertionPlan(window, plan);
+                this._executeInsertionPlan(window, plan, anchorWs);
                 return GLib.SOURCE_REMOVE;
             } finally {
                 _insertionShiftInProgress = false;
@@ -1799,6 +1834,7 @@ export class TilingManager {
     private _executeInsertionPlan(
         window: Meta.Window,
         plan: InsertionPlan,
+        anchorWs: number,
     ): void {
         if (
             window.get_compositor_private() === null || // destroyed: property access would throw
@@ -1812,15 +1848,31 @@ export class TilingManager {
             return;
         }
 
+        // dynamic append: create the plan's target workspace WITHOUT
+        // activating it (activate=false fires no
+        // active-workspace-changed, so no manager gains a layout entry
+        // implicitly) and hand every monitor's manager its entry for the
+        // new workspace before any leg references it (see
+        // _ensureWorkspaceTilingLayout)
+        if (plan.appendWorkspace) {
+            const ws = global.workspaceManager.append_new_workspace(
+                false,
+                global.get_current_time(),
+            );
+            for (const monitorIndex of this._getMonitorsInRowOrder()) {
+                this._getInsertionTargetManager(
+                    monitorIndex,
+                )?._ensureWorkspaceTilingLayout(ws);
+            }
+        }
+
         // every workspace the plan refers to must still exist: dynamic
-        // workspaces can recycle trailing empty ones in the gap. A
-        // workspace the append flag will create is resolved at placement
-        // time below instead.
+        // workspaces can recycle trailing empty ones in the gap. The
+        // append case created its target workspace just above.
         const referencedWsIndices = new Set<number>();
         for (const move of plan.moves)
             referencedWsIndices.add(move.target.wsIndex);
-        if (!plan.appendWorkspace)
-            referencedWsIndices.add(plan.newWindowTarget.wsIndex);
+        referencedWsIndices.add(plan.newWindowTarget.wsIndex);
         for (const wsIndex of referencedWsIndices) {
             if (
                 global.workspaceManager.get_workspace_by_index(wsIndex) ===
@@ -1865,19 +1917,19 @@ export class TilingManager {
                 this._debug('insertion: aborted, occupant vanished');
                 return;
             }
-            if (win.get_workspace().index() !== move.target.wsIndex) {
-                const targetWs =
-                    global.workspaceManager.get_workspace_by_index(
-                        move.target.wsIndex,
-                    );
-                if (targetWs === null) {
-                    this._debug('insertion: aborted, workspace vanished');
-                    return;
-                }
-                win.change_workspace(targetWs);
-                this._debug(
-                    `insertion: overflow window -> ws=${move.target.wsIndex}`,
-                );
+            // INTENTIONAL semantic difference from
+            // _findVacancyInOtherWorkspaces: that default search wraps
+            // around the workspace ring ((origin + k) % n), while an
+            // insertion cascade only ever moves FORWARD — workspace
+            // indices monotonically non-decreasing from the anchor. A
+            // target behind the anchor workspace means the planner
+            // regressed to ring semantics: abort the whole plan like the
+            // other re-check failures (skip-and-continue would leave an
+            // unshifted occupant wedged between the insertion slot and
+            // the absorb vacancy).
+            if (move.target.wsIndex < anchorWs) {
+                this._debug('insertion: skip invalid cross-ws move');
+                return;
             }
             const manager = this._getInsertionTargetManager(
                 move.target.slot.monitorIndex,
@@ -1887,6 +1939,25 @@ export class TilingManager {
                     'insertion: fallback, monitor manager unavailable',
                 );
                 return;
+            }
+            if (win.get_workspace().index() !== move.target.wsIndex) {
+                const targetWs =
+                    global.workspaceManager.get_workspace_by_index(
+                        move.target.wsIndex,
+                    );
+                if (targetWs === null) {
+                    this._debug('insertion: aborted, workspace vanished');
+                    return;
+                }
+                // the placement below runs through the TARGET monitor's
+                // manager, whose layout map has no entry for a
+                // never-activated workspace (hard precondition, see
+                // _ensureWorkspaceTilingLayout)
+                manager._ensureWorkspaceTilingLayout(targetWs);
+                win.change_workspace(targetWs);
+                this._debug(
+                    `insertion: overflow window -> ws=${move.target.wsIndex}`,
+                );
             }
             manager.autoTileWindowToTile(move.target.tile, win);
 
@@ -1901,10 +1972,10 @@ export class TilingManager {
             );
         }
 
-        // final leg: the new window itself. A plan with appendWorkspace
-        // would create its target workspace here first (cross-workspace
-        // wave); until that lands such plans degrade to the
-        // workspace-vanished abort just below.
+        // final leg: the new window itself. For an append plan the target
+        // workspace was created at the top of this callback, so the
+        // lookup below finds it; every manager already holds its layout
+        // entry from the same block.
         const newTargetWs = global.workspaceManager.get_workspace_by_index(
             plan.newWindowTarget.wsIndex,
         );
