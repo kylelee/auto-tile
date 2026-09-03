@@ -54,30 +54,9 @@ class SnapAssistingInfo {
     }
 }
 
-const REASSERT_SCHEDULE_MS = [50, 150, 300];
-const REASSERT_TOLERANCE_PX = 1;
-
 // squared-distance slack under which two vacant tiles count as equally
 // centered when picking the next empty tile for a new window
 const CENTERING_TIE_EPSILON = 1e-9;
-
-interface WindowReassertState {
-    expectedRect: Mtk.Rectangle;
-    monitorIndex: number | undefined;
-    attemptsLeft: number;
-    nextStepIndex: number;
-    sourceId: number; // pending GLib source id, 0 = none
-    unmanagedSignalId: number;
-    grabSignalId: number;
-}
-
-// Module-level on purpose: ALL TilingManager instances share ONE pending
-// re-assert per window. A new placement routed through ANY monitor's
-// manager must replace a re-assert registered by another manager for the
-// same window (e.g. a rapid cross-monitor keyboard-move reversal within
-// the ~500ms schedule) — the cancel-on-entry below only works if the
-// registry is global to the module.
-const _reassertingWindows = new Map<Meta.Window, WindowReassertState>();
 
 // Windows currently being placed by this module. The guard suppresses the
 // window-entered-monitor re-tiling while our own placement (which calls
@@ -563,10 +542,6 @@ export class TilingManager {
             GLib.Source.remove(this._movingWindowTimerId);
             this._movingWindowTimerId = null;
         }
-        // cancels every pending re-assert: managers are destroyed together and their expected rects would be stale anyway
-        [..._reassertingWindows.keys()].forEach(win =>
-            this._cancelWindowReassert(win)
-        );
         this._signals.disconnect();
         this._isGrabbingWindow = false;
         this._snapAssistingInfo.update(undefined);
@@ -1102,116 +1077,7 @@ export class TilingManager {
             destRect.width,
             destRect.height,
         );
-        this._reassertWindowRect(window, destRect, this._monitor.index);
         _windowsUnderPlacement.delete(window);
-    }
-
-    /**
-     * Verify (复核) that a window actually reached the expected frame rect after
-     * a tile placement, and re-apply the geometry if Mutter or the client
-     * shifted it. Bounded: at most 1 + REASSERT_SCHEDULE_MS.length checks.
-     * The registry is shared across all TilingManager instances: scheduling a re-assert for a window always cancels any pending one, even one registered by another monitor's manager.
-     */
-    private _reassertWindowRect(
-        window: Meta.Window,
-        expectedRect: Mtk.Rectangle,
-        targetMonitorIndex?: number
-    ): void {
-        this._cancelWindowReassert(window);
-
-        const state: WindowReassertState = {
-            expectedRect: expectedRect.copy(),
-            monitorIndex: targetMonitorIndex,
-            attemptsLeft: 1 + REASSERT_SCHEDULE_MS.length,
-            nextStepIndex: 0,
-            sourceId: 0,
-            unmanagedSignalId: 0,
-            grabSignalId: 0,
-        };
-        _reassertingWindows.set(window, state);
-
-        const cancel = () => this._cancelWindowReassert(window);
-
-        state.unmanagedSignalId = window.connect('unmanaged', cancel);
-        state.grabSignalId = global.display.connect(
-            'grab-op-begin',
-            (_display: Meta.Display, grabWindow: Meta.Window) => {
-                if (grabWindow === window) cancel();
-            }
-        );
-
-        const check = (): boolean => {
-            state.sourceId = 0;
-            // the placement is void if the window changed state meanwhile
-            if (
-                window.minimized ||
-                window.maximizedHorizontally ||
-                window.maximizedVertically ||
-                window.is_fullscreen()
-            ) {
-                cancel();
-                return GLib.SOURCE_REMOVE;
-            }
-            if (
-                state.monitorIndex !== undefined &&
-                window.get_monitor() !== state.monitorIndex
-            )
-                window.move_to_monitor(state.monitorIndex);
-
-            const current = window.get_frame_rect();
-            const expected = state.expectedRect;
-            const drifted =
-                Math.abs(current.x - expected.x) > REASSERT_TOLERANCE_PX ||
-                Math.abs(current.y - expected.y) > REASSERT_TOLERANCE_PX ||
-                Math.abs(current.width - expected.width) >
-                    REASSERT_TOLERANCE_PX ||
-                Math.abs(current.height - expected.height) >
-                    REASSERT_TOLERANCE_PX;
-            if (!drifted) {
-                cancel();
-                return GLib.SOURCE_REMOVE;
-            }
-
-            this._debug(
-                `re-asserting window geometry: delta x=${current.x - expected.x} y=${current.y - expected.y} width=${current.width - expected.width} height=${current.height - expected.height}`
-            );
-            window.move_resize_frame(
-                false,
-                expected.x,
-                expected.y,
-                expected.width,
-                expected.height
-            );
-
-            state.attemptsLeft--;
-            if (
-                state.attemptsLeft <= 0 ||
-                state.nextStepIndex >= REASSERT_SCHEDULE_MS.length
-            ) {
-                cancel();
-                return GLib.SOURCE_REMOVE;
-            }
-
-            const delay = REASSERT_SCHEDULE_MS[state.nextStepIndex++];
-            state.sourceId = GLib.timeout_add(
-                GLib.PRIORITY_DEFAULT,
-                delay,
-                check
-            );
-            return GLib.SOURCE_REMOVE;
-        };
-
-        state.sourceId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, check);
-    }
-
-    private _cancelWindowReassert(window: Meta.Window): void {
-        const state = _reassertingWindows.get(window);
-        if (!state) return;
-        _reassertingWindows.delete(window);
-
-        if (state.sourceId) GLib.Source.remove(state.sourceId);
-        if (state.unmanagedSignalId) window.disconnect(state.unmanagedSignalId);
-        if (state.grabSignalId) global.display.disconnect(state.grabSignalId);
     }
 
     private _onSnapAssist(_: SnapAssist, tile: Tile, layoutId: string) {
@@ -1456,11 +1322,6 @@ export class TilingManager {
                 destinationRect.y,
                 destinationRect.width,
                 destinationRect.height,
-            );
-            this._reassertWindowRect(
-                window,
-                destinationRect,
-                targetMonitorIndex ?? this._monitor.index
             );
             _windowsUnderPlacement.delete(window);
         } else {
@@ -1709,7 +1570,7 @@ export class TilingManager {
     // Swap helper for keyboard directional moves: places `swapTarget` on the
     // tile `movingWindow` currently occupies, on the monitor `movingWindow`
     // currently lives on, via the CANONICAL tile-placement path (gap-adjusted
-    // inner rect + assignedTile + re-assert). The caller then moves
+    // inner rect + assignedTile). The caller then moves
     // `movingWindow` through the existing destination path. Returns false
     // (and does nothing) when the mover has no assigned tile or the origin
     // manager is unavailable - callers then keep legacy behavior.
