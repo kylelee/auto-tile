@@ -57,6 +57,10 @@ class SnapAssistingInfo {
 const REASSERT_SCHEDULE_MS = [50, 150, 300];
 const REASSERT_TOLERANCE_PX = 1;
 
+// squared-distance slack under which two vacant tiles count as equally
+// centered when picking the next empty tile for a new window
+const CENTERING_TIE_EPSILON = 1e-9;
+
 interface WindowReassertState {
     expectedRect: Mtk.Rectangle;
     monitorIndex: number | undefined;
@@ -1528,18 +1532,16 @@ export class TilingManager {
             )
                 return;
 
-            // search the birth monitor first, then every other monitor by
-            // ascending index: the first empty tile wins
-            const ownTile = this._findEmptyTile(window);
-            if (ownTile) {
-                this._easeWindowRectFromTile(ownTile, window, true);
-                return;
-            }
-            for (let i = 0; i < Main.layoutManager.monitors.length; i++) {
-                if (i === this._monitor.index) continue;
-                const manager = this._getTilingManager?.(i);
+            // search the monitors row by row from top to bottom and, within
+            // a row, from left to right: the first monitor with an empty
+            // tile wins
+            for (const monitorIndex of this._getMonitorsInRowOrder()) {
+                const manager =
+                    monitorIndex === this._monitor.index
+                        ? this
+                        : this._getTilingManager?.(monitorIndex);
                 if (!manager) continue;
-                const tile = this._findEmptyTile(window, i);
+                const tile = this._findEmptyTile(window, monitorIndex);
                 if (tile) {
                     manager.autoTileWindowToTile(tile, window);
                     return;
@@ -1586,20 +1588,24 @@ export class TilingManager {
 
         if (vacantTiles.length === 0) return undefined;
 
-        // finally find the nearest tile to the center of the screen
-        vacantTiles.sort((a, b) => a.x - b.x);
+        // finally find the vacant tile whose center point is nearest to the
+        // center of the work area; equally centered candidates are searched
+        // from top to bottom and from left to right
+        vacantTiles.sort((a, b) => a.y - b.y || a.x - b.x);
+
+        const centerDistance = (tile: Tile) =>
+            squaredEuclideanDistance(
+                { x: tile.x + tile.width / 2, y: tile.y + tile.height / 2 },
+                { x: 0.5, y: 0.5 }
+            );
 
         let bestTileIndex = 0;
-        let bestDistance = Math.abs(
-            0.5 -
-                vacantTiles[bestTileIndex].x +
-                vacantTiles[bestTileIndex].width / 2,
-        );
+        let bestDistance = centerDistance(vacantTiles[0]);
         for (let index = 1; index < vacantTiles.length; index++) {
-            const distance = Math.abs(
-                0.5 - (vacantTiles[index].x + vacantTiles[index].width / 2),
-            );
-            if (bestDistance > distance) {
+            const distance = centerDistance(vacantTiles[index]);
+            // strictly closer wins: equally centered tiles keep the first
+            // one, i.e. the topmost then leftmost by the sort above
+            if (distance < bestDistance - CENTERING_TIE_EPSILON) {
                 bestTileIndex = index;
                 bestDistance = distance;
             }
@@ -1608,5 +1614,12 @@ export class TilingManager {
         if (bestTileIndex < 0 || bestTileIndex >= vacantTiles.length)
             return undefined;
         return vacantTiles[bestTileIndex];
+    }
+
+    private _getMonitorsInRowOrder(): number[] {
+        return Main.layoutManager.monitors
+            .map((monitor, index) => ({ index, x: monitor.x, y: monitor.y }))
+            .sort((a, b) => a.y - b.y || a.x - b.x)
+            .map(entry => entry.index);
     }
 }
