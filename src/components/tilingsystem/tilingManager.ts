@@ -1959,17 +1959,33 @@ export class TilingManager {
                     `insertion: overflow window -> ws=${move.target.wsIndex}`,
                 );
             }
+            const preMoveMonitor = win.get_monitor();
             manager.autoTileWindowToTile(move.target.tile, win);
 
             // geometry verification only: a FAIL never rolls back, it must
             // merely be logged (pre-execution failures use the abort lines
-            // above and never reach this)
-            const movedOk = win
-                .get_frame_rect()
-                .overlap(move.target.slot.tileRect);
-            this._debug(
-                `insertion: move ${movedOk ? 'ok' : 'FAIL'} ws=${move.target.wsIndex} slot=${move.target.slot.slotIndex}`,
-            );
+            // above and never reach this). A same-monitor move_resize_frame
+            // is reflected by get_frame_rect() synchronously; a
+            // cross-monitor one is not — move_to_monitor() flips
+            // get_monitor() at once, but the frame rect only lands after
+            // the client acks the reconfigure, so an immediate read sees
+            // the half-applied rect and would log a false FAIL. Those legs
+            // are audited after the settle instead.
+            if (preMoveMonitor === move.target.slot.monitorIndex) {
+                const movedOk = win
+                    .get_frame_rect()
+                    .overlap(move.target.slot.tileRect);
+                this._debug(
+                    `insertion: move ${movedOk ? 'ok' : 'FAIL'} ws=${move.target.wsIndex} slot=${move.target.slot.slotIndex}`,
+                );
+            } else {
+                this._auditInsertionMoveLater(
+                    win,
+                    move.target.wsIndex,
+                    move.target.slot.slotIndex,
+                    move.target.slot.tileRect,
+                );
+            }
         }
 
         // final leg: the new window itself. For an append plan the target
@@ -2016,6 +2032,37 @@ export class TilingManager {
             plan.newWindowTarget.slot.tile,
             window,
         );
+    }
+
+    // Deferred geometry audit for cross-monitor move legs: the frame rect
+    // only settles after the client acks the reconfigure, so the check is
+    // retried a bounded number of times before a FAIL is declared.
+    private _auditInsertionMoveLater(
+        window: Meta.Window,
+        wsIndex: number,
+        slotIndex: number,
+        tileRect: Mtk.Rectangle,
+        attempt: number = 1,
+    ): void {
+        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 250 * attempt, () => {
+            if (window.get_compositor_private() === null)
+                return GLib.SOURCE_REMOVE; // unmanaged meanwhile: nothing to audit
+            const movedOk = window.get_frame_rect().overlap(tileRect);
+            if (!movedOk && attempt < 3) {
+                this._auditInsertionMoveLater(
+                    window,
+                    wsIndex,
+                    slotIndex,
+                    tileRect,
+                    attempt + 1,
+                );
+                return GLib.SOURCE_REMOVE;
+            }
+            this._debug(
+                `insertion: move ${movedOk ? 'ok' : 'FAIL'} ws=${wsIndex} slot=${slotIndex}`,
+            );
+            return GLib.SOURCE_REMOVE;
+        });
     }
 
     // frame rects of tiled windows (assigned tile, not minimized, not
