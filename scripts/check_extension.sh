@@ -10,7 +10,6 @@
 # Usage: ./scripts/check_extension.sh                 # build + check both release zips
 #        ./scripts/check_extension.sh --no-build      # check existing zips only
 #        ./scripts/check_extension.sh --dist          # check dist/ + dist_legacy/ (fast, no zip)
-#        ./scripts/check_extension.sh --per-file      # per-file/chunked analysis (segfault workaround)
 #        ./scripts/check_extension.sh --strict        # warnings are blocking too
 #        ./scripts/check_extension.sh --install-tools # only provision the shexli venv
 #
@@ -55,7 +54,6 @@ usage() { sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'; }
 while [ $# -gt 0 ]; do
     case "$1" in
         --dist) MODE="dist"; shift ;;
-        --per-file) MODE="per-file"; shift ;;
         --no-build) DO_BUILD=0; shift ;;
         --strict) STRICT=1; shift ;;
         --install-tools) MODE="install"; shift ;;
@@ -110,29 +108,6 @@ if [ "$MODE" = "install" ]; then
 fi
 
 resolve_shexli
-
-if [ "$MODE" = "per-file" ]; then
-    command -v node >/dev/null 2>&1 || { echo "❌ 'node' not found in PATH" >&2; exit 2; }
-    [ -d node_modules ] || { echo "📦 node_modules missing, installing..."; npm install; }
-    STRICT_ARGS=()
-    [ "$STRICT" -eq 1 ] && STRICT_ARGS=(--strict)
-    WORST=0
-    for pkg in "$ROOT_DIR/dist" "$ROOT_DIR/dist_legacy"; do
-        [ -f "$pkg/metadata.json" ] || {
-            echo "❌ $pkg/metadata.json not found. Run ./scripts/build.sh first." >&2
-            exit 2
-        }
-        echo "══════════════════════════════════════════════════════════"
-        echo "🔍 per-file analysis: ${pkg#"$ROOT_DIR"/}"
-        echo "══════════════════════════════════════════════════════════"
-        set +e
-        node "$SCRIPT_DIR/shexli_per_file.mjs" "$pkg" "$SHEXLI_CMD" "${STRICT_ARGS[@]}"
-        rc=$?
-        set -e
-        [ "$rc" -gt "$WORST" ] && WORST=$rc
-    done
-    exit "$WORST"
-fi
 
 # ---------------------------------------------------------------------------
 # Gather the packages to check.
@@ -195,7 +170,6 @@ analyze_package() {
    This is the known shexli 0.2.1 segfault (heap corruption in its tree-sitter
    usage; each part of the bundle analyzes cleanly on its own). It is NOT an
    AutoTile defect. Track: extensions-web MR !245 / pypi shexli.
-   Workaround: ./scripts/check_extension.sh --per-file
 EOF
         fi
         STATUS="crashed"
