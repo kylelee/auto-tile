@@ -70,23 +70,27 @@ const scenarios: [string, () => void][] = [
         },
     ],
     [
-        '3. disconnect(obj) releases only that object handlers and returns the released key',
+        '3. disconnect(obj) releases every tracked signal of that object and returns the last released key',
         () => {
             const signals = new SignalHandling();
             const a = target();
             const b = target();
-            // distinct signal keys: the same key on a second object would
-            // overwrite the first entry (scenario 4)
+            // one object connected to two different signal names: both entries
+            // must be released (distinct keys; the same key on a second object
+            // would overwrite the first entry — scenario 4)
             signals.connect(a, 'x', () => undefined);
-            signals.connect(b, 'y', () => undefined);
-            // current contract: the released signal key string (truthy), not a boolean
-            equal(signals.disconnect(a), 'x');
-            deepEqual(a.disconnected, [1]);
+            signals.connect(a, 'y', () => undefined);
+            signals.connect(b, 'z', () => undefined);
+            // the released signal key string (the last one, truthy), not a boolean
+            equal(signals.disconnect(a), 'y');
+            // both ids released, in connection order
+            deepEqual(a.disconnected, [1, 2]);
+            // other objects are untouched
             deepEqual(b.disconnected, []);
-            // releasing an object with no tracked signals reports undefined
+            // an object with no tracked signals left reports undefined
             equal(signals.disconnect(a), undefined);
-            equal(signals.disconnect(b), 'y');
-            deepEqual(b.disconnected, [1]);
+            equal(signals.disconnect(b), 'z');
+            deepEqual(b.disconnected, [1]); // each target numbers its own ids
         },
     ],
     [
