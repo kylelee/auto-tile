@@ -154,6 +154,7 @@ export class TilingManager {
     private _grabOrigin: GrabOrigin | null = null;
 
     private readonly _signals: SignalHandling;
+    private readonly _grabSignals: SignalHandling;
     private readonly _debug: (..._content: unknown[]) => void;
 
     /**
@@ -172,6 +173,7 @@ export class TilingManager {
         this._enableScaling = enableScaling;
         this._monitor = monitor;
         this._signals = new SignalHandling();
+        this._grabSignals = new SignalHandling();
         this._getTilingManager = getTilingManager;
 
         this._debug = logger(`TilingManager ${monitor.index}`);
@@ -725,6 +727,7 @@ export class TilingManager {
             this._movingWindowTimerId = null;
         }
         this._signals.disconnect();
+        this._grabSignals.disconnect();
         this._grabOrigin = null;
         this._freeTileFiller?.destroy();
         this._freeTileFiller = undefined;
@@ -758,6 +761,9 @@ export class TilingManager {
     private _onWindowGrabBegin(window: Meta.Window, grabOp: number) {
         if (this._isGrabbingWindow) return;
 
+        // defensive: drop connections of a grab whose end was missed
+        this._grabSignals.disconnect();
+
         // drag origin snapshot: MUST be recorded strictly before the
         // synchronous _onMovingWindow call at the bottom of this method,
         // whose first pass clears assignedTile (recording after it would
@@ -775,7 +781,7 @@ export class TilingManager {
         };
 
         TouchPointer.get().updateWindowPosition(window.get_frame_rect());
-        this._signals.connect(
+        this._grabSignals.connect(
             global.stage,
             'touch-event',
             (_source, event: Clutter.Event) => {
@@ -784,7 +790,7 @@ export class TilingManager {
             },
         );
         // Add Wacom tablet support, listen to tablet events
-        this._signals.connect(
+        this._grabSignals.connect(
             global.stage,
             'captured-event',
             (_source, event: Clutter.Event) => {
@@ -815,7 +821,7 @@ export class TilingManager {
             Settings.ENABLE_BLUR_SNAP_ASSISTANT ||
             Settings.ENABLE_BLUR_SELECTED_TILEPREVIEW
         ) {
-            this._signals.connect(window, 'position-changed', () => {
+            this._grabSignals.connect(window, 'position-changed', () => {
                 if (Settings.ENABLE_BLUR_SELECTED_TILEPREVIEW) {
                     this._selectedTilesPreview
                         .get_effect('blur')
@@ -1076,7 +1082,7 @@ export class TilingManager {
         this._isGrabbingWindow = false;
         this._grabStartPosition = null;
 
-        this._signals.disconnect(window);
+        this._grabSignals.disconnect();
         TouchPointer.get().reset();
 
         const currentWs = window.get_workspace();
