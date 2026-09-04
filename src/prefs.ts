@@ -811,7 +811,7 @@ export default class AutoTileExtensionPreferences extends ExtensionPreferences {
         // set if the keybinding was set or not by the user
         for (let i = 0; i < keybindings.length; i++) {
             keybindings[i][3] =
-                gioSettings.get_strv(keybindings[i][0])[0].length > 0;
+                (gioSettings.get_strv(keybindings[i][0])[0]?.length ?? 0) > 0;
         }
 
         // draw keybindings set or not optional

@@ -16,11 +16,16 @@ export default class DBus {
     public enable(ext: unknown) {
         if (this._dbus) return;
 
-        this._dbus = Gio.DBusExportedObject.wrapJSObject(node, ext);
-        this._dbus.export(
-            Gio.DBus.session,
-            '/org/gnome/Shell/Extensions/AutoTile',
-        );
+        try {
+            this._dbus = Gio.DBusExportedObject.wrapJSObject(node, ext);
+            this._dbus.export(
+                Gio.DBus.session,
+                '/org/gnome/Shell/Extensions/AutoTile',
+            );
+        } catch (e) {
+            console.error('[autotile]', '[dbus]', e);
+            this._dbus = null;
+        }
     }
 
     public disable() {
