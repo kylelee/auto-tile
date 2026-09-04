@@ -321,6 +321,7 @@ export default class LayoutEditor extends St.Widget {
     }
 
     private deleteTile(editableTile: EditableTilePreview) {
+        if (this._layout.tiles.length <= 1) return;
         for (const slider of editableTile.getAllSliders()) {
             if (slider === null) continue;
 
