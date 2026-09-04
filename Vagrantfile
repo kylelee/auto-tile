@@ -1,4 +1,4 @@
-# Tiling Shell: advanced and modern window management for GNOME
+# AutoTile: advanced and modern window management for GNOME
 #
 # Copyright (C) 2025 Domenico Ferraro
 #
@@ -23,7 +23,7 @@ CPUS = 4
 MEMORY = 4096
 PROJECT_DIR = Pathname.new(__FILE__).realpath.dirname
 SYNCED_FOLDER = "/home/vagrant/#{PROJECT_DIR.basename}"
-UUID = "tilingshell@ferrarodomenico.com"
+UUID = "autotile@kylelee.github.io"
 
 # Shared configuration for all GNOME VMs
 def configure_gnome_vm(vm_config, box_name)

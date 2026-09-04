@@ -1,13 +1,13 @@
-# Ukrainian translation for Tiling Shell.
+# Ukrainian translation for AutoTile.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # Yevhen Popok <xalt7x.service@gmail.com>, 2025.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Tiling Shell\n"
+"Project-Id-Version: AutoTile\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-04 01:30+0800\n"
+"POT-Creation-Date: 2026-09-04 19:09+0800\n"
 "PO-Revision-Date: 2025-03-17 02:23+0200\n"
 "Last-Translator: Yevhen Popok <xalt7x.service@gmail.com>\n"
 "Language-Team: Ukrainian\n"
@@ -20,18 +20,6 @@ msgstr ""
 #: dist/components/altTab/MultipleWindowsIcon.js:42
 msgid "Tiled windows"
 msgstr ""
-
-#: dist/components/window_menu/overriddenWindowMenu.js:117
-msgid "Move to best tile"
-msgstr ""
-
-#: dist/components/window_menu/overriddenWindowMenu.js:137
-msgid "Move to leftmost tile"
-msgstr "Перемістити до крайньої лівої плитки"
-
-#: dist/components/window_menu/overriddenWindowMenu.js:156
-msgid "Move to rightmost tile"
-msgstr "Перемістити до крайньої правої плитки"
 
 #: dist/components/editor/editorDialog.js:36
 msgid "Select the layout to edit"
@@ -65,30 +53,17 @@ msgstr "Як використовувати редактор"
 msgid "Start editing"
 msgstr "Почати редагування"
 
-#: dist/indicator/editingMenu.js:19
-msgid "Menu"
-msgstr "Меню"
+#: dist/components/window_menu/overriddenWindowMenu.js:117
+msgid "Move to best tile"
+msgstr ""
 
-#: dist/indicator/editingMenu.js:26
-msgid "Info"
-msgstr "Інформація"
+#: dist/components/window_menu/overriddenWindowMenu.js:137
+msgid "Move to leftmost tile"
+msgstr "Перемістити до крайньої лівої плитки"
 
-#: dist/indicator/editingMenu.js:33 dist/prefs.js:425 dist/prefs.js:814
-msgid "Save"
-msgstr "Зберегти"
-
-#: dist/indicator/editingMenu.js:43 dist/prefs.js:426 dist/prefs.js:480
-#: dist/prefs.js:815 dist/prefs.js:870
-msgid "Cancel"
-msgstr "Скасувати"
-
-#: dist/indicator/defaultMenu.js:298
-msgid "Edit Layouts"
-msgstr "Редагувати макет"
-
-#: dist/indicator/defaultMenu.js:308
-msgid "New Layout"
-msgstr "Новий макет"
+#: dist/components/window_menu/overriddenWindowMenu.js:156
+msgid "Move to rightmost tile"
+msgstr "Перемістити до крайньої правої плитки"
 
 #: dist/prefs.js:59
 msgid "General"
@@ -99,8 +74,8 @@ msgid "Appearance"
 msgstr "Вигляд"
 
 #: dist/prefs.js:65
-msgid "Configure the appearance of Tiling Shell"
-msgstr "Налаштуйте вигляд Tiling Shell"
+msgid "Configure the appearance of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:70
 msgid "Show Indicator"
@@ -226,8 +201,8 @@ msgid "Behaviour"
 msgstr "Поведінка"
 
 #: dist/prefs.js:190
-msgid "Configure the behaviour of Tiling Shell"
-msgstr "Налаштуйте поведінку Tiling Shell"
+msgid "Configure the behaviour of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:195
 msgid "Enable Snap Assistant"
@@ -435,8 +410,8 @@ msgid "Layouts"
 msgstr "Макети"
 
 #: dist/prefs.js:406
-msgid "Configure the layouts of Tiling Shell"
-msgstr "Налаштуйте макети Tiling Shell"
+msgid "Configure the layouts of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:410 dist/prefs.js:411
 msgid "Edit layouts"
@@ -453,6 +428,15 @@ msgstr "Експортувати макети"
 #: dist/prefs.js:419
 msgid "Export layouts to a file"
 msgstr "Експортувати макети до файлу"
+
+#: dist/prefs.js:425 dist/prefs.js:814 dist/indicator/editingMenu.js:33
+msgid "Save"
+msgstr "Зберегти"
+
+#: dist/prefs.js:426 dist/prefs.js:480 dist/prefs.js:815 dist/prefs.js:870
+#: dist/indicator/editingMenu.js:43
+msgid "Cancel"
+msgstr "Скасувати"
 
 #: dist/prefs.js:471 dist/prefs.js:472
 msgid "Import layouts"
@@ -674,8 +658,8 @@ msgid "Import, export and reset"
 msgstr "Імпортування, експортування та скидання"
 
 #: dist/prefs.js:801
-msgid "Import, export and reset the settings of Tiling Shell"
-msgstr "Імпортування, експортування та скидання налаштувань Tiling Shell"
+msgid "Import, export and reset the settings of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:806 dist/prefs.js:807
 msgid "Export settings"
@@ -776,3 +760,19 @@ msgstr "Нове скорочення..."
 #: dist/prefs.js:1322
 msgid "Use Backspace to clear"
 msgstr "Використайте Backspace, щоб очистити"
+
+#: dist/indicator/defaultMenu.js:298
+msgid "Edit Layouts"
+msgstr "Редагувати макет"
+
+#: dist/indicator/defaultMenu.js:308
+msgid "New Layout"
+msgstr "Новий макет"
+
+#: dist/indicator/editingMenu.js:19
+msgid "Menu"
+msgstr "Меню"
+
+#: dist/indicator/editingMenu.js:26
+msgid "Info"
+msgstr "Інформація"

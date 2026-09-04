@@ -17,7 +17,7 @@ import { logger } from '../utils/logger';
 import { registerGObjectClass } from '../utils/gjs';
 import { Monitor } from 'resource:///org/gnome/shell/ui/layout.js';
 import Layout from '../components/layout/Layout';
-import { _ } from '../translations';
+import { t } from '../translations';
 import { widgetOrientation } from '../utils/gnomesupport';
 import { createButton, createIconButton } from './utils';
 
@@ -380,7 +380,7 @@ export default class DefaultMenu implements CurrentMenu {
 
         const editLayoutsBtn = createButton(
             'edit-symbolic',
-            `${_('Edit Layouts')}...`,
+            `${t('Edit Layouts')}...`,
             this._indicator.path,
         );
         editLayoutsBtn.connect('clicked', () =>
@@ -389,7 +389,7 @@ export default class DefaultMenu implements CurrentMenu {
         buttonsBoxLayout.add_child(editLayoutsBtn);
         const newLayoutBtn = createButton(
             'add-symbolic',
-            `${_('New Layout')}...`,
+            `${t('New Layout')}...`,
             this._indicator.path,
         );
         newLayoutBtn.connect('clicked', () =>

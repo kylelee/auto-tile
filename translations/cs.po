@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-04 01:30+0800\n"
+"POT-Creation-Date: 2026-09-04 19:09+0800\n"
 "PO-Revision-Date: 2025-10-02 22:40+0200\n"
 "Last-Translator: Amerey <info@amerey.eu>\n"
 "Language-Team: \n"
@@ -21,18 +21,6 @@ msgstr ""
 #: dist/components/altTab/MultipleWindowsIcon.js:42
 msgid "Tiled windows"
 msgstr ""
-
-#: dist/components/window_menu/overriddenWindowMenu.js:117
-msgid "Move to best tile"
-msgstr ""
-
-#: dist/components/window_menu/overriddenWindowMenu.js:137
-msgid "Move to leftmost tile"
-msgstr "Přesunout na dlaždici, která je nejvíce vlevo"
-
-#: dist/components/window_menu/overriddenWindowMenu.js:156
-msgid "Move to rightmost tile"
-msgstr "Přesunout na dlaždici, která je nejvíce vpravo"
 
 #: dist/components/editor/editorDialog.js:36
 msgid "Select the layout to edit"
@@ -66,30 +54,17 @@ msgstr "Jak používat editor"
 msgid "Start editing"
 msgstr "Začít upravovat"
 
-#: dist/indicator/editingMenu.js:19
-msgid "Menu"
-msgstr "Menu"
+#: dist/components/window_menu/overriddenWindowMenu.js:117
+msgid "Move to best tile"
+msgstr ""
 
-#: dist/indicator/editingMenu.js:26
-msgid "Info"
-msgstr "Informace"
+#: dist/components/window_menu/overriddenWindowMenu.js:137
+msgid "Move to leftmost tile"
+msgstr "Přesunout na dlaždici, která je nejvíce vlevo"
 
-#: dist/indicator/editingMenu.js:33 dist/prefs.js:425 dist/prefs.js:814
-msgid "Save"
-msgstr "Uložit"
-
-#: dist/indicator/editingMenu.js:43 dist/prefs.js:426 dist/prefs.js:480
-#: dist/prefs.js:815 dist/prefs.js:870
-msgid "Cancel"
-msgstr "Zrušit"
-
-#: dist/indicator/defaultMenu.js:298
-msgid "Edit Layouts"
-msgstr "Upravit rozvržení"
-
-#: dist/indicator/defaultMenu.js:308
-msgid "New Layout"
-msgstr "Nové rozvržení"
+#: dist/components/window_menu/overriddenWindowMenu.js:156
+msgid "Move to rightmost tile"
+msgstr "Přesunout na dlaždici, která je nejvíce vpravo"
 
 #: dist/prefs.js:59
 msgid "General"
@@ -100,8 +75,8 @@ msgid "Appearance"
 msgstr "Vzhled"
 
 #: dist/prefs.js:65
-msgid "Configure the appearance of Tiling Shell"
-msgstr "Nastavení vzhledu Tiling Shell"
+msgid "Configure the appearance of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:70
 msgid "Show Indicator"
@@ -225,8 +200,8 @@ msgid "Behaviour"
 msgstr "Chování"
 
 #: dist/prefs.js:190
-msgid "Configure the behaviour of Tiling Shell"
-msgstr "Nastavení chování Tiling Shell"
+msgid "Configure the behaviour of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:195
 msgid "Enable Snap Assistant"
@@ -436,8 +411,8 @@ msgid "Layouts"
 msgstr "Rozvržení"
 
 #: dist/prefs.js:406
-msgid "Configure the layouts of Tiling Shell"
-msgstr "Nastavení rozvržení Tiling Shell"
+msgid "Configure the layouts of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:410 dist/prefs.js:411
 msgid "Edit layouts"
@@ -454,6 +429,15 @@ msgstr "Exportovat rozvržení"
 #: dist/prefs.js:419
 msgid "Export layouts to a file"
 msgstr "Exportujte rozvržení do souboru"
+
+#: dist/prefs.js:425 dist/prefs.js:814 dist/indicator/editingMenu.js:33
+msgid "Save"
+msgstr "Uložit"
+
+#: dist/prefs.js:426 dist/prefs.js:480 dist/prefs.js:815 dist/prefs.js:870
+#: dist/indicator/editingMenu.js:43
+msgid "Cancel"
+msgstr "Zrušit"
 
 #: dist/prefs.js:471 dist/prefs.js:472
 msgid "Import layouts"
@@ -665,8 +649,8 @@ msgid "Import, export and reset"
 msgstr "Import, export a reset"
 
 #: dist/prefs.js:801
-msgid "Import, export and reset the settings of Tiling Shell"
-msgstr "Importujte, exportujte a resetujte nastavení Tiling Shell"
+msgid "Import, export and reset the settings of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:806 dist/prefs.js:807
 msgid "Export settings"
@@ -767,3 +751,19 @@ msgstr "Nový akcelerátor…"
 #: dist/prefs.js:1322
 msgid "Use Backspace to clear"
 msgstr "K vymazání použijte Backspace"
+
+#: dist/indicator/defaultMenu.js:298
+msgid "Edit Layouts"
+msgstr "Upravit rozvržení"
+
+#: dist/indicator/defaultMenu.js:308
+msgid "New Layout"
+msgstr "Nové rozvržení"
+
+#: dist/indicator/editingMenu.js:19
+msgid "Menu"
+msgstr "Menu"
+
+#: dist/indicator/editingMenu.js:26
+msgid "Info"
+msgstr "Informace"

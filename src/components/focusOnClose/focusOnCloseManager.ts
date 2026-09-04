@@ -101,9 +101,25 @@ export class FocusOnCloseManager {
         // (invalidate_top_window_actor_for_views) and X11 EnterNotify would
         // race us. Last-anchor-wins under rapid batch closes: the idle
         // recomputes the candidates from the live windows.
+        //
+        // CASCADE CONTRACT: this close also triggers FreeTileFiller's
+        // cross-workspace merge, whose pass is deferred to an idle too —
+        // queued at PRIORITY_DEFAULT_IDLE from the LATER 'unmanaged'
+        // signal, while this anchor is recorded on the EARLIER
+        // 'unmanaging' one. Both signals fire within mutter's unmanage
+        // call stack, so both idles are pending before either dispatches,
+        // and PRIORITY_LOW (numerically above DEFAULT_IDLE) guarantees
+        // this search runs strictly AFTER the whole merge applied its
+        // moves synchronously: "nearest" is computed on the POST-cascade
+        // rects and focus is activated once, after the churn. The
+        // successor is the window that compacted onto, or was pulled
+        // across workspaces into, the freed spot nearest the closed one.
+        // Do NOT raise this priority back to PRIORITY_DEFAULT_IDLE: the
+        // search would then run on pre-merge geometry and the merge's
+        // workspace/tile moves would drop the just-set focus again.
         this._pendingAnchor = anchor;
         if (this._idleId === 0) {
-            this._idleId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            this._idleId = GLib.idle_add(GLib.PRIORITY_LOW, () => {
                 this._idleId = 0;
                 const anchorToUse = this._pendingAnchor;
                 this._pendingAnchor = null;

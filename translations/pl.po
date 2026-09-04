@@ -3,9 +3,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Tiling Shell\n"
+"Project-Id-Version: AutoTile\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-04 01:30+0800\n"
+"POT-Creation-Date: 2026-09-04 19:09+0800\n"
 "PO-Revision-Date: 2025-11-13 19:42+0100\n"
 "Last-Translator: Adam Lewicki <a.lewick95@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -20,18 +20,6 @@ msgstr ""
 #: dist/components/altTab/MultipleWindowsIcon.js:42
 msgid "Tiled windows"
 msgstr "Ułożone okna"
-
-#: dist/components/window_menu/overriddenWindowMenu.js:117
-msgid "Move to best tile"
-msgstr ""
-
-#: dist/components/window_menu/overriddenWindowMenu.js:137
-msgid "Move to leftmost tile"
-msgstr "Przesuń do strefy najbardziej po lewej"
-
-#: dist/components/window_menu/overriddenWindowMenu.js:156
-msgid "Move to rightmost tile"
-msgstr "Przesuń do strefy najbardziej po prawej"
 
 #: dist/components/editor/editorDialog.js:36
 msgid "Select the layout to edit"
@@ -65,30 +53,17 @@ msgstr "Jak używać edytora"
 msgid "Start editing"
 msgstr "Rozpocznij edycje"
 
-#: dist/indicator/editingMenu.js:19
-msgid "Menu"
-msgstr "Menu"
+#: dist/components/window_menu/overriddenWindowMenu.js:117
+msgid "Move to best tile"
+msgstr ""
 
-#: dist/indicator/editingMenu.js:26
-msgid "Info"
-msgstr "Info"
+#: dist/components/window_menu/overriddenWindowMenu.js:137
+msgid "Move to leftmost tile"
+msgstr "Przesuń do strefy najbardziej po lewej"
 
-#: dist/indicator/editingMenu.js:33 dist/prefs.js:425 dist/prefs.js:814
-msgid "Save"
-msgstr "Zapisz"
-
-#: dist/indicator/editingMenu.js:43 dist/prefs.js:426 dist/prefs.js:480
-#: dist/prefs.js:815 dist/prefs.js:870
-msgid "Cancel"
-msgstr "Anuluj"
-
-#: dist/indicator/defaultMenu.js:298
-msgid "Edit Layouts"
-msgstr "Edytuj układy"
-
-#: dist/indicator/defaultMenu.js:308
-msgid "New Layout"
-msgstr "Nowy układ"
+#: dist/components/window_menu/overriddenWindowMenu.js:156
+msgid "Move to rightmost tile"
+msgstr "Przesuń do strefy najbardziej po prawej"
 
 #: dist/prefs.js:59
 msgid "General"
@@ -99,8 +74,8 @@ msgid "Appearance"
 msgstr "Wygląd"
 
 #: dist/prefs.js:65
-msgid "Configure the appearance of Tiling Shell"
-msgstr "Skonfiguruj wygląd Układania okien"
+msgid "Configure the appearance of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:70
 msgid "Show Indicator"
@@ -224,8 +199,8 @@ msgid "Behaviour"
 msgstr "Zachowanie"
 
 #: dist/prefs.js:190
-msgid "Configure the behaviour of Tiling Shell"
-msgstr "Skonfiguruj zachowanie Układania okien"
+msgid "Configure the behaviour of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:195
 msgid "Enable Snap Assistant"
@@ -438,8 +413,8 @@ msgid "Layouts"
 msgstr "Układy"
 
 #: dist/prefs.js:406
-msgid "Configure the layouts of Tiling Shell"
-msgstr "Skonfiguruj układy Układania okien"
+msgid "Configure the layouts of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:410 dist/prefs.js:411
 msgid "Edit layouts"
@@ -456,6 +431,15 @@ msgstr "Eksportuj układy"
 #: dist/prefs.js:419
 msgid "Export layouts to a file"
 msgstr "Eksportuj układy do pliku"
+
+#: dist/prefs.js:425 dist/prefs.js:814 dist/indicator/editingMenu.js:33
+msgid "Save"
+msgstr "Zapisz"
+
+#: dist/prefs.js:426 dist/prefs.js:480 dist/prefs.js:815 dist/prefs.js:870
+#: dist/indicator/editingMenu.js:43
+msgid "Cancel"
+msgstr "Anuluj"
 
 #: dist/prefs.js:471 dist/prefs.js:472
 msgid "Import layouts"
@@ -670,8 +654,8 @@ msgid "Import, export and reset"
 msgstr "Import, eksport i reset"
 
 #: dist/prefs.js:801
-msgid "Import, export and reset the settings of Tiling Shell"
-msgstr "Importuj, eksportuj i resetuj ustawienia Układania okien"
+msgid "Import, export and reset the settings of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:806 dist/prefs.js:807
 msgid "Export settings"
@@ -773,252 +757,18 @@ msgstr "Nowy skrót…"
 msgid "Use Backspace to clear"
 msgstr "Użyj Backspace, aby wyczyścić"
 
-#~ msgid "Last version installed"
-#~ msgstr "Zainstalowano najnowszą wersję"
-
-#~ msgid "Last version installed of this extension."
-#~ msgstr "Ostatnia wersja tego rozszerzenia."
-
-#~ msgid "Enable tiling system"
-#~ msgstr "Włącz system układania okien"
-
-#~ msgid "Hold CTRL while moving a window to tile it."
-#~ msgstr "Przytrzymaj klawisz CTRL podczas przesuwania okna, aby je ułożyć."
-
-#~ msgid "Tiling system activation key"
-#~ msgstr "Klawisz aktywacji systemu układania okien"
-
-#~ msgid ""
-#~ "Which key to hold while moving a window to activate the tiling system."
-#~ msgstr ""
-#~ "Klawisz do przytrzymania podczas przesuwania okna, aby włączyć system "
-#~ "układania okien."
-
-#~ msgid "Tiling system deactivation key"
-#~ msgstr "Klawisz deaktywacji systemu układania okien"
-
-#~ msgid ""
-#~ "Which key to hold while moving a window to deactivate the tiling system."
-#~ msgstr ""
-#~ "Klawisz do przytrzymania podczas przesuwania okna, aby wyłączyć system "
-#~ "układania okien."
-
-#~ msgid "Enable snap assist"
-#~ msgstr "Włącz Asystenta przyciągania"
-
-#~ msgid "Move the window on top of the screen to snap assist it."
-#~ msgstr ""
-#~ "Przesuń okno na górną krawędź ekranu, aby wywołać Asystenta przyciągania."
-
-#~ msgid "Shows indicator"
-#~ msgstr "Pokaż wskaźnik"
-
-#~ msgid "Shows an indicator on top panel."
-#~ msgstr "Wyświetla wskaźnik na górnym panelu."
-
-#~ msgid "Internal gaps between tiles in a layout."
-#~ msgstr "Wewnętrzna przerwa między kafelkami w układzie."
-
-#~ msgid "External gaps between the layout and the monitor borders."
-#~ msgstr "Zewnętrzne przerwy między układem a granicami monitora."
-
-#~ msgid "Hold ALT to span multiple tiles."
-#~ msgstr "Przytrzymaj klawisz ALT, aby rozciągnąć na wiele kafelków."
-
-#~ msgid "Key to span multiple tiles"
-#~ msgstr "Klawisz do rozciągania na wiele kafelków"
-
-#~ msgid "Which key to hold to span multiple tiles."
-#~ msgstr "Klawisz do przytrzymania, aby rozciągnąć na wiele kafelków."
-
-#~ msgid "The layouts available to the tiling managers and the snap assist."
-#~ msgstr "Układy dostępne dla menedżerów układania i Asystenta przyciągania."
-
-#~ msgid "Selected layouts"
-#~ msgstr "Wybrane układy"
-
-#~ msgid "Each monitor's active layout used by the monitor tiling manager."
-#~ msgstr ""
-#~ "Aktywny układ każdego monitora używany przez menedżera układania monitora."
-
-#~ msgid "Restore the windows to their original size when untiled."
-#~ msgstr "Przywracaj okna do ich oryginalnego rozmiaru po usunięciu z układu."
-
-#~ msgid ""
-#~ "When a tiled window is resized, auto-resize the other tiled windows near "
-#~ "it."
-#~ msgstr ""
-#~ "Gdy rozmiar ułożonego okna jest zmieniany, automatycznie zmień rozmiar "
-#~ "sąsiednich ułożonych okien."
-
-#~ msgid "Enable Snap Assistant blur"
-#~ msgstr "Włącz rozmycie asystenta przyciągania"
-
-#~ msgid "Blur snap assistant"
-#~ msgstr "Rozmycie Asystenta przyciągania"
-
-#~ msgid "Enable selected tile preview blur"
-#~ msgstr "Włącz rozmycie podglądu wybranego kafelka"
-
-#~ msgid "Blur selected tile previews"
-#~ msgstr "Rozmyj podglądy wybranych kafelków"
-
-#~ msgid "Enable keybindings"
-#~ msgstr "Włącz skróty klawiszowe"
-
-#~ msgid "Move focused window through tiles by using keybindings."
-#~ msgstr "Przenieś aktywne okno przez kafelki, używając skrótów klawiszowych."
-
-#~ msgid "Enable auto tiling"
-#~ msgstr "Włącz automatyczne układanie"
-
-#~ msgid ""
-#~ "Automatically tile a new window to the best tile according to the current "
-#~ "layout."
-#~ msgstr ""
-#~ "Automatycznie układaj nowe okno do najlepszego kafelka zgodnie z bieżącym "
-#~ "układem."
-
-#~ msgid "Overridden settings"
-#~ msgstr "Nadpisane ustawienia"
-
-#~ msgid "The settings that are overridden and their old value."
-#~ msgstr "Ustawienia, które są nadpisane, oraz ich stara wartość."
-
-#~ msgid "Active Screen Edges"
-#~ msgstr "Aktywne krawędzie ekranu"
-
-#~ msgid ""
-#~ "Drag windows against the top, left and right screen edges to resize them."
-#~ msgstr ""
-#~ "Przeciągnij okna do górnej, lewej lub prawej krawędzi ekranu, aby zmienić "
-#~ "ich rozmiar."
-
-#~ msgid "Drag agains top edge to maximize window"
-#~ msgstr "Przeciągnij do górnej krawędzi, aby zmaksymalizować okno"
-
-#~ msgid ""
-#~ "Add snap assistant and auto-tile buttons in the menu that shows up when "
-#~ "you right click on a window title."
-#~ msgstr ""
-#~ "Dodaj przyciski Asystenta przyciągania i automatycznego układania do menu "
-#~ "wyświetlanego po kliknięciu prawym przyciskiem myszy na pasku tytułu okna."
-
-#~ msgid "Add tiled windows group to alt+tab menu"
-#~ msgstr "Dodaj grupę ułożonych okien do menu ALT+TAB"
-
-#~ msgid ""
-#~ "Add the tiled windows to the alt+tab menu to open all the tiled windows "
-#~ "at once"
-#~ msgstr ""
-#~ "Dodaj ułożone okna do menu ALT+TAB, aby otworzyć wszystkie ułożone okna "
-#~ "jednocześnie"
-
-#~ msgid "Snap Assistant's threshold to enlarge, shrink, open and close it."
-#~ msgstr ""
-#~ "Progi Asystenta przyciągania do powiększania, pomniejszania, otwierania i "
-#~ "zamykania."
-
-#~ msgid "Quarter tiling threshold"
-#~ msgstr "Próg aktywacji ćwiartkowego układania"
-
-#~ msgid "Threshold to trigger quarter tiling."
-#~ msgstr "Próg aktywacji ćwiartkowego układania."
-
-#~ msgid "Offset to trigger edge tiling (left and right edge)."
-#~ msgstr ""
-#~ "Przesunięcie do aktywacji układania krawędziowego (lewa i prawa krawędź)."
-
-#~ msgid "Enable window border"
-#~ msgstr "Włącz obramowanie okna"
-
-#~ msgid "Show a border around focused window."
-#~ msgstr "Pokaż obramowanie wokół aktywnego okna."
-
-#~ msgid "Focused window border color"
-#~ msgstr "Kolor obramowania aktywnego okna"
-
-#~ msgid "The color of the focused window's border."
-#~ msgstr "Kolor obramowania aktywnego okna."
-
-#~ msgid "Use custom color"
-#~ msgstr "Użyj własnego koloru"
-
-#~ msgid "Use the color defined here for the focused window's border."
-#~ msgstr "Użyj zdefiniowanego tutaj koloru dla obramowania aktywnego okna."
-
-#~ msgid "Focused window border width"
-#~ msgstr "Szerokość obramowania aktywnego okna"
-
-#~ msgid "The width of the focused window's border."
-#~ msgstr "Szerokość obramowania aktywnego okna."
-
-#~ msgid "Enable smart window border radius"
-#~ msgstr "Włącz inteligentny promień obramowania okna"
-
-#~ msgid "Dinamically adapt to the window's border radius."
-#~ msgstr "Dynamicznie dopasowuj do rzeczywistego promienia obramowania okna."
-
-#~ msgid "Snap assistant animation time (milliseconds)"
-#~ msgstr "Czas trwania animacji Asystenta przyciągania (w milisekundach)"
-
-#~ msgid "Animation time in milliseconds of the snap assistant"
-#~ msgstr "Czas trwania animacji Asystenta przyciągania w milisekundach"
-
-#~ msgid "Tile animation time (milliseconds)"
-#~ msgstr "Czas trwania animacji kafelka (w milisekundach)"
-
-#~ msgid "Animation time in milliseconds of the tiles"
-#~ msgstr "Czas trwania animacji kafelków w milisekundach"
-
-#~ msgid ""
-#~ "Provides smart suggestions to fill empty tiles when using the tiling "
-#~ "system."
-#~ msgstr ""
-#~ "Wyświetlaj inteligentne podpowiedzi wypełniania pustych kafelków podczas "
-#~ "korzystania z systemu układania."
-
-#~ msgid ""
-#~ "Offers suggestions to populate empty tiles when using the snap assistant."
-#~ msgstr ""
-#~ "Wyświetlaj podpowiedzi wypełniania pustych kafelków podczas korzystania z "
-#~ "Asystenta przyciągania."
-
-#~ msgid ""
-#~ "Suggests windows to occupy empty tiles when snapping to screen edges."
-#~ msgstr ""
-#~ "Sugeruj okna do zajęcia pustych kafelków podczas przyciągania do krawędzi "
-#~ "ekranu."
-
-#~ msgid "Move focused window to the tile to its right"
-#~ msgstr "Przenieś aktywne okno do kafelka po prawej"
-
-#~ msgid "Move focused window to the tile to its left"
-#~ msgstr "Przenieś aktywne okno do kafelka po lewej"
-
-#~ msgid "Move focused window to the tile above"
-#~ msgstr "Przenieś aktywne okno do kafelka powyżej"
-
-#~ msgid "Move focused window to the tile below"
-#~ msgstr "Przenieś aktywne okno do kafelka poniżej"
-
-#~ msgid "Span focused window to the tile to its right"
-#~ msgstr "Rozciągnij aktywne okno na kafelek po prawej"
-
-#~ msgid "Span focused window to the tile to its left"
-#~ msgstr "Rozciągnij aktywne okno na kafelek po lewej"
-
-#~ msgid "Span focused window to the tile above"
-#~ msgstr "Rozciągnij aktywne okno na kafelek powyżej"
-
-#~ msgid "Span focused window to the tile below"
-#~ msgstr "Rozciągnij aktywne okno na kafelek poniżej"
-
-#~ msgid "Resize the focused window to span all tiles"
-#~ msgstr "Rozciągnij aktywne okno na wszystkie kafelki"
-
-#~ msgid "Untile the focused window"
-#~ msgstr "Usuń aktywne okno z układu"
-
-#~ msgid "Focus the window to the right the current focused window"
-#~ msgstr "Aktywuj okno po prawej od bieżącego aktywnego okna"
+#: dist/indicator/defaultMenu.js:298
+msgid "Edit Layouts"
+msgstr "Edytuj układy"
+
+#: dist/indicator/defaultMenu.js:308
+msgid "New Layout"
+msgstr "Nowy układ"
+
+#: dist/indicator/editingMenu.js:19
+msgid "Menu"
+msgstr "Menu"
+
+#: dist/indicator/editingMenu.js:26
+msgid "Info"
+msgstr "Info"

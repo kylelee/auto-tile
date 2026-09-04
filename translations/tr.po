@@ -1,6 +1,6 @@
-# Turkish translations for Tiling Shell.
+# Turkish translations for AutoTile.
 # Copyright (C) 2025 THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the Tiling Shell package.
+# This file is distributed under the same license as the AutoTile package.
 # Osman KARAGÖZ <osmank3@gmail.com>, 2025.
 #
 #, fuzzy
@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-04 01:30+0800\n"
+"POT-Creation-Date: 2026-09-04 19:09+0800\n"
 "PO-Revision-Date: 2025-05-09 10:05+0300\n"
 "Last-Translator: Osman KARAGÖZ <osmank3@gmail.com>\n"
 "Language-Team: \n"
@@ -20,18 +20,6 @@ msgstr ""
 
 #: dist/components/altTab/MultipleWindowsIcon.js:42
 msgid "Tiled windows"
-msgstr ""
-
-#: dist/components/window_menu/overriddenWindowMenu.js:117
-msgid "Move to best tile"
-msgstr ""
-
-#: dist/components/window_menu/overriddenWindowMenu.js:137
-msgid "Move to leftmost tile"
-msgstr ""
-
-#: dist/components/window_menu/overriddenWindowMenu.js:156
-msgid "Move to rightmost tile"
 msgstr ""
 
 #: dist/components/editor/editorDialog.js:36
@@ -66,30 +54,17 @@ msgstr ""
 msgid "Start editing"
 msgstr ""
 
-#: dist/indicator/editingMenu.js:19
-msgid "Menu"
+#: dist/components/window_menu/overriddenWindowMenu.js:117
+msgid "Move to best tile"
 msgstr ""
 
-#: dist/indicator/editingMenu.js:26
-msgid "Info"
+#: dist/components/window_menu/overriddenWindowMenu.js:137
+msgid "Move to leftmost tile"
 msgstr ""
 
-#: dist/indicator/editingMenu.js:33 dist/prefs.js:425 dist/prefs.js:814
-msgid "Save"
-msgstr "Kaydet"
-
-#: dist/indicator/editingMenu.js:43 dist/prefs.js:426 dist/prefs.js:480
-#: dist/prefs.js:815 dist/prefs.js:870
-msgid "Cancel"
-msgstr "Vazgeç"
-
-#: dist/indicator/defaultMenu.js:298
-msgid "Edit Layouts"
-msgstr "Yerleşimleri Düzenle"
-
-#: dist/indicator/defaultMenu.js:308
-msgid "New Layout"
-msgstr "Yeni Yerleşim"
+#: dist/components/window_menu/overriddenWindowMenu.js:156
+msgid "Move to rightmost tile"
+msgstr ""
 
 #: dist/prefs.js:59
 msgid "General"
@@ -100,8 +75,8 @@ msgid "Appearance"
 msgstr "Görünüm"
 
 #: dist/prefs.js:65
-msgid "Configure the appearance of Tiling Shell"
-msgstr "Tiling Shell'in görünümünü yapılandır"
+msgid "Configure the appearance of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:70
 msgid "Show Indicator"
@@ -225,8 +200,8 @@ msgid "Behaviour"
 msgstr "Davranış"
 
 #: dist/prefs.js:190
-msgid "Configure the behaviour of Tiling Shell"
-msgstr "Tiling Shell'in davranışını yapılandır"
+msgid "Configure the behaviour of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:195
 msgid "Enable Snap Assistant"
@@ -436,8 +411,8 @@ msgid "Layouts"
 msgstr "Yerleşimler"
 
 #: dist/prefs.js:406
-msgid "Configure the layouts of Tiling Shell"
-msgstr "Tiling Shell'in yerleşimlerini yapılandır"
+msgid "Configure the layouts of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:410 dist/prefs.js:411
 msgid "Edit layouts"
@@ -454,6 +429,15 @@ msgstr "Yerleşimleri dışa aktar"
 #: dist/prefs.js:419
 msgid "Export layouts to a file"
 msgstr "Yerleşimleri bir dosyaya aktar"
+
+#: dist/prefs.js:425 dist/prefs.js:814 dist/indicator/editingMenu.js:33
+msgid "Save"
+msgstr "Kaydet"
+
+#: dist/prefs.js:426 dist/prefs.js:480 dist/prefs.js:815 dist/prefs.js:870
+#: dist/indicator/editingMenu.js:43
+msgid "Cancel"
+msgstr "Vazgeç"
 
 #: dist/prefs.js:471 dist/prefs.js:472
 msgid "Import layouts"
@@ -664,8 +648,8 @@ msgid "Import, export and reset"
 msgstr "İçe aktar, dışa aktar ve sıfırla"
 
 #: dist/prefs.js:801
-msgid "Import, export and reset the settings of Tiling Shell"
-msgstr "Tiling Shell ayarlarını içe aktar, dışa aktar ve sıfırla"
+msgid "Import, export and reset the settings of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:806 dist/prefs.js:807
 msgid "Export settings"
@@ -768,3 +752,19 @@ msgstr "Yeni kısayol…"
 #: dist/prefs.js:1322
 msgid "Use Backspace to clear"
 msgstr "Temizlemek için Backspace kullan"
+
+#: dist/indicator/defaultMenu.js:298
+msgid "Edit Layouts"
+msgstr "Yerleşimleri Düzenle"
+
+#: dist/indicator/defaultMenu.js:308
+msgid "New Layout"
+msgstr "Yeni Yerleşim"
+
+#: dist/indicator/editingMenu.js:19
+msgid "Menu"
+msgstr ""
+
+#: dist/indicator/editingMenu.js:26
+msgid "Info"
+msgstr ""

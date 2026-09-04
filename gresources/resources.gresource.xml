@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-  <gresource prefix="/org/gnome/Shell/Extensions/tilingshell">
+  <gresource prefix="/org/gnome/Shell/Extensions/autotile">
     <file preprocess="xml-stripblanks">icons/scalable/actions/edge-adaptive-symbolic.svg</file>
     <file preprocess="xml-stripblanks">icons/scalable/actions/edge-adaptive-symbolic-dark.svg</file>
     <file preprocess="xml-stripblanks">icons/scalable/actions/edge-default-symbolic.svg</file>

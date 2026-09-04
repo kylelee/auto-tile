@@ -1,6 +1,6 @@
 
 /*!
- * Tiling Shell: advanced and modern window management for GNOME
+ * AutoTile: advanced and modern window management for GNOME
  *
  * Copyright (C) 2025 Domenico Ferraro
  *
@@ -45,7 +45,7 @@ import { withAutoFillSuppressed } from './components/tilingsystem/autoFillSuppre
 import OverriddenWindowMenu from './components/window_menu/overriddenWindowMenu';
 import Tile from './components/layout/Tile';
 import { WindowBorderManager } from './components/windowBorder/windowBorderManager';
-import TilingShellWindowManager from './components/windowManager/tilingShellWindowManager';
+import AutoTileWindowManager from './components/windowManager/autoTileWindowManager';
 import ExtendedWindow from './components/tilingsystem/extendedWindow';
 import OverriddenAltTab from './components/altTab/overriddenAltTab';
 import { LayoutSwitcherPopup } from './components/layoutSwitcher/layoutSwitcher';
@@ -56,7 +56,7 @@ import { FocusOnCloseManager } from './components/focusOnClose/focusOnCloseManag
 
 const debug = logger('extension');
 
-export default class TilingShellExtension extends Extension {
+export default class AutoTileExtension extends Extension {
     private _indicator: Indicator | null;
     private _tilingManagers: TilingManager[];
     private _fractionalScalingEnabled: boolean;
@@ -134,7 +134,7 @@ export default class TilingShellExtension extends Extension {
         this._validateSettings();
 
         // force initialization and tracking of windows
-        TilingShellWindowManager.get();
+        AutoTileWindowManager.get();
 
         this._fractionalScalingEnabled = this._isFractionalScalingEnabled(
             new Gio.Settings({ schema: 'org.gnome.mutter' }),
@@ -434,7 +434,7 @@ export default class TilingShellExtension extends Extension {
             );
         }
 
-        // when Tiling Shell's edge-tiling is enabled/disable
+        // when AutoTile's edge-tiling is enabled/disable
         // then enable/disable native edge-tiling
         this._signals.connect(
             Settings,
@@ -1016,7 +1016,7 @@ export default class TilingShellExtension extends Extension {
         // destroy state and settings
         GlobalState.destroy();
         Settings.destroy();
-        TilingShellWindowManager.destroy();
+        AutoTileWindowManager.destroy();
 
         debug('extension is disabled');
     }

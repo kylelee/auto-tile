@@ -10,7 +10,7 @@ import Tile from '../../components/layout/Tile';
 import LayoutWidget from '../../components/layout/LayoutWidget';
 import SignalHandling from '../../utils/signalHandling';
 import SuggestionsTilePreview from '../../components/windowsSuggestions/suggestionsTilePreview';
-import TilingShellWindowManager from '../../components/windowManager/tilingShellWindowManager';
+import AutoTileWindowManager from '../../components/windowManager/autoTileWindowManager';
 import { getEventCoords, unmaximizeWindow } from '../../utils/gnomesupport';
 import TouchEventHelper from '../../utils/touch';
 
@@ -336,7 +336,7 @@ export default class TilingLayoutWithSuggestions extends LayoutWidget<Suggestion
         // create a static clone and hide the live clone
         // then we can change the actual window size
         // without showing that to the user
-        TilingShellWindowManager.easeMoveWindow({
+        AutoTileWindowManager.easeMoveWindow({
             window: nonTiledWin,
             from: cloneRect,
             to: buildRectangle({

@@ -19,5 +19,5 @@ When contributing to this repository, please first discuss with the owners of th
 6. Issue that pull request! 🥳
 
 ## Any contributions you make will be under the GPLv3 Software License
-In short, when you submit code changes, your submissions are understood to be under the same [GPLv3 License](https://github.com/domferr/tilingshell/blob/main/LICENSE) that covers the project. 
+In short, when you submit code changes, your submissions are understood to be under the same [GPLv3 License](https://github.com/kylelee/AutoTile/blob/main/LICENSE) that covers the project. 
 Feel free to contact the maintainers if that's a concern.

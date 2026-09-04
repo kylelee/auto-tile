@@ -37,7 +37,7 @@ import FreeTileFiller, {
 } from './freeTileFiller';
 import TouchPointer from './touchPointer';
 import { KeyBindingsDirection } from '../../keybindings';
-import TilingShellWindowManager from '../../components/windowManager/tilingShellWindowManager';
+import AutoTileWindowManager from '../../components/windowManager/autoTileWindowManager';
 import TilingLayoutWithSuggestions from '../windowsSuggestions/tilingLayoutWithSuggestions';
 import { maximizeWindow, unmaximizeWindow } from '../../utils/gnomesupport';
 import { rectMostlyInsideTile } from './freeTileFillPlanner';
@@ -101,7 +101,7 @@ export function isInsertionShiftInProgress(): boolean {
     return _insertionShiftInProgress;
 }
 
-// structural mirror of TilingShellWindowManager's per-window cache marker
+// structural mirror of AutoTileWindowManager's per-window cache marker
 // (not exported there): only liveness and the tracked workspace are read here
 interface WindowWithCachedProps extends Meta.Window {
     __ts_cached: { workspace: Meta.Workspace | null } | undefined;
@@ -362,7 +362,7 @@ export class TilingManager {
             },
         );
         this._signals.connect(
-            TilingShellWindowManager.get(),
+            AutoTileWindowManager.get(),
             'unmaximized',
             (_, window: Meta.Window) => {
                 if (Settings.ENABLE_AUTO_TILING) this._autoTile(window, false);
@@ -371,7 +371,7 @@ export class TilingManager {
 
         // forget assigned tile when window is maximized
         this._signals.connect(
-            TilingShellWindowManager.get(),
+            AutoTileWindowManager.get(),
             'maximized',
             (_, window: Meta.Window) => {
                 delete (window as ExtendedWindow).assignedTile;
@@ -386,7 +386,7 @@ export class TilingManager {
         });
 
         this._signals.connect(
-            TilingShellWindowManager.get(),
+            AutoTileWindowManager.get(),
             'window-unmanaged',
             (_, window: Meta.Window) => {
                 // only a window that occupied a tile can free one
@@ -408,7 +408,7 @@ export class TilingManager {
                     ?.workspace;
                 if (!trackedWs) {
                     console.warn(
-                        'TilingShell: unmanaged window has no tracked workspace, skipping auto-fill trigger',
+                        'AutoTile: unmanaged window has no tracked workspace, skipping auto-fill trigger',
                     );
                     return;
                 }
@@ -420,7 +420,7 @@ export class TilingManager {
                     );
                 } catch (e) {
                     console.warn(
-                        'TilingShell: tracked workspace of unmanaged window was disposed, skipping auto-fill trigger',
+                        'AutoTile: tracked workspace of unmanaged window was disposed, skipping auto-fill trigger',
                         e,
                     );
                 }
@@ -428,7 +428,7 @@ export class TilingManager {
         );
 
         this._signals.connect(
-            TilingShellWindowManager.get(),
+            AutoTileWindowManager.get(),
             'window-workspace-changed',
             (_, window: Meta.Window, oldIdx: number, newIdx: number) => {
                 // the assignedTile gating also keeps floating-window moves
@@ -1731,7 +1731,7 @@ export class TilingManager {
                     // the origin workspace vanished (dynamic collapse):
                     // re-seat on the window's current workspace
                     console.warn(
-                        'TilingShell: origin workspace of enforced window vanished, re-seating on the current one',
+                        'AutoTile: origin workspace of enforced window vanished, re-seating on the current one',
                     );
                     const tile = this._findEmptyTile(
                         window,
@@ -1765,7 +1765,7 @@ export class TilingManager {
 
     /**
      * Re-tile a window that just entered this monitor through a NON
-     * Tiling-Shell path (e.g. GNOME's built-in "move window one monitor
+     * AutoTile path (e.g. GNOME's built-in "move window one monitor
      * up/down" shortcuts). Only already-tiled windows are handled: they keep
      * being tiled on the destination monitor, per the destination layout.
      */

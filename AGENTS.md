@@ -1,6 +1,6 @@
 # AGENTS.md
 
-GNOME Shell extension (TypeScript compiled to GJS JavaScript) providing tiling window management. Supports GNOME Shell 42–50; UUID `tilingshell@ferrarodomenico.com`. Types come from `@girs/gnome-shell`.
+GNOME Shell extension (TypeScript compiled to GJS JavaScript) providing tiling window management. Supports GNOME Shell 42–50; UUID `autotile@kylelee.github.io`. Types come from `@girs/gnome-shell`.
 
 ## Commands
 
@@ -50,13 +50,13 @@ The extension process and the prefs dialog are separate processes with disjoint 
 
 ## Settings & keybindings
 
-Adding a setting/keybinding touches 4 files — follow the step-by-step recipe in README §"How to add new keybindings": `resources/schemas/org.gnome.shell.extensions.tilingshell.gschema.xml` → `src/settings/settings.ts` (`SETTING_<NAME>` constant) → `src/keybindings.ts` (signal, `addKeybinding` in `enable`, `removeKeybinding` in `disable`) → `src/prefs.ts` (entry; reuse the schema summary text).
+Adding a setting/keybinding touches 4 files — follow the step-by-step recipe in README §"How to add new keybindings": `resources/schemas/org.gnome.shell.extensions.autotile.gschema.xml` → `src/settings/settings.ts` (`SETTING_<NAME>` constant) → `src/keybindings.ts` (signal, `addKeybinding` in `enable`, `removeKeybinding` in `disable`) → `src/prefs.ts` (entry; reuse the schema summary text).
 
 ## Conventions
 
 - Prettier: 4-space indent, single quotes, semicolons — run `npm run prettier:fix` before committing.
 - ESLint enforces GJS restrictions: `log()`/`logError()` forbidden (use `console.*`), no `Lang.*`, `no-await-in-loop` is an error, unused vars/args must be `_`-prefixed.
-- User-visible strings use gettext (`_()`, `ngettext`), domain `tilingshell`.
+- User-visible strings use gettext, domain `autotile`: in the extension process import `t`/`tn`/`tp` from `src/translations.ts`; in prefs use the local `_t()`. Chinese locales (zh_CN/zh_SG → zh_Simplified, zh_TW/zh_HK → zh_Traditional) are resolved in code by `src/utils/moCatalog.ts`, not by system gettext.
 - `translations/*.po` are generated — after changing translatable strings run `npm run update-translations` (needs gettext tools and a fresh `dist/`; xgettext runs over the built JS, not src).
 - Version lives in both `package.json` and `resources/metadata.json` (`version` + `version-name`) — bump together.
 - PRs: branch from `main`, lint clean, test changes on both GNOME ≤44 (legacy build) and ≥45; behavior changes need a demo video or description (CONTRIBUTING.md).

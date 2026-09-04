@@ -1,6 +1,6 @@
 # Documentation for JSON exported layouts
 
-*Tiling Shell* supports importing and exporting its layouts as a JSON file. With this you can create your own custom layouts, or fine-tune already existing layouts.
+*AutoTile* supports importing and exporting its layouts as a JSON file. With this you can create your own custom layouts, or fine-tune already existing layouts.
 
 The exported layouts (from the preferences) are a collection of `Layout` objects. A `Layout` object is an object with two (2) properties: 
 
@@ -32,7 +32,7 @@ So a `Tile` with `x` = 0.5 and `y` = 0.5, on a screen with a resolution of 1920x
 
 The `group` attribute is mainly used in the layout editor where it determines which `Tile`(s) are "linked": if you resize a single `Tile` it's linked neighbour(s) are also updated.
 
-For more in depth information you can look at an [in depth explanation](https://github.com/domferr/tilingshell/issues/177#issuecomment-2458322208) of `group`(s).
+For more in depth information you can look at an [in depth explanation](https://github.com/kylelee/AutoTile/issues/177#issuecomment-2458322208) of `group`(s).
 
 Example JSON of a `Tile` object would look like this
 

@@ -10,4 +10,4 @@ export function rect_to_string(rect: {
 export const logger =
     (prefix: string) =>
     (...content: unknown[]): void =>
-        console.log('[tilingshell]', `[${prefix}]`, ...content);
+        console.log('[autotile]', `[${prefix}]`, ...content);

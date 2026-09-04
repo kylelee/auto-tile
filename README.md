@@ -1,12 +1,12 @@
-<img src="https://raw.githubusercontent.com/domferr/tilingshell/main/logo.png" align="right" width="76"/>
+<img src="https://raw.githubusercontent.com/kylelee/AutoTile/main/logo.png" align="right" width="76"/>
 
-[![release](https://img.shields.io/badge/Release_v16-blue?style=for-the-badge)]([https://ko-fi.com/domferr](https://github.com/domferr/tilingshell/releases))
-![](https://img.shields.io/github/license/domferr/tilingshell?style=for-the-badge)
+[![release](https://img.shields.io/badge/Release_v16-blue?style=for-the-badge)]([https://ko-fi.com/domferr](https://github.com/kylelee/AutoTile/releases))
+![](https://img.shields.io/github/license/kylelee/AutoTile?style=for-the-badge)
 ![](https://img.shields.io/badge/GNOME-42--49-e04196?style=for-the-badge&logo=gnome&logoColor=white)
 [![kofi](https://img.shields.io/badge/Donate_on_Ko--fi-purple?logo=ko-fi&style=for-the-badge)](https://ko-fi.com/domferr)
 [![patreon](https://img.shields.io/badge/Patreon-F96854?style=for-the-badge&logo=patreon&logoColor=white)](https://patreon.com/domferr)
 
-# Tiling Shell #
+# AutoTile #
 
 This is a Gnome Shell extension implementing modern windows tiling system by extending GNOME's default 2 columns to any layout you want! Can be installed on Gnome Shells from **42 to 49** on X11 and Wayland: the most recent GNOME Shell is supported, and older releases will include all the features and bug fixes!
 
@@ -17,12 +17,12 @@ This is a Gnome Shell extension implementing modern windows tiling system by ext
 - 🚀 Automatically sets the same UI of your GNOME theme, for a **seamless integration**!
 
 <div align="center">
-  <a href="https://extensions.gnome.org/extension/7065/tiling-shell/" >
-      <img src="https://img.shields.io/badge/Install%20from-extensions.gnome.org-4A86CF?style=for-the-badge&logo=Gnome&logoColor=white"/>
+  <a href="https://github.com/kylelee/AutoTile/releases" >
+      <img src="https://img.shields.io/badge/Get%20it%20on-GitHub-4A86CF?style=for-the-badge&logo=Gnome&logoColor=white"/>
   </a>
 </div>
 
-<img src="https://github.com/domferr/tilingshell/blob/main/doc/horiz_summary.jpg" align="center"/>
+<img src="https://github.com/kylelee/AutoTile/blob/main/doc/horiz_summary.jpg" align="center"/>
 
 <details>
   <summary><span align="center">See here the video overview</span></summary>
@@ -30,7 +30,7 @@ This is a Gnome Shell extension implementing modern windows tiling system by ext
   https://github.com/user-attachments/assets/2905f0a1-ecd4-47b5-a6bc-59f91716e685
 </details>
 
-Have issues, you want to suggest a new feature or contribute? Please open a new [issue](https://github.com/domferr/tilingshell/issues)!
+Have issues, you want to suggest a new feature or contribute? Please open a new [issue](https://github.com/kylelee/AutoTile/issues)!
 
 ## Usage ##
 
@@ -40,13 +40,13 @@ Have issues, you want to suggest a new feature or contribute? Please open a new 
 | [⬇️](#tiling-buttons) **Tiling Buttons** | [⬇️](#per-workspace-layout) **Per-workspace layout** | [⬇️](#auto-tiling) **Auto-tiling** | [⬇️](#tiling-context-menu) **Tiling context menu** |
 | [⬇️](#smart-border-radius) **Smart border radius** | [⬇️](#windows-suggestions) **Windows Suggestions** 
 
-## 🎉🎉 Tiling Shell's AWESOME Supporters!
+## 🎉🎉 AutoTile's AWESOME Supporters!
 Thank you to the :star2: **amazing** <a href="https://patreon.com/domferr"><img src="https://img.shields.io/badge/Patreons-F96854?logo=patreon&logoColor=white)" height="14px"/><a/> and **everyone** who donated on <a href="https://ko-fi.com/domferr"><img src="https://img.shields.io/badge/_Ko--fi-794bc4?logo=ko-fi&logoColor=white" height="14px"/><a/>! :medal_sports:Sean, Markus Huggler, Kostja Palović, Mike Empey, Miguel and Jesse Dhillon on Patreon:medal_sports: and Zorin OS, Nick, thy-fi, iatanas0v, Chris, wbezs, DaneshManoharan, Tamas, Ivan Banha and many more on Ko-fi! You are on a mission to **make Linux window management better for everyone**!
 
 ### Tiling System ###
 When grabbing and moving a window, press <kbd>CTRL</kbd> key to show the tiling layout (you can choose another key from the preferences). When moving on a tile, it will highlight. Ungrab the window to place that window on the highlighted tile.
 
-[tiling_system.webm](https://github.com/domferr/tilingshell/assets/14203981/a45ec416-ad39-458d-9b9f-cddce8b25666)
+[tiling_system.webm](https://github.com/kylelee/AutoTile/assets/14203981/a45ec416-ad39-458d-9b9f-cddce8b25666)
 
 > This extension and the tiling system also implements Windows PowerToys FancyZones!
 
@@ -55,16 +55,16 @@ When grabbing and moving a window, press <kbd>CTRL</kbd> key to show the tiling 
 ### Snap Assistant ###
 When grabbing and moving a window, the snap assistant will be available on top of the screen. Move the window near it to activate the snap assistant. While still grabbing the window, move your mouse to the tile you are interested in. By stopping grabbing the window will be tiled to the selected tile!
 
-[snap_assistant.webm](https://github.com/domferr/tilingshell/assets/14203981/33511582-fa92-445e-b1ba-8b08f9a8e43a)
+[snap_assistant.webm](https://github.com/kylelee/AutoTile/assets/14203981/33511582-fa92-445e-b1ba-8b08f9a8e43a)
 
 > Snap Assistant's sensibility can be customized from the preferences.
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
 ### Select a layout ###
-Click on Tiling Shell's panel indicator and the available layouts will be shown. Select the one you prefer by clicking on it. That layout will be applied to every monitor in case you have more than one.
+Click on AutoTile's panel indicator and the available layouts will be shown. Select the one you prefer by clicking on it. That layout will be applied to every monitor in case you have more than one.
 
-[layout_selection.webm](https://github.com/domferr/tilingshell/assets/14203981/f4956a34-64e3-4c24-b177-8f9b08fcc45c)
+[layout_selection.webm](https://github.com/kylelee/AutoTile/assets/14203981/f4956a34-64e3-4c24-b177-8f9b08fcc45c)
 
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
@@ -73,7 +73,7 @@ Click on Tiling Shell's panel indicator and the available layouts will be shown.
 
 The layout is not strict. You can select multiple tiles too! Just hold <kbd>ALT</kbd> while using the tiling system (you can choose another key from the preferences).
 
-[multiple_selection.webm](https://github.com/domferr/tilingshell/assets/14203981/92b29130-260c-479d-9237-bf5c87427e52)
+[multiple_selection.webm](https://github.com/kylelee/AutoTile/assets/14203981/92b29130-260c-479d-9237-bf5c87427e52)
 
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
@@ -82,9 +82,9 @@ The layout is not strict. You can select multiple tiles too! Just hold <kbd>ALT<
 
 | Split a tile | Split a tile _vertically_ | Delete a tile | Save, close the editor or open the menu |
 |:---:|:---:|:---:|:---:|
-| <kbd>LEFT CLICK</kbd> | <kbd>LEFT CLICK</kbd> + <kbd>CTRL</kbd> | <kbd>RIGHT CLICK</kbd> | Click the Tiling Shell's icon <img src="https://github.com/domferr/tilingshell/assets/14203981/13e27ec1-6a5d-420f-a87f-8f3df0b34c92" width=96 /> on the panel. |
+| <kbd>LEFT CLICK</kbd> | <kbd>LEFT CLICK</kbd> + <kbd>CTRL</kbd> | <kbd>RIGHT CLICK</kbd> | Click the AutoTile's icon <img src="https://github.com/kylelee/AutoTile/assets/14203981/13e27ec1-6a5d-420f-a87f-8f3df0b34c92" width=96 /> on the panel. |
 
-[layout_editor.webm](https://github.com/domferr/tilingshell/assets/14203981/c6e05589-69d9-4fa3-a4df-61ee875cf9e1)
+[layout_editor.webm](https://github.com/kylelee/AutoTile/assets/14203981/c6e05589-69d9-4fa3-a4df-61ee875cf9e1)
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
@@ -92,7 +92,7 @@ The layout is not strict. You can select multiple tiles too! Just hold <kbd>ALT<
 
 You can resize adjacent tiled windows together!
 
-[Resizing tiled windows](https://github.com/domferr/tilingshell/assets/14203981/da4ef97e-cdbb-4981-a8ab-9ca8cd23d63d)
+[Resizing tiled windows](https://github.com/kylelee/AutoTile/assets/14203981/da4ef97e-cdbb-4981-a8ab-9ca8cd23d63d)
 
 > It can be enabled/disabled from the preferences
 
@@ -114,7 +114,7 @@ Moving toward an occupied tile swaps the positions of the two windows, even acro
 
 You can tile a window by moving it to the edge.
 
-[Screencast from 2024-06-22 22-12-22.webm](https://github.com/domferr/tilingshell/assets/14203981/6e5a2ba9-cd38-44bb-b791-51e41e07f7a0)
+[Screencast from 2024-06-22 22-12-22.webm](https://github.com/kylelee/AutoTile/assets/14203981/6e5a2ba9-cd38-44bb-b791-51e41e07f7a0)
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
@@ -150,7 +150,7 @@ While that preference is enabled, dragging can no longer un-tile a window: stray
 
 ### Export and import layouts ###
 
-*Tiling Shell* supports importing and exporting its layouts to a JSON file. With this you can create your own custom layouts without the built-in graphical editor, or share your layouts with others! If you are interested into knowing more about the contents of the layout file check the official [documentation](./doc/json-internal-documentation.md).
+*AutoTile* supports importing and exporting its layouts to a JSON file. With this you can create your own custom layouts without the built-in graphical editor, or share your layouts with others! If you are interested into knowing more about the contents of the layout file check the official [documentation](./doc/json-internal-documentation.md).
 
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
@@ -171,7 +171,7 @@ Right-click on a window to use the auto-tile buttons and the snap assistant from
 
 ### Smart border radius ###
 
-In GNOME, different windows may have different border radius. Drawing a border around the focused window is hard because it is not possible to know the window border radius. All the existing extensions just draw a border with a static value, making the UI less polished. Tiling Shell, **dynamically** computes the focused window border radius at runtime. Moreover, if you have an extension or anything else who customize the border radius, the focused window border radius adapts as well! This can be enabled/disabled from the extension's preferences too.
+In GNOME, different windows may have different border radius. Drawing a border around the focused window is hard because it is not possible to know the window border radius. All the existing extensions just draw a border with a static value, making the UI less polished. AutoTile, **dynamically** computes the focused window border radius at runtime. Moreover, if you have an extension or anything else who customize the border radius, the focused window border radius adapts as well! This can be enabled/disabled from the extension's preferences too.
 
 
 <p align="center">
@@ -195,18 +195,18 @@ Yes. From the extension's preferences you find a section called Windows Suggesti
 
 ## Installation
 
-This extension is published on [extensions.gnome.org](https://extensions.gnome.org/extension/7065/tiling-shell/)! You can install from there or install manually. By installing from [extensions.gnome.org](https://extensions.gnome.org/extension/7065/tiling-shell/) you will always have the latest update.
+This extension is published on [GitHub](https://github.com/kylelee/AutoTile)! You can install from there or install manually. By installing from [GitHub releases](https://github.com/kylelee/AutoTile/releases) you will always have the latest update.
 
 <div align="center">
-  <a href="https://extensions.gnome.org/extension/7065/tiling-shell/" >
-      <img src="https://img.shields.io/badge/Install%20from-extensions.gnome.org-4A86CF?style=for-the-badge&logo=Gnome&logoColor=white"/>
+  <a href="https://github.com/kylelee/AutoTile/releases" >
+      <img src="https://img.shields.io/badge/Get%20it%20on-GitHub-4A86CF?style=for-the-badge&logo=Gnome&logoColor=white"/>
   </a>
 </div>
 
 ### Install manually
-Download the latest [release](https://github.com/domferr/tilingshell/releases). Extract the downloaded archive. Copy the folder to `~/.local/share/gnome-shell/extensions` directory. You need to reload GNOME Shell afterwards (e.g. by logging out). Then you can enable the extension:
+Download the latest [release](https://github.com/kylelee/AutoTile/releases). Extract the downloaded archive. Copy the folder to `~/.local/share/gnome-shell/extensions` directory. You need to reload GNOME Shell afterwards (e.g. by logging out). Then you can enable the extension:
 ```bash
-/usr/bin/gnome-extensions enable tilingshell@ferrarodomenico.com
+/usr/bin/gnome-extensions enable autotile@kylelee.github.io
 ```
 
 ### Install via Source
@@ -218,7 +218,7 @@ npm run install:extension
 You can restart your GNOME shell e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only) and enable the extension. Enjoy it!
 To enable via the command line you can run 
 ```bash
-/usr/bin/gnome-extensions enable tilingshell@ferrarodomenico.com
+/usr/bin/gnome-extensions enable autotile@kylelee.github.io
 ```
 
 To read the logs you can run
@@ -232,20 +232,20 @@ To read the logs of the preferences you can run
 ```bash
 journalctl -f -o cat /usr/bin/gjs
 ```
-### Uninstall Tiling Shell
+### Uninstall AutoTile
 
 To uninstall, first disable the extension and then remove it. To disable via the command line you can run 
 ```bash
-/usr/bin/gnome-extensions disable tilingshell@ferrarodomenico.com
+/usr/bin/gnome-extensions disable autotile@kylelee.github.io
 ```
 
 ## Contributing
 
-Feel free to submit [issues](https://github.com/domferr/tilingshell/issues/new/choose) and [Pull Requests](https://github.com/domferr/tilingshell/pulls)!
+Feel free to submit [issues](https://github.com/kylelee/AutoTile/issues/new/choose) and [Pull Requests](https://github.com/kylelee/AutoTile/pulls)!
 
 ### How to add new keybindings
 
-1. Edit the file `resources/schemas/org.gnome.shell.extensions.tilingshell.gschema.xml` and add a new key with a name, default empty value and a summary. For example, add the following if the name is `highlight-current-window` and the summary is `Minimize all the other windows and show only the focused window`:
+1. Edit the file `resources/schemas/org.gnome.shell.extensions.autotile.gschema.xml` and add a new key with a name, default empty value and a summary. For example, add the following if the name is `highlight-current-window` and the summary is `Minimize all the other windows and show only the focused window`:
 ```xml
 <key type="as" name="highlight-current-window">
   <default><![CDATA[['']]]></default>
@@ -253,7 +253,7 @@ Feel free to submit [issues](https://github.com/domferr/tilingshell/issues/new/c
 </key>
 ```
 
-2. Edit the file `src/settings/settings.ts` and add a static constant at the end of the list of the static constants (for example [here](https://github.com/domferr/tilingshell/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/settings/settings.ts#L138)). The static constant must be a string equal to the key name. The constant name must start with `SETTING_` and must be the key name capitalized and using underscores. For example if the key name is `highlight-current-window`, add this to the file:
+2. Edit the file `src/settings/settings.ts` and add a static constant at the end of the list of the static constants (for example [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/settings/settings.ts#L138)). The static constant must be a string equal to the key name. The constant name must start with `SETTING_` and must be the key name capitalized and using underscores. For example if the key name is `highlight-current-window`, add this to the file:
 ```js
 static SETTING_HIGHLIGHT_CURRENT_WINDOW = 'highlight-current-window';
 ```
@@ -265,7 +265,7 @@ static SETTING_HIGHLIGHT_CURRENT_WINDOW = 'highlight-current-window';
 },
 ```
 
-4. The idea is that, when the user presses the keybindings, the Keybinding singleton class will emit that signal. To achieve that, edit the file `src/keybindings.ts` by emitting the signal when the keybindings are used, for example [here](https://github.com/domferr/tilingshell/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L223). For example if the key name is `highlight-current-window`, add this:
+4. The idea is that, when the user presses the keybindings, the Keybinding singleton class will emit that signal. To achieve that, edit the file `src/keybindings.ts` by emitting the signal when the keybindings are used, for example [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L223). For example if the key name is `highlight-current-window`, add this:
 ```js
 Main.wm.addKeybinding(
     Settings.SETTING_HIGHLIGHT_CURRENT_WINDOW,
@@ -279,12 +279,12 @@ Main.wm.addKeybinding(
 ```
 You can put after `display` all the parameters you need (if any).
 
-5. Ensure you disable the keybindings when the extension is disabled. To achieve that edit the file `src/keybindings.ts` to remove the keybindings, for example [here](https://github.com/domferr/tilingshell/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L318). For example, if the key name is `highlight-current-window` then add this:
+5. Ensure you disable the keybindings when the extension is disabled. To achieve that edit the file `src/keybindings.ts` to remove the keybindings, for example [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L318). For example, if the key name is `highlight-current-window` then add this:
 ```js
 Main.wm.removeKeybinding(Settings.SETTING_HIGHLIGHT_CURRENT_WINDOW);
 ```
 
-6. You can now listen to the keybindings from everywhere by just connecting to the signal. A good place to do so is in the `src/extension.ts` file, for example [here](https://github.com/domferr/tilingshell/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/extension.ts#L264). For example, if the key name is `highlight-current-window` then add this:
+6. You can now listen to the keybindings from everywhere by just connecting to the signal. A good place to do so is in the `src/extension.ts` file, for example [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/extension.ts#L264). For example, if the key name is `highlight-current-window` then add this:
 ```js
 this._signals.connect(
   this._keybindings,
@@ -297,12 +297,12 @@ this._signals.connect(
 );
 ```
 
-7. Edit the file `src/prefs.ts` to allow the user to choose its preferred keybindings. This can be easily done by adding a new entry in the `keybindings` array. For example by adding a new entry [here](https://github.com/domferr/tilingshell/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/prefs.ts#L639). For example, if the key name is `highlight-current-window` then add this:
+7. Edit the file `src/prefs.ts` to allow the user to choose its preferred keybindings. This can be easily done by adding a new entry in the `keybindings` array. For example by adding a new entry [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/prefs.ts#L639). For example, if the key name is `highlight-current-window` then add this:
 ```js
 [
     Settings.SETTING_HIGHLIGHT_CURRENT_WINDOW,
-    _('Highlight focused window'),
-    _('Minimize all the other windows and show only the focused window'),
+    _t('Highlight focused window'),
+    _t('Minimize all the other windows and show only the focused window'),
     false,
     false,
 ],

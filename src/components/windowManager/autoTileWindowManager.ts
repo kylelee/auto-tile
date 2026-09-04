@@ -9,13 +9,13 @@ class CachedWindowProperties {
     // renumber survivors without firing per-window signals (an index goes stale)
     public workspace: Meta.Workspace | null = null;
 
-    constructor(window: Meta.Window, manager: TilingShellWindowManager) {
+    constructor(window: Meta.Window, manager: AutoTileWindowManager) {
         this.workspace = window.get_workspace();
         this.update(window, manager);
         this._is_initialized = true;
     }
 
-    public update(window: Meta.Window, manager: TilingShellWindowManager) {
+    public update(window: Meta.Window, manager: AutoTileWindowManager) {
         const newMaximized =
             window.maximizedVertically && window.maximizedHorizontally;
         if (this._is_initialized) {
@@ -33,9 +33,9 @@ interface WindowWithCachedProps extends Meta.Window {
     __ts_cached: CachedWindowProperties | undefined;
 }
 
-export default class TilingShellWindowManager extends GObject.Object {
+export default class AutoTileWindowManager extends GObject.Object {
     static { registerGObjectClass(this, {
-        GTypeName: 'TilingShellWindowManager',
+        GTypeName: 'AutoTileWindowManager',
         Signals: {
             unmaximized: {
                 param_types: [Meta.Window.$gtype],
@@ -56,13 +56,13 @@ export default class TilingShellWindowManager extends GObject.Object {
         },
     })};
 
-    private static _instance: TilingShellWindowManager | null;
+    private static _instance: AutoTileWindowManager | null;
 
     private readonly _signals: SignalHandling;
     private readonly _windowSignals: SignalHandling;
 
-    static get(): TilingShellWindowManager {
-        if (!this._instance) this._instance = new TilingShellWindowManager();
+    static get(): AutoTileWindowManager {
+        if (!this._instance) this._instance = new AutoTileWindowManager();
 
         return this._instance;
     }
@@ -160,7 +160,7 @@ export default class TilingShellWindowManager extends GObject.Object {
                 // reset the tracker to the current workspace and skip emission
                 cached.workspace = window.get_workspace();
                 console.warn(
-                    'TilingShell: tracked workspace of window',
+                    'AutoTile: tracked workspace of window',
                     window.get_id(),
                     'was disposed, resetting it',
                     e,

@@ -2,7 +2,7 @@ import { Gio, GLib } from '../gi/prefs';
 import Settings from '../settings/settings';
 import SettingsOverride from '../settings/settingsOverride';
 
-const dconfPath = '/org/gnome/shell/extensions/tilingshell/';
+const dconfPath = '/org/gnome/shell/extensions/autotile/';
 const excludedKeys: string[] = [
     Settings.KEY_SETTING_LAYOUTS_JSON,
     Settings.KEY_LAST_VERSION_NAME_INSTALLED,

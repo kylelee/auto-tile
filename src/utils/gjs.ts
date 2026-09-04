@@ -9,7 +9,7 @@ export function registerGObjectClass<
     // Always ensure a unique GTypeName
     if (!metaInfo.GTypeName) {
         // Prefix with something project-specific to avoid cross-extension conflicts
-        metaInfo.GTypeName = `TilingShell${target.name}`;
+        metaInfo.GTypeName = `AutoTile${target.name}`;
     }
 
     // @ts-expect-error This is expected

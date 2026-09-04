@@ -473,6 +473,64 @@ const scenarios: [string, () => void][] = [
             );
         },
     ],
+    [
+        '12. acceptance: close on the trigger ws compacts the survivor and pulls every right workspace one step forward',
+        () => {
+            // workspace 1 had two windows, one of them is closed: the
+            // survivor compacts onto the freed tile, workspace 2's window
+            // is pulled into the tile the survivor left behind and
+            // workspace 3's window follows into the gap workspace 2 left
+            // — everything converges on the trigger workspace, so the
+            // window nearest the closed one's spot is a local successor
+            deepEqual(
+                planFillCascade(
+                    snapshotOf({
+                        0: {
+                            tiles: pair,
+                            windowRects: [pair[1]],
+                            movableWindowIndexes: [0],
+                        },
+                        1: {
+                            tiles: pair,
+                            windowRects: [pair[0]],
+                            movableWindowIndexes: [0],
+                        },
+                        2: {
+                            tiles: pair,
+                            windowRects: [pair[0]],
+                            movableWindowIndexes: [0],
+                        },
+                    })
+                ),
+                [
+                    {
+                        kind: 'compact',
+                        fromWs: 0,
+                        toWs: 0,
+                        windowIndex: 0,
+                        fromTileIndex: 1,
+                        tileIndex: 0,
+                    },
+                    {
+                        kind: 'pull',
+                        fromWs: 1,
+                        windowIndex: 0,
+                        toWs: 0,
+                        tileIndex: 1,
+                        fromTileIndex: 0,
+                    },
+                    {
+                        kind: 'pull',
+                        fromWs: 2,
+                        windowIndex: 0,
+                        toWs: 1,
+                        tileIndex: 0,
+                        fromTileIndex: 0,
+                    },
+                ]
+            );
+        },
+    ],
 ];
 
 let passed = 0;

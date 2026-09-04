@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Tiling Shell\n"
+"Project-Id-Version: AutoTile\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-04 01:30+0800\n"
+"POT-Creation-Date: 2026-09-04 19:09+0800\n"
 "PO-Revision-Date: 2025-04-22 22:05+0200\n"
 "Last-Translator: Mathias <https://github.com/mathiasbosman>\n"
 "Language-Team: Dutch <>\n"
@@ -13,18 +13,6 @@ msgstr ""
 
 #: dist/components/altTab/MultipleWindowsIcon.js:42
 msgid "Tiled windows"
-msgstr ""
-
-#: dist/components/window_menu/overriddenWindowMenu.js:117
-msgid "Move to best tile"
-msgstr ""
-
-#: dist/components/window_menu/overriddenWindowMenu.js:137
-msgid "Move to leftmost tile"
-msgstr ""
-
-#: dist/components/window_menu/overriddenWindowMenu.js:156
-msgid "Move to rightmost tile"
 msgstr ""
 
 #: dist/components/editor/editorDialog.js:36
@@ -59,30 +47,17 @@ msgstr ""
 msgid "Start editing"
 msgstr ""
 
-#: dist/indicator/editingMenu.js:19
-msgid "Menu"
+#: dist/components/window_menu/overriddenWindowMenu.js:117
+msgid "Move to best tile"
 msgstr ""
 
-#: dist/indicator/editingMenu.js:26
-msgid "Info"
+#: dist/components/window_menu/overriddenWindowMenu.js:137
+msgid "Move to leftmost tile"
 msgstr ""
 
-#: dist/indicator/editingMenu.js:33 dist/prefs.js:425 dist/prefs.js:814
-msgid "Save"
-msgstr "Opslaan"
-
-#: dist/indicator/editingMenu.js:43 dist/prefs.js:426 dist/prefs.js:480
-#: dist/prefs.js:815 dist/prefs.js:870
-msgid "Cancel"
-msgstr "Annuleren"
-
-#: dist/indicator/defaultMenu.js:298
-msgid "Edit Layouts"
-msgstr "Bewerk indelingen"
-
-#: dist/indicator/defaultMenu.js:308
-msgid "New Layout"
-msgstr "Nieuwe indeling"
+#: dist/components/window_menu/overriddenWindowMenu.js:156
+msgid "Move to rightmost tile"
+msgstr ""
 
 #: dist/prefs.js:59
 msgid "General"
@@ -93,8 +68,8 @@ msgid "Appearance"
 msgstr "Uiterlijk"
 
 #: dist/prefs.js:65
-msgid "Configure the appearance of Tiling Shell"
-msgstr "Configureer het uiterlijk van Tiling Shell"
+msgid "Configure the appearance of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:70
 msgid "Show Indicator"
@@ -218,8 +193,8 @@ msgid "Behaviour"
 msgstr "Gedrag"
 
 #: dist/prefs.js:190
-msgid "Configure the behaviour of Tiling Shell"
-msgstr "Configureer het gedrag van Tiling Shell"
+msgid "Configure the behaviour of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:195
 msgid "Enable Snap Assistant"
@@ -436,8 +411,8 @@ msgid "Layouts"
 msgstr "Indelingen"
 
 #: dist/prefs.js:406
-msgid "Configure the layouts of Tiling Shell"
-msgstr "Configureer de indelingen van Tiling Shell"
+msgid "Configure the layouts of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:410 dist/prefs.js:411
 msgid "Edit layouts"
@@ -454,6 +429,15 @@ msgstr "Exporteer indelingen"
 #: dist/prefs.js:419
 msgid "Export layouts to a file"
 msgstr "Exporteer indelingen naar een bestand"
+
+#: dist/prefs.js:425 dist/prefs.js:814 dist/indicator/editingMenu.js:33
+msgid "Save"
+msgstr "Opslaan"
+
+#: dist/prefs.js:426 dist/prefs.js:480 dist/prefs.js:815 dist/prefs.js:870
+#: dist/indicator/editingMenu.js:43
+msgid "Cancel"
+msgstr "Annuleren"
 
 #: dist/prefs.js:471 dist/prefs.js:472
 msgid "Import layouts"
@@ -668,8 +652,8 @@ msgid "Import, export and reset"
 msgstr "Importeer, exporteer en reset"
 
 #: dist/prefs.js:801
-msgid "Import, export and reset the settings of Tiling Shell"
-msgstr "Importeer, exporteer en herstel de instellingen van Tiling Shell"
+msgid "Import, export and reset the settings of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:806 dist/prefs.js:807
 msgid "Export settings"
@@ -771,3 +755,19 @@ msgstr "Nieuwe sneltoets…"
 #: dist/prefs.js:1322
 msgid "Use Backspace to clear"
 msgstr "Gebruik Backspace om te wissen"
+
+#: dist/indicator/defaultMenu.js:298
+msgid "Edit Layouts"
+msgstr "Bewerk indelingen"
+
+#: dist/indicator/defaultMenu.js:308
+msgid "New Layout"
+msgstr "Nieuwe indeling"
+
+#: dist/indicator/editingMenu.js:19
+msgid "Menu"
+msgstr ""
+
+#: dist/indicator/editingMenu.js:26
+msgid "Info"
+msgstr ""

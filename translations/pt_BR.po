@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Tiling Shell\n"
+"Project-Id-Version: AutoTile\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-04 01:30+0800\n"
+"POT-Creation-Date: 2026-09-04 19:09+0800\n"
 "PO-Revision-Date: 2025-02-18 10:20-0300\n"
 "Last-Translator: Rodrigo Mantoan <rodrigo@mantoan.dev>\n"
 "Language-Team: Portuguese\n"
@@ -21,18 +21,6 @@ msgstr ""
 #: dist/components/altTab/MultipleWindowsIcon.js:42
 msgid "Tiled windows"
 msgstr ""
-
-#: dist/components/window_menu/overriddenWindowMenu.js:117
-msgid "Move to best tile"
-msgstr ""
-
-#: dist/components/window_menu/overriddenWindowMenu.js:137
-msgid "Move to leftmost tile"
-msgstr "Mover para o mosaico mais à esquerda"
-
-#: dist/components/window_menu/overriddenWindowMenu.js:156
-msgid "Move to rightmost tile"
-msgstr "Mover para o mosaico mais à direita"
 
 #: dist/components/editor/editorDialog.js:36
 msgid "Select the layout to edit"
@@ -66,30 +54,17 @@ msgstr "Como usar o editor"
 msgid "Start editing"
 msgstr "Iniciar edição"
 
-#: dist/indicator/editingMenu.js:19
-msgid "Menu"
-msgstr "Menu"
+#: dist/components/window_menu/overriddenWindowMenu.js:117
+msgid "Move to best tile"
+msgstr ""
 
-#: dist/indicator/editingMenu.js:26
-msgid "Info"
-msgstr "Informações"
+#: dist/components/window_menu/overriddenWindowMenu.js:137
+msgid "Move to leftmost tile"
+msgstr "Mover para o mosaico mais à esquerda"
 
-#: dist/indicator/editingMenu.js:33 dist/prefs.js:425 dist/prefs.js:814
-msgid "Save"
-msgstr "Salvar"
-
-#: dist/indicator/editingMenu.js:43 dist/prefs.js:426 dist/prefs.js:480
-#: dist/prefs.js:815 dist/prefs.js:870
-msgid "Cancel"
-msgstr "Cancelar"
-
-#: dist/indicator/defaultMenu.js:298
-msgid "Edit Layouts"
-msgstr "Editar layouts"
-
-#: dist/indicator/defaultMenu.js:308
-msgid "New Layout"
-msgstr "Novo layout"
+#: dist/components/window_menu/overriddenWindowMenu.js:156
+msgid "Move to rightmost tile"
+msgstr "Mover para o mosaico mais à direita"
 
 #: dist/prefs.js:59
 msgid "General"
@@ -100,8 +75,8 @@ msgid "Appearance"
 msgstr "Aparência"
 
 #: dist/prefs.js:65
-msgid "Configure the appearance of Tiling Shell"
-msgstr "Configurar a aparência do Tiling Shell"
+msgid "Configure the appearance of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:70
 msgid "Show Indicator"
@@ -224,8 +199,8 @@ msgid "Behaviour"
 msgstr "Comportamento"
 
 #: dist/prefs.js:190
-msgid "Configure the behaviour of Tiling Shell"
-msgstr "Configurar o comportamento do Tiling Shell"
+msgid "Configure the behaviour of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:195
 msgid "Enable Snap Assistant"
@@ -434,8 +409,8 @@ msgid "Layouts"
 msgstr "Layouts"
 
 #: dist/prefs.js:406
-msgid "Configure the layouts of Tiling Shell"
-msgstr "Configurar os layouts do Tiling Shell"
+msgid "Configure the layouts of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:410 dist/prefs.js:411
 msgid "Edit layouts"
@@ -452,6 +427,15 @@ msgstr "Exportar layouts"
 #: dist/prefs.js:419
 msgid "Export layouts to a file"
 msgstr "Exportar layouts para um arquivo"
+
+#: dist/prefs.js:425 dist/prefs.js:814 dist/indicator/editingMenu.js:33
+msgid "Save"
+msgstr "Salvar"
+
+#: dist/prefs.js:426 dist/prefs.js:480 dist/prefs.js:815 dist/prefs.js:870
+#: dist/indicator/editingMenu.js:43
+msgid "Cancel"
+msgstr "Cancelar"
 
 #: dist/prefs.js:471 dist/prefs.js:472
 msgid "Import layouts"
@@ -662,8 +646,8 @@ msgid "Import, export and reset"
 msgstr "Importar, exportar e redefinir"
 
 #: dist/prefs.js:801
-msgid "Import, export and reset the settings of Tiling Shell"
-msgstr "Importar, exportar e redefinir as configurações do Tiling Shell"
+msgid "Import, export and reset the settings of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:806 dist/prefs.js:807
 msgid "Export settings"
@@ -764,3 +748,19 @@ msgstr "Novo atalho…"
 #: dist/prefs.js:1322
 msgid "Use Backspace to clear"
 msgstr "Pressione Backspace para limpar"
+
+#: dist/indicator/defaultMenu.js:298
+msgid "Edit Layouts"
+msgstr "Editar layouts"
+
+#: dist/indicator/defaultMenu.js:308
+msgid "New Layout"
+msgstr "Novo layout"
+
+#: dist/indicator/editingMenu.js:19
+msgid "Menu"
+msgstr "Menu"
+
+#: dist/indicator/editingMenu.js:26
+msgid "Info"
+msgstr "Informações"
