@@ -13,17 +13,22 @@ npm run prettier:check     # prettier over **/*.{ts,scss}
 npm run prettier:fix
 npm run install:extension  # copy build into ~/.local/share/gnome-shell/extensions (picks dist vs dist_legacy from local gnome-shell version)
 npm run build:package      # zips both builds for release
+
+# the only test (no test runner wired up):
+npx esbuild tests/freeTileFillPlanner.test.ts --bundle --platform=node --format=cjs --outfile=/tmp/t.cjs && node /tmp/t.cjs
 ```
 
 - Build requires GLib dev tools on PATH (`glib-compile-schemas`, `glib-compile-resources`).
-- **No test suite, no CI.** Verification = `npm run lint` + `npm run build` + manual testing.
+- `scripts/build.sh` / `scripts/install.sh` wrap the npm build/install with tool checks; `EXTENSIONS_DIR=... ./scripts/install.sh` targets a custom directory.
+- **No CI.** Verification = `npm run lint` + `npm run build` + manual testing + the test above.
+- `tests/freeTileFillPlanner.test.ts` is a self-asserting script (plain `node:assert`) — it runs under plain node, so it can only import **GI-free modules** (no `gi://` imports). Keep pure logic that needs tests in such modules (e.g. `src/components/tilingsystem/freeTileFillPlanner.ts`, `autoFillSuppression.ts`).
 - **No typecheck step exists** — esbuild does not type-check; type errors surface only in the editor/LSP.
 - Never edit or commit `dist/` / `dist_legacy/` (gitignored, fully generated — the build even runs `eslint --fix` over them).
 
 ### Manual testing
 
 - `npm run dev:wayland` — build + install + launch a nested Wayland GNOME Shell (dummy 1920x1080 monitor) without logging out. Fastest feedback loop.
-- Vagrant VMs per GNOME version: `npm run dev:vm:gnome46` / `gnome47` / `gnome49` (also gnome44/48 in Vagrantfile; rsyncs the repo and starts the VM).
+- Vagrant VMs per GNOME version: `npm run dev:vm:gnome46` / `gnome47` / `gnome49` (also gnome44/48 in Vagrantfile; rsyncs the repo and starts the VM). Every `vagrant up` re-provisions automatically: `npm install` + build + install + GDM restart (`vm:halt:*` / `vm:destroy:*` scripts exist too).
 - Logs: `npm run logs:follow` (shell process) or `journalctl -f -o cat /usr/bin/gjs` (prefs dialog).
 
 ## Build pipeline (`esbuild.mjs`) — understand before touching imports
@@ -60,6 +65,7 @@ Adding a setting/keybinding touches 4 files — follow the step-by-step recipe i
 - `translations/*.po` are generated — after changing translatable strings run `npm run update-translations` (needs gettext tools and a fresh `dist/`; xgettext runs over the built JS, not src).
 - Version lives in both `package.json` and `resources/metadata.json` (`version` + `version-name`) — bump together.
 - PRs: branch from `main`, lint clean, test changes on both GNOME ≤44 (legacy build) and ≥45; behavior changes need a demo video or description (CONTRIBUTING.md).
+- `./manage_pr.sh fetch <PR#> <branch>` / `push <user> <branch> [--force]` — maintainer workflow for fetching and re-pushing contributor PR branches.
 
 ## Orientation
 
