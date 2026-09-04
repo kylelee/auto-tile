@@ -1,20 +1,23 @@
 <img src="https://raw.githubusercontent.com/kylelee/AutoTile/main/logo.png" align="right" width="76"/>
 
-[![release](https://img.shields.io/badge/Release_v16-blue?style=for-the-badge)]([https://ko-fi.com/domferr](https://github.com/kylelee/AutoTile/releases))
+[![release](https://img.shields.io/badge/Release_v17.3-blue?style=for-the-badge)](https://github.com/kylelee/AutoTile/releases)
 ![](https://img.shields.io/github/license/kylelee/AutoTile?style=for-the-badge)
-![](https://img.shields.io/badge/GNOME-42--49-e04196?style=for-the-badge&logo=gnome&logoColor=white)
-[![kofi](https://img.shields.io/badge/Donate_on_Ko--fi-purple?logo=ko-fi&style=for-the-badge)](https://ko-fi.com/domferr)
-[![patreon](https://img.shields.io/badge/Patreon-F96854?style=for-the-badge&logo=patreon&logoColor=white)](https://patreon.com/domferr)
+![](https://img.shields.io/badge/GNOME-42--50-e04196?style=for-the-badge&logo=gnome&logoColor=white)
+
+**English** | [简体中文](README.zh_CN.md)
 
 # AutoTile #
 
-This is a Gnome Shell extension implementing modern windows tiling system by extending GNOME's default 2 columns to any layout you want! Can be installed on Gnome Shells from **42 to 49** on X11 and Wayland: the most recent GNOME Shell is supported, and older releases will include all the features and bug fixes!
+AutoTile is a GNOME Shell extension that brings **automatic tiling window management** to GNOME. It is heavily inspired by **[Omarchy](https://omarchy.org) 4.0** and the window layouters of **[Hyprland](https://hyprland.org)**: that is why we forked the excellent **[Tiling Shell](https://github.com/domferr/tilingshell)** project (many thanks to its original author [Domenico Ferraro](https://github.com/domferr)) and extended it, so that GNOME users can enjoy an auto-tiling experience that comes close to **Omarchy Linux** — huge thanks to DHH and the Omarchy developers for their aesthetics, inspiration, philosophy and outstanding code contributions.
 
-- 🤩 First and only extension that provides Windows 11's **snap assistant**
-- 🖥️🖥️ **multiple monitors support**, even with different scaling factors!
+Improvement suggestions and ideas of any kind are more than welcome — please open an [issue](https://github.com/kylelee/AutoTile/issues)! 🙌
+
+AutoTile runs on GNOME Shell **42 to 50**, on X11 and Wayland, with multi-monitor support even across monitors with different scaling factors — on top of everything Tiling Shell already offered:
+
+- 🤩 Windows 11's **snap assistant** and Windows PowerToys' **FancyZones**
 - ⚙️ Manage, edit, create and delete layouts with a **built-in editor**
-- 💡 Layouts are not strict, you can **span multiple tiles** if you want
-- 🚀 Automatically sets the same UI of your GNOME theme, for a **seamless integration**!
+- 💡 Layouts are not strict — you can **span multiple tiles** if you want
+- 🚀 Adapts to your GNOME theme for a **seamless integration**!
 
 <div align="center">
   <a href="https://github.com/kylelee/AutoTile/releases" >
@@ -26,22 +29,24 @@ This is a Gnome Shell extension implementing modern windows tiling system by ext
 
 <details>
   <summary><span align="center">See here the video overview</span></summary>
-  
+
   https://github.com/user-attachments/assets/2905f0a1-ecd4-47b5-a6bc-59f91716e685
 </details>
 
-Have issues, you want to suggest a new feature or contribute? Please open a new [issue](https://github.com/kylelee/AutoTile/issues)!
+## ✨ Highlights
+
+- 🪟 **Auto-tile every new window** — with auto-tiling enabled, every new window is tiled to the best free tile automatically. When the focused window is tiled, the new window opens right next to it and all windows behind it shift forward and re-tile automatically — cascading across monitors and, optionally, workspaces. See [Auto-tiling](#auto-tiling).
+- 🖥️ **Move windows and focus across monitors and workspaces** — move the focused window with <kbd>SUPER</kbd>+<kbd>←</kbd>/<kbd>↑</kbd>/<kbd>↓</kbd>/<kbd>→</kbd> through the tiles, across monitors, and onto the adjacent workspace at the screen edge. Dedicated keybindings move the window focus in any direction. See [Tile with Keyboard](#tile-with-keyboard).
+- 🔁 **Swap adjacent tiled windows** — moving a window toward an occupied tile swaps the positions of the two windows, even across monitors, and freed tiles are refilled automatically. See [Tile with Keyboard](#tile-with-keyboard) and [Auto-tiling](#auto-tiling).
+- 🧲 **Windows stay in the layout** — when auto-tiling's layout enforcement is enabled, windows can no longer leave the tiling by dragging: stray drops snap back into the layout, and the whole grid keeps itself continuously filled from the top-left. See [Auto-tiling](#auto-tiling).
 
 ## Usage ##
 
-| [⬇️](#tiling-system) Tiling System | [⬇️](#snap-assistant) Snap Assistant | [⬇️](#select-a-layout) Select a layout | [⬇️](#select-multiple-tiles) Select multiple tiles |
+| [Tiling System](#tiling-system) | [Snap Assistant](#snap-assistant) | [Select a layout](#select-a-layout) | [Select multiple tiles](#select-multiple-tiles) |
 |:---|:---|:---|:---|
-| [⬇️](#layout-editor) **Layout editor** | [⬇️](#smart-resize) **Smart resize** | [⬇️](#tile-with-keyboard) **Tile with Keyboard** | [⬇️](#edge-tiling) **Edge Tiling** |
-| [⬇️](#tiling-buttons) **Tiling Buttons** | [⬇️](#per-workspace-layout) **Per-workspace layout** | [⬇️](#auto-tiling) **Auto-tiling** | [⬇️](#tiling-context-menu) **Tiling context menu** |
-| [⬇️](#smart-border-radius) **Smart border radius** | [⬇️](#windows-suggestions) **Windows Suggestions** 
-
-## 🎉🎉 AutoTile's AWESOME Supporters!
-Thank you to the :star2: **amazing** <a href="https://patreon.com/domferr"><img src="https://img.shields.io/badge/Patreons-F96854?logo=patreon&logoColor=white)" height="14px"/><a/> and **everyone** who donated on <a href="https://ko-fi.com/domferr"><img src="https://img.shields.io/badge/_Ko--fi-794bc4?logo=ko-fi&logoColor=white" height="14px"/><a/>! :medal_sports:Sean, Markus Huggler, Kostja Palović, Mike Empey, Miguel and Jesse Dhillon on Patreon:medal_sports: and Zorin OS, Nick, thy-fi, iatanas0v, Chris, wbezs, DaneshManoharan, Tamas, Ivan Banha and many more on Ko-fi! You are on a mission to **make Linux window management better for everyone**!
+| [Layout editor](#layout-editor) | [Smart resize](#smart-resize) | [Tile with Keyboard](#tile-with-keyboard) | [Edge Tiling](#edge-tiling) |
+| [Per-workspace layout](#per-workspace-layout) | [Auto-tiling](#auto-tiling) | [Tiling context menu](#tiling-context-menu) | [Import/Export layouts](#export-and-import-layouts) |
+| [Smart border radius](#smart-border-radius) | [Windows Suggestions](#windows-suggestions) | | |
 
 ### Tiling System ###
 When grabbing and moving a window, press <kbd>CTRL</kbd> key to show the tiling layout (you can choose another key from the preferences). When moving on a tile, it will highlight. Ungrab the window to place that window on the highlighted tile.
@@ -66,7 +71,6 @@ Click on AutoTile's panel indicator and the available layouts will be shown. Sel
 
 [layout_selection.webm](https://github.com/kylelee/AutoTile/assets/14203981/f4956a34-64e3-4c24-b177-8f9b08fcc45c)
 
-
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
 ### Select multiple tiles ###
@@ -74,7 +78,6 @@ Click on AutoTile's panel indicator and the available layouts will be shown. Sel
 The layout is not strict. You can select multiple tiles too! Just hold <kbd>ALT</kbd> while using the tiling system (you can choose another key from the preferences).
 
 [multiple_selection.webm](https://github.com/kylelee/AutoTile/assets/14203981/92b29130-260c-479d-9237-bf5c87427e52)
-
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
@@ -100,9 +103,11 @@ You can resize adjacent tiled windows together!
 
 ### Tile with Keyboard ###
 
-Move window through the tiles using keyboard shortcuts (<kbd>SUPER</kbd>+<kbd>←</kbd>/<kbd>↑</kbd>/<kbd>↓</kbd>/<kbd>→</kbd>). They can be customized from the preferences!
+Move the focused window through the tiles using keyboard shortcuts (<kbd>SUPER</kbd>+<kbd>←</kbd>/<kbd>↑</kbd>/<kbd>↓</kbd>/<kbd>→</kbd>). They can be customized from the preferences!
 
 Moving toward an occupied tile swaps the positions of the two windows, even across monitors, while free tiles are taken as-is in the movement direction. At the last monitor's edge, LEFT/RIGHT move the window to the adjacent workspace — creating one when dynamic workspaces are enabled — and swap there too when the landing tile is occupied.
+
+Dedicated keybindings also move the **window focus** (up/down/left/right, next/previous) in any direction, so you can walk the whole grid — tiled windows and beyond — without touching the mouse. They can be set from the preferences.
 
 [Tile with Keyboard Video](https://github.com/user-attachments/assets/6f8dedbb-2733-41d8-8a94-0fa62dffb915)
 
@@ -118,11 +123,17 @@ You can tile a window by moving it to the edge.
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Tiling Buttons ###
+### Tiling context menu ###
 
 Right-click on a window to use the auto-tile buttons and the snap assistant from there! The auto-tile buttons allow you to tile to the leftmost or rightmost empty tile, based on your selected layout. The "Move to best tile" button suggests tiling to the nearest empty tile to the center of the screen.
 
-[Screencast from 2024-07-13 18-21-57.webm](https://github.com/user-attachments/assets/8fd79faa-a476-4b55-b79c-6329e4b59519)
+<p align="center"><img src="https://github.com/user-attachments/assets/d660779a-7549-4858-b149-59edad076483" width=520/></p>
+
+<p align="center">Check the demonstration video to see it in action!</p>
+
+[Screencast from 2024-07-13 18-21-57.webm](https://github.com/kylelee/AutoTile/assets/14203981/8fd79faa-a476-4b55-b7c6-6329e4b59519)
+
+> The original idea was to show the snap assistant when hovering the maximize button (as it is done on Windows 11). Unfortunately, GNOME doesn't let us handle the hovering of the maximize button or add another button near it...
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
@@ -148,24 +159,11 @@ While that preference is enabled, dragging can no longer un-tile a window: stray
 
 [automatic_tiling](https://github.com/user-attachments/assets/76abc53f-2c6d-47ab-bee3-bbcdd946f2a1)
 
+<p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
+
 ### Export and import layouts ###
 
 *AutoTile* supports importing and exporting its layouts to a JSON file. With this you can create your own custom layouts without the built-in graphical editor, or share your layouts with others! If you are interested into knowing more about the contents of the layout file check the official [documentation](./doc/json-internal-documentation.md).
-
-
-<p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
-
-### Tiling context menu ###
-
-Right-click on a window to use the auto-tile buttons and the snap assistant from there! These buttons allow you to tile to the leftmost or rightmost empty tile, based on your selected layout. The "Move to best tile" button suggests tiling to the nearest empty tile to the center of the screen.
-
-<p align="center"><img src="https://github.com/user-attachments/assets/d660779a-7549-4858-b149-59edad076483" width=520/></p>
-
-<p align="center">Check the demonstration video to see it in action!</p>
-
-[Screencast from 2024-07-13 18-21-57.webm](https://github.com/user-attachments/assets/8fd79faa-a476-4b55-b79c-6329e4b59519)
-
-> The original idea was to show the snap assistant when hovering the maximize button (as it is done on Windows 11). Unfortunately, GNOME doesn't let us handle the hovering of the maximize button or add another button near it...
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
@@ -173,10 +171,9 @@ Right-click on a window to use the auto-tile buttons and the snap assistant from
 
 In GNOME, different windows may have different border radius. Drawing a border around the focused window is hard because it is not possible to know the window border radius. All the existing extensions just draw a border with a static value, making the UI less polished. AutoTile, **dynamically** computes the focused window border radius at runtime. Moreover, if you have an extension or anything else who customize the border radius, the focused window border radius adapts as well! This can be enabled/disabled from the extension's preferences too.
 
-
 <p align="center">
 <img src="https://github.com/user-attachments/assets/cfaca5f9-d9b2-4739-9426-1aebb5f33c29" width=304 />
-<img src="https://github.com/user-attachments/assets/8e68abff-66e5-4b85-a6ce-0bd2da7be166" width=332 />
+<img src="https://github.com/user-attachments/assets/e8e68abff-66e5-4b85-a6ce-0bd2da7be166" width=332 />
 </p>
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
@@ -189,7 +186,7 @@ https://github.com/user-attachments/assets/fbf68458-199d-490b-90cf-3e976d5b511b
 
 _Can I choose to opt in or out?_
 
-Yes. From the extension's preferences you find a section called Windows Suggestions. You can enable and disable windows suggestions for tiling system, snap assistant and screen edges. You can choose which of the three to keep enabled, or all of them, to personalize for your needs and preferences. 
+Yes. From the extension's preferences you find a section called Windows Suggestions. You can enable and disable windows suggestions for tiling system, snap assistant and screen edges. You can choose which of the three to keep enabled, or all of them, to personalize for your needs and preferences.
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
@@ -216,7 +213,7 @@ Clone the repo then run ```npm i``` to install dependencies and then run ```npm 
 npm run install:extension
 ```
 You can restart your GNOME shell e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only) and enable the extension. Enjoy it!
-To enable via the command line you can run 
+To enable via the command line you can run
 ```bash
 /usr/bin/gnome-extensions enable autotile@kylelee.github.io
 ```
@@ -234,7 +231,7 @@ journalctl -f -o cat /usr/bin/gjs
 ```
 ### Uninstall AutoTile
 
-To uninstall, first disable the extension and then remove it. To disable via the command line you can run 
+To uninstall, first disable the extension and then remove it. To disable via the command line you can run
 ```bash
 /usr/bin/gnome-extensions disable autotile@kylelee.github.io
 ```
@@ -326,3 +323,9 @@ If you are running on a NTFS file system then you have to move out the key:
 mv /path/to/box/virtualbox/private_key $HOME/.ssh/vagrant_key
 ln -sr $HOME/.ssh/vagrant_key /path/to/box/virtualbox/private_key
 ```
+
+## 🙏 Acknowledgements
+
+- **[Tiling Shell](https://github.com/domferr/tilingshell)** by [Domenico Ferraro](https://github.com/domferr) — AutoTile is a fork of this fantastic extension. Many thanks for the great work! If you like AutoTile, please consider supporting the original author on [Ko-fi](https://ko-fi.com/domferr) or [Patreon](https://patreon.com/domferr).
+- **[Omarchy](https://omarchy.org)** by DHH and the Omarchy contributors — thank you for the aesthetics, the inspiration, the philosophy and the outstanding code. AutoTile aims to bring a near-Omarchy auto-tiling experience to GNOME.
+- **[Hyprland](https://hyprland.org)** and its window layouters — a constant source of inspiration for the tiling behavior.
