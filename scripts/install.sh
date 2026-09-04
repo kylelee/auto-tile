@@ -38,5 +38,11 @@ cp -r "$DIST_DIR"/* "$DEST_DIR"/
 echo "✅ Installed AutoTile (GNOME Shell $SHELL_MAJOR → ${DIST_DIR#$ROOT_DIR/}) into:"
 echo "   $DEST_DIR"
 echo
-echo "Reload GNOME Shell (log out/in, or Alt-F2 'r' on X11 only), then enable it:"
-echo "   gnome-extensions enable $UUID"
+
+if gnome-extensions enable "$UUID"; then
+    echo "✅ Enabled $UUID"
+else
+    echo "⚠️  Could not enable $UUID yet (the running GNOME Shell may not know about it)."
+    echo "   Reload GNOME Shell (log out/in, or Alt-F2 'r' on X11 only), then enable it:"
+    echo "   gnome-extensions enable $UUID"
+fi
