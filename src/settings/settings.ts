@@ -562,9 +562,12 @@ export default class Settings {
                 this._settings?.get_string(this.KEY_SETTING_LAYOUTS_JSON) ||
                     '[]',
             ) as Layout[];
-            if (layouts.length === 0)
+            const nonEmptyLayouts = layouts.filter(
+                (layout) => layout.tiles.length > 0,
+            );
+            if (nonEmptyLayouts.length === 0)
                 throw new Error('At least one layout is required');
-            return layouts.filter((layout) => layout.tiles.length > 0);
+            return nonEmptyLayouts;
         } catch (_unused) {
             this.reset_layouts_json();
             return JSON.parse(

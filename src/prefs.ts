@@ -27,8 +27,8 @@ import { logger } from './utils/logger';
 // legacy build's import converter mis-parses a braced relative import that
 // follows a braced resource:// import
 import { MoCatalog, chineseCatalogFor } from './utils/moCatalog';
+import { validateLayouts } from './components/layout/layoutValidation';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
-import Layout from './components/layout/Layout';
 import SettingsExport from './settings/settingsExport';
 import { gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 // @ts-expect-error "Module exists"
@@ -588,20 +588,19 @@ export default class AutoTileExtensionPreferences extends ExtensionPreferences {
                                 const [success, content] =
                                     file.load_contents(null);
                                 if (success) {
-                                    let importedLayouts = JSON.parse(
-                                        new TextDecoder('utf-8').decode(
-                                            content,
+                                    const importedLayouts = validateLayouts(
+                                        JSON.parse(
+                                            new TextDecoder('utf-8').decode(
+                                                content,
+                                            ),
                                         ),
-                                    ) as Layout[];
+                                    );
                                     if (importedLayouts.length === 0) {
                                         throw new Error(
                                             'At least one layout is required',
                                         );
                                     }
 
-                                    importedLayouts = importedLayouts.filter(
-                                        (layout) => layout.tiles.length > 0,
-                                    );
                                     const newLayouts =
                                         Settings.get_layouts_json();
                                     newLayouts.push(...importedLayouts);
@@ -812,7 +811,7 @@ export default class AutoTileExtensionPreferences extends ExtensionPreferences {
         // set if the keybinding was set or not by the user
         for (let i = 0; i < keybindings.length; i++) {
             keybindings[i][3] =
-                gioSettings.get_strv(keybindings[i][0])[0].length > 0;
+                (gioSettings.get_strv(keybindings[i][0])[0]?.length ?? 0) > 0;
         }
 
         // draw keybindings set or not optional

@@ -319,7 +319,7 @@ export default class AutoTileExtension extends Extension {
                 if (this._windowBorderManager)
                     this._windowBorderManager.destroy();
                 this._windowBorderManager = new WindowBorderManager(
-                    this._fractionalScalingEnabled,
+                    !this._fractionalScalingEnabled,
                 );
                 this._windowBorderManager.enable();
             },
@@ -906,6 +906,7 @@ export default class AutoTileExtension extends Extension {
         const windowList = filterUnfocusableWindows(
             focus_window.get_workspace().list_windows(),
         );
+        if (windowList.length === 0) return;
         const focusParent = focus_window.get_transient_for() || focus_window;
         const focusedIdx = windowList.findIndex((win) => {
             // in case we are iterating over a modal dialog for our focused window
@@ -915,6 +916,8 @@ export default class AutoTileExtension extends Extension {
         let nextIndex = -1;
         switch (direction) {
             case FocusSwitchDirection.PREV:
+                if (focusedIdx === -1) return;
+                if (focusedIdx === 0 && !Settings.WRAPAROUND_FOCUS) return;
                 if (focusedIdx === 0 && Settings.WRAPAROUND_FOCUS) {
                     windowList[windowList.length - 1].activate(
                         global.get_current_time(),
@@ -926,6 +929,7 @@ export default class AutoTileExtension extends Extension {
                 }
                 break;
             case FocusSwitchDirection.NEXT:
+                if (focusedIdx === -1) return;
                 nextIndex = (focusedIdx + 1) % windowList.length;
                 if (nextIndex > 0 || Settings.WRAPAROUND_FOCUS)
                     windowList[nextIndex].activate(global.get_current_time());

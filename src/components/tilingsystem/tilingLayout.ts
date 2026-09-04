@@ -11,6 +11,7 @@ import {
     isPointInsideRect,
     squaredEuclideanDistance,
 } from '../../utils/ui';
+import { clamp } from '../../utils/clamp';
 import TileUtils from '../../components/layout/TileUtils';
 import GlobalState from '../../utils/globalState';
 import { KeyBindingsDirection } from '../../keybindings';
@@ -365,7 +366,7 @@ export default class TilingLayout extends LayoutWidget<DynamicTilePreview> {
     public findNearestTileDirection(
         source: Mtk.Rectangle,
         direction: KeyBindingsDirection,
-        clamp: boolean,
+        clampToContainer: boolean,
         enlarge: number,
     ): { rect: Mtk.Rectangle; tile: Tile } | undefined {
         if (direction === KeyBindingsDirection.NODIRECTION) return undefined;
@@ -398,14 +399,14 @@ export default class TilingLayout extends LayoutWidget<DynamicTilePreview> {
             sourceCoords.y < this._containerRect.y ||
             sourceCoords.y > this._containerRect.height + this._containerRect.y
         ) {
-            if (!clamp) return undefined; // we can already return undefined
+            if (!clampToContainer) return undefined; // we can already return undefined
 
-            sourceCoords.x = Math.clamp(
+            sourceCoords.x = clamp(
                 sourceCoords.x,
                 this._containerRect.x,
                 this._containerRect.width + this._containerRect.x,
             );
-            sourceCoords.y = Math.clamp(
+            sourceCoords.y = clamp(
                 sourceCoords.y,
                 this._containerRect.y,
                 this._containerRect.height + this._containerRect.y,
