@@ -319,7 +319,7 @@ export default class AutoTileExtension extends Extension {
                 if (this._windowBorderManager)
                     this._windowBorderManager.destroy();
                 this._windowBorderManager = new WindowBorderManager(
-                    this._fractionalScalingEnabled,
+                    !this._fractionalScalingEnabled,
                 );
                 this._windowBorderManager.enable();
             },
