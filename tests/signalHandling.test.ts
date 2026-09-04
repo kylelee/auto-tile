@@ -106,6 +106,28 @@ const scenarios: [string, () => void][] = [
             deepEqual(a.disconnected, [second]);
         },
     ],
+    [
+        '5. re-attach cycle stays clean: disconnect(stage) releases all its keys across repeated grab cycles',
+        () => {
+            const signals = new SignalHandling();
+            const stage = target();
+            // first grab cycle: the two grab-time stage handlers
+            signals.connect(stage, 'touch-event', () => undefined);
+            signals.connect(stage, 'captured-event', () => undefined);
+            // grab end releases BOTH stage keys at once; the last
+            // released key (insertion order) is 'captured-event'
+            equal(signals.disconnect(stage), 'captured-event');
+            deepEqual(stage.disconnected, [1, 2]);
+            // second grab cycle re-registers the same two keys into an
+            // empty map, then releases them again — no accumulation
+            signals.connect(stage, 'touch-event', () => undefined);
+            signals.connect(stage, 'captured-event', () => undefined);
+            equal(signals.disconnect(stage), 'captured-event');
+            deepEqual(stage.disconnected, [1, 2, 3, 4]);
+            // map fully empty: no residual ids after repeated cycles
+            equal(signals.disconnect(), false);
+        },
+    ],
 ];
 
 let passed = 0;
