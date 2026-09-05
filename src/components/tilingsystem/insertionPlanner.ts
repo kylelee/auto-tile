@@ -149,6 +149,55 @@ export function isSlotOccupied(
         );
 }
 
+/**
+ * Strict reading-order first-vacancy search for the untiled-new-window
+ * path: the first free slot of the fromWs chain starting at slot 0, then -
+ * only when allowed - strictly forward through the later workspaces
+ * (never wrapping back to earlier ones), and finally slot 0 of the
+ * workspace to be appended when both flags allow it. Occupancy truth and
+ * chain semantics are exactly planInsertion's.
+ */
+export function findFirstVacancy(opts: {
+    fromWs: number;
+    nWorkspaces: number;
+    allowCrossWorkspace: boolean;
+    allowAppend: boolean;
+    getChain: (wsIndex: number) => ChainSlot[];
+    inputs: ChainInputs;
+    getWorkspaceByIndex: (i: number) => Meta.Workspace | null;
+}): { wsIndex: number; slot: ChainSlot; appendWorkspace: boolean } | null {
+    const lastWsIndex = opts.allowCrossWorkspace
+        ? opts.nWorkspaces - 1
+        : opts.fromWs;
+    for (let wsIndex = opts.fromWs; wsIndex <= lastWsIndex; wsIndex++) {
+        const ws = opts.getWorkspaceByIndex(wsIndex);
+        if (!ws) continue; // uninspectable workspace: never a vacancy
+        const chain = opts.getChain(wsIndex);
+        for (let slotIndex = 0; slotIndex < chain.length; slotIndex++) {
+            if (!isSlotOccupied(chain, slotIndex, ws, opts.inputs)) {
+                return {
+                    wsIndex,
+                    slot: chain[slotIndex],
+                    appendWorkspace: false,
+                };
+            }
+        }
+    }
+    if (opts.allowCrossWorkspace && opts.allowAppend) {
+        const appendChain = opts.getChain(opts.nWorkspaces);
+        // a tile-less appended workspace holds no vacancy either, mirroring
+        // planInsertion's absorb-slot guard
+        if (appendChain.length > 0) {
+            return {
+                wsIndex: opts.nWorkspaces,
+                slot: appendChain[0],
+                appendWorkspace: true,
+            };
+        }
+    }
+    return null;
+}
+
 /** Where a shifted window must land. */
 export interface InsertionMoveTarget {
     wsIndex: number;
