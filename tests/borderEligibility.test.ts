@@ -119,7 +119,7 @@ const scenarios: [string, () => void][] = [
         },
     ],
     [
-        '8. zero-sized frame: width 0 or height 0 → ineligible',
+        '8. frame below 2px: width 0/1 or height 0/1 → ineligible; 2x2 → eligible',
         () => {
             equal(
                 isWindowEligibleForBorder(withOverrides({ frameWidth: 0 })),
@@ -128,6 +128,20 @@ const scenarios: [string, () => void][] = [
             equal(
                 isWindowEligibleForBorder(withOverrides({ frameHeight: 0 })),
                 false
+            );
+            equal(
+                isWindowEligibleForBorder(withOverrides({ frameWidth: 1 })),
+                false
+            );
+            equal(
+                isWindowEligibleForBorder(withOverrides({ frameHeight: 1 })),
+                false
+            );
+            equal(
+                isWindowEligibleForBorder(
+                    withOverrides({ frameWidth: 2, frameHeight: 2 })
+                ),
+                true
             );
         },
     ],

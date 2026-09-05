@@ -34,7 +34,10 @@ export function isWindowEligibleForBorder(w: WindowBorderEligibility): boolean {
         BORDER_ELIGIBLE_WINDOW_TYPES.has(w.windowTypeName) &&
         !w.skipTaskbar &&
         w.showingOnItsWorkspace &&
-        w.frameWidth > 0 &&
-        w.frameHeight > 0
+        // >= 2px: sub-2px frames are ghost windows (e.g. wl-clipboard's
+        // 1x1 clipboard helper that lives ~12ms) — never draw or track a
+        // focus border on them; real windows are never 1px.
+        w.frameWidth >= 2 &&
+        w.frameHeight >= 2
     );
 }
