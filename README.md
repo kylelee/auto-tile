@@ -40,6 +40,99 @@ https://github.com/user-attachments/assets/2905f0a1-ecd4-47b5-a6bc-59f91716e685
 - 🔁 **Swap adjacent tiled windows** — moving a window toward an occupied tile swaps the positions of the two windows, even across monitors, and freed tiles are refilled automatically. See [Tile with Keyboard](#tile-with-keyboard) and [Auto-tiling](#auto-tiling).
 - 🧲 **Windows stay in the layout** — when auto-tiling's layout enforcement is enabled, windows can no longer leave the tiling by dragging: stray drops snap back into the layout, and the whole grid keeps itself continuously filled from the top-left. See [Auto-tiling](#auto-tiling).
 
+## Installation
+
+You can install AutoTile from the official GNOME Extensions website or from [GitHub](https://github.com/kylelee/AutoTile). By installing from [GitHub releases](https://github.com/kylelee/AutoTile/releases) you will always have the latest update.
+
+<div align="center">
+  <a href="https://github.com/kylelee/AutoTile/releases" >
+      <img src="https://img.shields.io/badge/Get%20it%20on-GitHub-4A86CF?style=for-the-badge&logo=Gnome&logoColor=white"/>
+  </a>
+</div>
+
+### Install from extensions.gnome.org
+
+The extension has been submitted to the official GNOME Extensions website: <https://extensions.gnome.org/extension/10872/autotile/>
+
+> ⚠️ It is still **under review**, so the page may not be available yet. Until the review is approved, please install from [GitHub releases](#install-from-github-releases) instead.
+
+Once approved, you will be able to install it with one click from the website (browser extension) or from the Extension Manager app.
+
+### Install from GitHub releases
+
+Download the latest [release](https://github.com/kylelee/AutoTile/releases) archive matching your GNOME Shell version and install it locally:
+
+| GNOME Shell version | Archive                                |
+| ------------------- | -------------------------------------- |
+| 45 – 50             | `autotile@kylelee.github.io.zip`       |
+| 42 – 44             | `GNOME.42-44.autotile@kylelee.github.io.zip` |
+
+Not sure which one? Check your GNOME Shell version:
+
+```bash
+gnome-shell --version
+```
+
+For GNOME Shell 45–50:
+
+```bash
+curl -L -o /tmp/autotile.zip https://github.com/kylelee/AutoTile/releases/latest/download/autotile@kylelee.github.io.zip
+mkdir -p ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
+unzip -o /tmp/autotile.zip -d ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
+```
+
+For GNOME Shell 42–44, download the other archive instead — the install steps are the same:
+
+```bash
+curl -L -o /tmp/autotile.zip https://github.com/kylelee/AutoTile/releases/latest/download/GNOME.42-44.autotile@kylelee.github.io.zip
+mkdir -p ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
+unzip -o /tmp/autotile.zip -d ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
+```
+
+Reload GNOME Shell afterwards — log out and back in on Wayland, or press <kbd>ALT</kbd>+<kbd>F2</kbd> and type `r` on X11. Then you can enable the extension:
+
+```bash
+/usr/bin/gnome-extensions enable autotile@kylelee.github.io
+```
+
+### Install via Source
+
+Clone the repo, then use the wrapper scripts (they check the required build tools for you):
+
+```bash
+./scripts/build.sh     # install deps if needed + build dist/ (GNOME 45+) and dist_legacy/ (42-44)
+./scripts/install.sh   # install into ~/.local/share/gnome-shell/extensions
+```
+
+The plain `npm` equivalents work too: `npm i`, `npm run build`, `npm run install:extension`. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the development workflow.
+
+You can restart your GNOME shell e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only) and enable the extension. Enjoy it!
+To enable via the command line you can run
+
+```bash
+/usr/bin/gnome-extensions enable autotile@kylelee.github.io
+```
+
+To read the logs you can run
+
+```bash
+journalctl --follow /usr/bin/gnome-shell
+```
+
+To read the logs of the preferences you can run
+
+```bash
+journalctl -f -o cat /usr/bin/gjs
+```
+
+### Uninstall AutoTile
+
+To uninstall, first disable the extension and then remove it. To disable via the command line you can run
+
+```bash
+/usr/bin/gnome-extensions disable autotile@kylelee.github.io
+```
+
 ## Usage
 
 | [Tiling System](#tiling-system)               | [Snap Assistant](#snap-assistant)           | [Select a layout](#select-a-layout)         | [Select multiple tiles](#select-multiple-tiles)     |
@@ -213,62 +306,6 @@ The preferences offer an option that adds the tiled windows to the <kbd>ALT</kbd
 When one tiled window is raised, all the other tiled windows come to the foreground with it, keeping the tiling visually coherent. Toggleable from the preferences.
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
-
-## Installation
-
-This extension is published on [GitHub](https://github.com/kylelee/AutoTile)! You can install from there or install manually. By installing from [GitHub releases](https://github.com/kylelee/AutoTile/releases) you will always have the latest update.
-
-<div align="center">
-  <a href="https://github.com/kylelee/AutoTile/releases" >
-      <img src="https://img.shields.io/badge/Get%20it%20on-GitHub-4A86CF?style=for-the-badge&logo=Gnome&logoColor=white"/>
-  </a>
-</div>
-
-### Install manually
-
-Download the latest [release](https://github.com/kylelee/AutoTile/releases). Extract the downloaded archive. Copy the folder to `~/.local/share/gnome-shell/extensions` directory. You need to reload GNOME Shell afterwards (e.g. by logging out). Then you can enable the extension:
-
-```bash
-/usr/bin/gnome-extensions enable autotile@kylelee.github.io
-```
-
-### Install via Source
-
-Clone the repo, then use the wrapper scripts (they check the required build tools for you):
-
-```bash
-./scripts/build.sh     # install deps if needed + build dist/ (GNOME 45+) and dist_legacy/ (42-44)
-./scripts/install.sh   # install into ~/.local/share/gnome-shell/extensions
-```
-
-The plain `npm` equivalents work too: `npm i`, `npm run build`, `npm run install:extension`. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the development workflow.
-
-You can restart your GNOME shell e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only) and enable the extension. Enjoy it!
-To enable via the command line you can run
-
-```bash
-/usr/bin/gnome-extensions enable autotile@kylelee.github.io
-```
-
-To read the logs you can run
-
-```bash
-journalctl --follow /usr/bin/gnome-shell
-```
-
-To read the logs of the preferences you can run
-
-```bash
-journalctl -f -o cat /usr/bin/gjs
-```
-
-### Uninstall AutoTile
-
-To uninstall, first disable the extension and then remove it. To disable via the command line you can run
-
-```bash
-/usr/bin/gnome-extensions disable autotile@kylelee.github.io
-```
 
 ## Contributing
 
