@@ -10,8 +10,8 @@ usage() {
     echo
     echo "Examples:"
     echo "  $0 fetch 345 feat-about-something"
-    echo "  $0 push domferr feat-about-something"
-    echo "  $0 push domferr feat-about-something --force"
+    echo "  $0 push kylelee feat-about-something"
+    echo "  $0 push kylelee feat-about-something --force"
     exit 1
 }
 
@@ -52,9 +52,9 @@ case "$ACTION" in
             echo "⚠️  Force push enabled."
         fi
 
-        echo "Pushing branch '$PR_BRANCH_NAME' to $PR_USERNAME/tilingshell.git as '$PR_BRANCH_NAME'..."
+        echo "Pushing branch '$PR_BRANCH_NAME' to $PR_USERNAME/AutoTile.git as '$PR_BRANCH_NAME'..."
         set -x
-        git push $FORCE_FLAG git@github.com:"$PR_USERNAME"/tilingshell.git "$PR_BRANCH_NAME":"$PR_BRANCH_NAME"
+        git push $FORCE_FLAG git@github.com:"$PR_USERNAME"/AutoTile.git "$PR_BRANCH_NAME":"$PR_BRANCH_NAME"
         set +x
         echo "✅ Done."
         ;;

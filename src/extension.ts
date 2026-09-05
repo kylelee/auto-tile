@@ -1,8 +1,9 @@
 
 /*!
- * Tiling Shell: advanced and modern window management for GNOME
+ * AutoTile: advanced and modern window management for GNOME
  *
  * Copyright (C) 2025 Domenico Ferraro
+ * Copyright (C) 2026 Kyle Lee
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,20 +42,22 @@ import { KeyBindingsDirection, FocusSwitchDirection } from './keybindings';
 import KeyBindings from './keybindings';
 import SettingsOverride from './settings/settingsOverride';
 import { ResizingManager } from './components/tilingsystem/resizeManager';
+import { withAutoFillSuppressed } from './components/tilingsystem/autoFillSuppression';
 import OverriddenWindowMenu from './components/window_menu/overriddenWindowMenu';
 import Tile from './components/layout/Tile';
 import { WindowBorderManager } from './components/windowBorder/windowBorderManager';
-import TilingShellWindowManager from './components/windowManager/tilingShellWindowManager';
+import AutoTileWindowManager from './components/windowManager/autoTileWindowManager';
 import ExtendedWindow from './components/tilingsystem/extendedWindow';
 import OverriddenAltTab from './components/altTab/overriddenAltTab';
 import { LayoutSwitcherPopup } from './components/layoutSwitcher/layoutSwitcher';
 import { unmaximizeWindow } from './utils/gnomesupport';
 import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 import { RaiseTogetherManager } from './components/raiseTogether/raiseTogetherManager';
+import { FocusOnCloseManager } from './components/focusOnClose/focusOnCloseManager';
 
 const debug = logger('extension');
 
-export default class TilingShellExtension extends Extension {
+export default class AutoTileExtension extends Extension {
     private _indicator: Indicator | null;
     private _tilingManagers: TilingManager[];
     private _fractionalScalingEnabled: boolean;
@@ -64,6 +67,7 @@ export default class TilingShellExtension extends Extension {
     private _resizingManager: ResizingManager | null;
     private _windowBorderManager: WindowBorderManager | null;
     private _raiseTogetherManager: RaiseTogetherManager | null;
+    private _focusOnCloseManager: FocusOnCloseManager | null;
 
     constructor(metadata: ExtensionMetadata) {
         super(metadata);
@@ -76,6 +80,7 @@ export default class TilingShellExtension extends Extension {
         this._resizingManager = null;
         this._windowBorderManager = null;
         this._raiseTogetherManager = null;
+        this._focusOnCloseManager = null;
     }
 
     createIndicator() {
@@ -94,7 +99,10 @@ export default class TilingShellExtension extends Extension {
                 Settings.ENABLE_WINDOW_BORDER;
         }
 
-        if (Settings.LAST_VERSION_NAME_INSTALLED !== '17.3') {
+        if (
+            Settings.LAST_VERSION_NAME_INSTALLED !== '17.3' &&
+            Settings.LAST_VERSION_NAME_INSTALLED !== '18.0'
+        ) {
             debug('apply compatibility changes for 17.3');
 
             // if users used cycle layouts keybinding, enable the backwards one
@@ -130,7 +138,7 @@ export default class TilingShellExtension extends Extension {
         this._validateSettings();
 
         // force initialization and tracking of windows
-        TilingShellWindowManager.get();
+        AutoTileWindowManager.get();
 
         this._fractionalScalingEnabled = this._isFractionalScalingEnabled(
             new Gio.Settings({ schema: 'org.gnome.mutter' }),
@@ -174,6 +182,10 @@ export default class TilingShellExtension extends Extension {
         this._raiseTogetherManager = new RaiseTogetherManager();
         this._raiseTogetherManager.enable();
 
+        if (this._focusOnCloseManager) this._focusOnCloseManager.destroy();
+        this._focusOnCloseManager = new FocusOnCloseManager();
+        this._focusOnCloseManager.enable();
+
         this.createIndicator();
 
         if (this._dbus) this._dbus.disable();
@@ -195,7 +207,11 @@ export default class TilingShellExtension extends Extension {
         this._tilingManagers.forEach((tm) => tm.destroy());
         this._tilingManagers = getMonitors().map(
             (monitor) =>
-                new TilingManager(monitor, !this._fractionalScalingEnabled),
+                new TilingManager(
+                    monitor,
+                    !this._fractionalScalingEnabled,
+                    (i: number) => this._tilingManagers[i],
+                ),
         );
         this._tilingManagers.forEach((tm) => tm.enable());
     }
@@ -219,6 +235,73 @@ export default class TilingShellExtension extends Extension {
             }
         });
 
+        let userGrabbingWindow = false;
+        this._signals.connect(global.display, 'grab-op-begin', () => {
+            userGrabbingWindow = true;
+        });
+        this._signals.connect(global.display, 'grab-op-end', () => {
+            userGrabbingWindow = false;
+        });
+        this._signals.connect(
+            global.display,
+            'window-entered-monitor',
+            (
+                _display: Meta.Display,
+                monitorIndex: number,
+                window: Meta.Window
+            ) => {
+                if (userGrabbingWindow) return; // mid-drag: do not fight the user
+                this._tilingManagers[monitorIndex]?.onWindowEnteredMonitor(
+                    window
+                );
+            }
+        );
+        this._signals.connect(
+            global.display,
+            'window-left-monitor',
+            (
+                _display: Meta.Display,
+                monitorIndex: number,
+                window: Meta.Window
+            ) => {
+                if (userGrabbingWindow) {
+                    debug('skip monitor-left auto-fill: user is dragging');
+                    return;
+                }
+                if (!(window as ExtendedWindow).assignedTile) return;
+                const oldMonitorTilingManager =
+                    this._tilingManagers[monitorIndex];
+                if (!oldMonitorTilingManager) return;
+                // tile-lock enforcement while auto-fill is on: here the
+                // geometry legit test DOES govern (a monitor move can leave
+                // the rect off-tile) and the suppression gate inside exempts
+                // keyboard swap legs
+                // a dying window emits monitor signals during teardown with
+                // its workspace already torn to null: never enforce on it
+                // (compositor abort on not-settled windows)
+                if (window.get_workspace()) {
+                    const assignedTile = (window as ExtendedWindow).assignedTile;
+                    oldMonitorTilingManager.enforceTiledPlacement(window, {
+                        window,
+                        tiled: true,
+                        monitorIndex,
+                        ws: window.get_workspace() ?? undefined,
+                        wsIndex: window.get_workspace()?.index(),
+                        tile: assignedTile
+                            ? new Tile({ ...assignedTile })
+                            : undefined,
+                    });
+                }
+                // monitorIndex is the OLD monitor: this signal fires before
+                // 'window-entered-monitor'; exclude the transitioning window
+                // so mid-transition occupancy is not confused
+                oldMonitorTilingManager.scheduleAutoFill(
+                    window.get_workspace()?.index() ?? 0,
+                    window
+                );
+            }
+        );
+
         this._signals.connect(
             new Gio.Settings({ schema: 'org.gnome.mutter' }),
             'changed::experimental-features',
@@ -240,7 +323,7 @@ export default class TilingShellExtension extends Extension {
                 if (this._windowBorderManager)
                     this._windowBorderManager.destroy();
                 this._windowBorderManager = new WindowBorderManager(
-                    this._fractionalScalingEnabled,
+                    !this._fractionalScalingEnabled,
                 );
                 this._windowBorderManager.enable();
             },
@@ -355,7 +438,7 @@ export default class TilingShellExtension extends Extension {
             );
         }
 
-        // when Tiling Shell's edge-tiling is enabled/disable
+        // when AutoTile's edge-tiling is enabled/disable
         // then enable/disable native edge-tiling
         this._signals.connect(
             Settings,
@@ -504,101 +587,142 @@ export default class TilingShellExtension extends Extension {
         direction: KeyBindingsDirection,
         spanFlag: boolean,
     ) {
-        const focus_window = display.get_focus_window();
-        if (
-            !focus_window ||
-            !focus_window.has_focus() ||
-            (focus_window.get_wm_class() &&
-                focus_window.get_wm_class() === 'gjs') ||
-            focus_window.is_fullscreen()
-        )
-            return;
+        // The keyboard move/swap command must never trigger the
+        // auto-fill cascade: its cross-monitor legs fire the
+        // monitor-left and workspace-changed signals synchronously,
+        // and the suppression flag is checked at signal time.
+        withAutoFillSuppressed(() => {
+            const focus_window = display.get_focus_window();
+            if (
+                !focus_window ||
+                !focus_window.has_focus() ||
+                (focus_window.get_wm_class() &&
+                    focus_window.get_wm_class() === 'gjs') ||
+                focus_window.is_fullscreen()
+            )
+                return;
 
-        // if the window is maximized, it cannot be spanned
-        if (
-            (focus_window.maximizedHorizontally ||
-                focus_window.maximizedVertically) &&
-            spanFlag
-        )
-            return;
+            // if the window is maximized, it cannot be spanned
+            if (
+                (focus_window.maximizedHorizontally ||
+                    focus_window.maximizedVertically) &&
+                spanFlag
+            )
+                return;
 
-        // handle unmaximize of maximized window
-        if (
-            (focus_window.maximizedHorizontally ||
-                focus_window.maximizedVertically) &&
-            direction === KeyBindingsDirection.DOWN
-        ) {
-            unmaximizeWindow(focus_window);
-            return;
-        }
+            // handle unmaximize of maximized window
+            if (
+                (focus_window.maximizedHorizontally ||
+                    focus_window.maximizedVertically) &&
+                direction === KeyBindingsDirection.DOWN
+            ) {
+                unmaximizeWindow(focus_window);
+                return;
+            }
 
-        const monitorTilingManager =
-            this._tilingManagers[focus_window.get_monitor()];
-        if (!monitorTilingManager) return;
+            const monitorTilingManager =
+                this._tilingManagers[focus_window.get_monitor()];
+            if (!monitorTilingManager) return;
 
-        if (
-            Settings.ENABLE_AUTO_TILING &&
-            (focus_window.maximizedHorizontally ||
-                focus_window.maximizedVertically)
-        ) {
-            unmaximizeWindow(focus_window);
-            return;
-        }
+            if (
+                Settings.ENABLE_AUTO_TILING &&
+                (focus_window.maximizedHorizontally ||
+                    focus_window.maximizedVertically)
+            ) {
+                unmaximizeWindow(focus_window);
+                return;
+            }
 
-        let displayDirection = Meta.DisplayDirection.DOWN;
-        switch (direction) {
-            case KeyBindingsDirection.LEFT:
-                displayDirection = Meta.DisplayDirection.LEFT;
-                break;
-            case KeyBindingsDirection.RIGHT:
-                displayDirection = Meta.DisplayDirection.RIGHT;
-                break;
-            case KeyBindingsDirection.UP:
-                displayDirection = Meta.DisplayDirection.UP;
-                break;
-        }
-        const neighborMonitorIndex = display.get_monitor_neighbor_index(
-            focus_window.get_monitor(),
-            displayDirection,
-        );
+            let displayDirection = Meta.DisplayDirection.DOWN;
+            switch (direction) {
+                case KeyBindingsDirection.LEFT:
+                    displayDirection = Meta.DisplayDirection.LEFT;
+                    break;
+                case KeyBindingsDirection.RIGHT:
+                    displayDirection = Meta.DisplayDirection.RIGHT;
+                    break;
+                case KeyBindingsDirection.UP:
+                    displayDirection = Meta.DisplayDirection.UP;
+                    break;
+            }
+            const neighborMonitorIndex = display.get_monitor_neighbor_index(
+                focus_window.get_monitor(),
+                displayDirection,
+            );
 
-        const success = monitorTilingManager.onKeyboardMoveWindow(
-            focus_window,
-            direction,
-            false,
-            spanFlag,
-            neighborMonitorIndex === -1, // clamp if there is NOT a monitor in this direction
-        );
+            // no monitor in this direction: extend the unified "next tile
+            // in the direction" model to the adjacent WORKSPACE (LEFT/RIGHT
+            // only, never wrapping) before the clamped same-monitor move —
+            // mirrors the directional focus feature's neighbor-workspace
+            // search. Declines (floating/maximized mover, not at the edge
+            // column, workspace boundary) fall through to the legacy path.
+            if (
+                neighborMonitorIndex === -1 &&
+                !spanFlag &&
+                (direction === KeyBindingsDirection.LEFT ||
+                    direction === KeyBindingsDirection.RIGHT) &&
+                monitorTilingManager.onKeyboardMoveWindowAcrossWorkspaces(
+                    focus_window,
+                    direction,
+                )
+            )
+                return;
 
-        if (
-            success ||
-            direction === KeyBindingsDirection.NODIRECTION ||
-            neighborMonitorIndex === -1
-        )
-            return;
+            const success = monitorTilingManager.onKeyboardMoveWindow(
+                focus_window,
+                direction,
+                false,
+                spanFlag,
+                neighborMonitorIndex === -1, // clamp if there is NOT a monitor in this direction
+                // for UP, defer the at-edge maximize to the neighbor fallback so a
+                // free tile on the monitor above wins first (user decision)
+                {
+                    deferEdgeToNeighbor:
+                        direction === KeyBindingsDirection.UP &&
+                        neighborMonitorIndex !== -1,
+                },
+            );
 
-        // if the window is maximized, direction is UP and there is a monitor above, minimize the window
-        if (
-            (focus_window.maximizedHorizontally ||
-                focus_window.maximizedVertically) &&
-            direction === KeyBindingsDirection.UP
-        ) {
-            Main.wm.skipNextEffect(focus_window.get_compositor_private());
-            unmaximizeWindow(focus_window);
-            (focus_window as ExtendedWindow).assignedTile = undefined;
-        }
+            if (
+                success ||
+                direction === KeyBindingsDirection.NODIRECTION ||
+                neighborMonitorIndex === -1
+            )
+                return;
 
-        const neighborTilingManager =
-            this._tilingManagers[neighborMonitorIndex];
-        if (!neighborTilingManager) return;
+            let wasMaximizedBeforeMove = false;
+            // if the window is maximized, direction is UP and there is a monitor above, minimize the window
+            if (
+                (focus_window.maximizedHorizontally ||
+                    focus_window.maximizedVertically) &&
+                direction === KeyBindingsDirection.UP
+            ) {
+                Main.wm.skipNextEffect(focus_window.get_compositor_private());
+                unmaximizeWindow(focus_window);
+                (focus_window as ExtendedWindow).assignedTile = undefined;
+                wasMaximizedBeforeMove = true;
+            }
 
-        neighborTilingManager.onKeyboardMoveWindow(
-            focus_window,
-            direction,
-            true,
-            spanFlag,
-            false,
-        );
+            const neighborTilingManager =
+                this._tilingManagers[neighborMonitorIndex];
+            if (!neighborTilingManager) return;
+
+            neighborTilingManager.onKeyboardMoveWindow(
+                focus_window,
+                direction,
+                true,
+                spanFlag,
+                false,
+                {
+                    // non-maximized UP edge: free tile or (inside the neighbor
+                    // manager) maximize — no nearest-tile stacking. Maximized
+                    // origin keeps the historical free-tile-else-nearest-tile.
+                    freeTileOnly:
+                        direction === KeyBindingsDirection.UP &&
+                        !wasMaximizedBeforeMove,
+                },
+            );
+        });
     }
 
     private _onKeyboardFocusWinDirection(
@@ -674,9 +798,99 @@ export default class TilingShellExtension extends Extension {
                 }
             });
 
+        if (!bestWindow) {
+            // no window along the direction in this workspace: search the
+            // neighbor workspaces along the same direction
+            bestWindow = this._findWindowInNeighborWorkspaces(
+                focus_window,
+                direction,
+            );
+        }
+
         if (!bestWindow) return;
 
         bestWindow.activate(global.get_current_time());
+    }
+
+    /**
+     * Search the workspaces after the one of focusWindow, along direction,
+     * for the nearest workspace containing at least one selectable window.
+     * Only the horizontal directions move across workspaces. The selected
+     * window is the one on the tile nearest to the source workspace: the
+     * leftmost for RIGHT, the rightmost for LEFT. Windows on the same edge
+     * are ranked by vertical proximity to the focused window.
+     *
+     * Workspaces are never wrapped around at the ends.
+     */
+    private _findWindowInNeighborWorkspaces(
+        focusWindow: Meta.Window,
+        direction: KeyBindingsDirection | FocusSwitchDirection,
+    ): Meta.Window | undefined {
+        if (
+            direction !== KeyBindingsDirection.LEFT &&
+            direction !== KeyBindingsDirection.RIGHT
+        )
+            return undefined;
+
+        const step = direction === KeyBindingsDirection.RIGHT ? 1 : -1;
+        const startIndex = focusWindow.get_workspace().index() + step;
+        const nWorkspaces = global.workspaceManager.get_n_workspaces();
+        const onlyTiledWindows = Settings.ENABLE_DIRECTIONAL_FOCUS_TILED_ONLY;
+        const focusRect = focusWindow.get_frame_rect();
+        const focusWindowCenterY = focusRect.y + focusRect.height / 2;
+
+        for (
+            let wsIndex = startIndex;
+            wsIndex >= 0 && wsIndex < nWorkspaces;
+            wsIndex += step
+        ) {
+            const workspace =
+                global.workspaceManager.get_workspace_by_index(wsIndex);
+            if (!workspace) continue;
+
+            let candidate: Meta.Window | undefined;
+            let candidateEdge = 0; // x of the tile edge nearest to the source workspace
+            let candidateCenterDistanceY = 0;
+
+            filterUnfocusableWindows(workspace.list_windows()).forEach((win) => {
+                if (win === focusWindow || win.minimized) return;
+                if (
+                    onlyTiledWindows &&
+                    (win as ExtendedWindow).assignedTile === undefined
+                )
+                    return;
+
+                const winRect = win.get_frame_rect();
+                const edge =
+                    direction === KeyBindingsDirection.RIGHT
+                        ? winRect.x
+                        : winRect.x + winRect.width;
+                const centerDistanceY = Math.abs(
+                    winRect.y + winRect.height / 2 - focusWindowCenterY,
+                );
+
+                // RIGHT searches the leftmost tile, LEFT the rightmost one
+                const nearerEdge =
+                    direction === KeyBindingsDirection.RIGHT
+                        ? edge < candidateEdge
+                        : edge > candidateEdge;
+
+                if (
+                    !candidate ||
+                    nearerEdge ||
+                    (edge === candidateEdge &&
+                        centerDistanceY < candidateCenterDistanceY)
+                ) {
+                    candidate = win;
+                    candidateEdge = edge;
+                    candidateCenterDistanceY = centerDistanceY;
+                }
+            });
+
+            if (candidate) return candidate;
+        }
+
+        return undefined;
     }
 
     private _onKeyboardFocusWin(
@@ -696,6 +910,7 @@ export default class TilingShellExtension extends Extension {
         const windowList = filterUnfocusableWindows(
             focus_window.get_workspace().list_windows(),
         );
+        if (windowList.length === 0) return;
         const focusParent = focus_window.get_transient_for() || focus_window;
         const focusedIdx = windowList.findIndex((win) => {
             // in case we are iterating over a modal dialog for our focused window
@@ -705,6 +920,8 @@ export default class TilingShellExtension extends Extension {
         let nextIndex = -1;
         switch (direction) {
             case FocusSwitchDirection.PREV:
+                if (focusedIdx === -1) return;
+                if (focusedIdx === 0 && !Settings.WRAPAROUND_FOCUS) return;
                 if (focusedIdx === 0 && Settings.WRAPAROUND_FOCUS) {
                     windowList[windowList.length - 1].activate(
                         global.get_current_time(),
@@ -716,6 +933,7 @@ export default class TilingShellExtension extends Extension {
                 }
                 break;
             case FocusSwitchDirection.NEXT:
+                if (focusedIdx === -1) return;
                 nextIndex = (focusedIdx + 1) % windowList.length;
                 if (nextIndex > 0 || Settings.WRAPAROUND_FOCUS)
                     windowList[nextIndex].activate(global.get_current_time());
@@ -788,6 +1006,9 @@ export default class TilingShellExtension extends Extension {
         this._raiseTogetherManager?.destroy();
         this._raiseTogetherManager = null;
 
+        this._focusOnCloseManager?.destroy();
+        this._focusOnCloseManager = null;
+
         // disable dbus
         this._dbus?.disable();
         this._dbus = null;
@@ -803,7 +1024,7 @@ export default class TilingShellExtension extends Extension {
         // destroy state and settings
         GlobalState.destroy();
         Settings.destroy();
-        TilingShellWindowManager.destroy();
+        AutoTileWindowManager.destroy();
 
         debug('extension is disabled');
     }

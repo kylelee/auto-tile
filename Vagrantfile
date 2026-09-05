@@ -1,6 +1,7 @@
-# Tiling Shell: advanced and modern window management for GNOME
+# AutoTile: advanced and modern window management for GNOME
 #
-# Copyright (C) 2025 Domenico Ferraro
+# Copyright (C) 2026 Domenico Ferraro
+# Copyright (C) 2026 Kyle Lee
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +24,7 @@ CPUS = 4
 MEMORY = 4096
 PROJECT_DIR = Pathname.new(__FILE__).realpath.dirname
 SYNCED_FOLDER = "/home/vagrant/#{PROJECT_DIR.basename}"
-UUID = "tilingshell@ferrarodomenico.com"
+UUID = "autotile@kylelee.github.io"
 
 # Shared configuration for all GNOME VMs
 def configure_gnome_vm(vm_config, box_name)
@@ -141,4 +142,3 @@ Vagrant.configure("2") do |config|
     configure_gnome_vm(gnome49, "bento/fedora-43")
   end
 end
-

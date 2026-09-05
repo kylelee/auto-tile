@@ -1,7 +1,7 @@
 {
-  "name": "Tiling Shell",
+  "name": "AutoTile",
   "description": "Extend Gnome Shell with advanced tiling window management. Supports multiple monitors, Windows 11 Snap Assistant, Fancy Zones, automatic tiling, keyboard shortcuts, customised tiling layouts and more!",
-  "uuid": "tilingshell@ferrarodomenico.com",
+  "uuid": "autotile@kylelee.github.io",
   "shell-version": [
     "42",
     "43",
@@ -13,11 +13,11 @@
     "49",
     "50"
   ],
-  "version": 99,
-  "version-name": "17.3",
-  "url": "https://github.com/domferr/tilingshell",
-  "settings-schema": "org.gnome.shell.extensions.tilingshell",
-  "gettext-domain": "tilingshell",
+  "version": 100,
+  "version-name": "18.0",
+  "url": "https://github.com/kylelee/AutoTile",
+  "settings-schema": "org.gnome.shell.extensions.autotile",
+  "gettext-domain": "autotile",
   "donations": {
     "kofi": "domferr",
     "patreon": "domferr"

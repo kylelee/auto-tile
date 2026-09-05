@@ -16,7 +16,7 @@ import TileUtils from '../../components/layout/TileUtils';
 import LayoutTileButtons from './layoutTileButtons';
 import { buildMarginOf } from '../../utils/ui';
 import LayoutIcon from './layoutIcon';
-import { _ } from '../../translations';
+import { t } from '../../translations';
 import { widgetOrientation } from '../../utils/gnomesupport';
 
 const LAYOUT_ICON_WIDTH = 46;
@@ -123,8 +123,8 @@ export default class OverriddenWindowMenu extends GObject.Object {
             window.get_monitor(),
             global.workspaceManager.get_active_workspace_index(),
         ).tiles;
-        const vacantTiles = tiles.filter((t) => {
-            const tileRect = TileUtils.apply_props(t, workArea);
+        const vacantTiles = tiles.filter((tile) => {
+            const tileRect = TileUtils.apply_props(tile, workArea);
             return !tiledWindows.find((win) =>
                 tileRect.overlap(win.get_frame_rect()),
             );
@@ -163,7 +163,7 @@ export default class OverriddenWindowMenu extends GObject.Object {
                 enableScalingFactorSupport(vacantPopupMenu, scalingFactor);
 
             buildMenuWithLayoutIcon(
-                _('Move to best tile'),
+                t('Move to best tile'),
                 vacantPopupMenu,
                 [vacantTiles[bestTileIndex]],
                 tiles,
@@ -185,7 +185,7 @@ export default class OverriddenWindowMenu extends GObject.Object {
             if (enableScaling)
                 enableScalingFactorSupport(vacantLeftPopupMenu, scalingFactor);
             buildMenuWithLayoutIcon(
-                _('Move to leftmost tile'),
+                t('Move to leftmost tile'),
                 vacantLeftPopupMenu,
                 [vacantTiles[0]],
                 tiles,
@@ -208,7 +208,7 @@ export default class OverriddenWindowMenu extends GObject.Object {
             if (enableScaling)
                 enableScalingFactorSupport(vacantRightPopupMenu, scalingFactor);
             buildMenuWithLayoutIcon(
-                _('Move to rightmost tile'),
+                t('Move to rightmost tile'),
                 vacantRightPopupMenu,
                 [tilesFromRightToLeft[0]],
                 tiles,

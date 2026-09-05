@@ -67,6 +67,11 @@ export default class WindowBorder extends St.DrawingArea {
     public trackWindow(win: Meta.Window, force: boolean = false) {
         if (!force && this._window === win) return;
 
+        // cancel any pending smart-border-radius timer: it still targets the
+        // previous window, whose actor may already be disposed
+        if (this._timeout) clearTimeout(this._timeout);
+        this._timeout = undefined;
+
         this._bindings.forEach((b) => b.unbind());
         this._bindings = [];
         this._signals.disconnect();
@@ -76,6 +81,9 @@ export default class WindowBorder extends St.DrawingArea {
             this._window.get_compositor_private() as Meta.WindowActor;
 
         // scale and translate like the window actor
+        // SYNC_CREATE is load-bearing: without the bind-time sync,
+        // re-tracking off a window mid size-change animation freezes the
+        // border's stale translation offset forever (one monitor off)
         this._bindings = [
             'scale-x',
             'scale-y',
@@ -86,8 +94,8 @@ export default class WindowBorder extends St.DrawingArea {
                 prop,
                 this,
                 prop,
-                GObject.BindingFlags.DEFAULT, // if winActor changes, this will change
-            ),
+                GObject.BindingFlags.SYNC_CREATE
+            )
         );
 
         if (Settings.ENABLE_SMART_WINDOW_BORDER_RADIUS) {
@@ -215,18 +223,45 @@ export default class WindowBorder extends St.DrawingArea {
         }
     }
 
+    // any introspected method call on a disposed GObject wrapper throws in
+    // GJS, which makes get_id() a safe liveness probe
+    private _isWindowAlive(window: Meta.Window): boolean {
+        try {
+            window.get_id();
+            return true;
+        } catch (_e) {
+            return false;
+        }
+    }
+
     private _runComputeBorderRadiusTimeout(winActor: Meta.WindowActor) {
         if (this._timeout) clearTimeout(this._timeout);
         this._timeout = undefined;
 
+        const scheduledWindow = winActor.metaWindow;
+        if (!scheduledWindow) return;
         this._timeout = setTimeout(() => {
-            this._computeBorderRadius(winActor).then(() => this.updateStyle());
+            // the timer may outlive its target: the border can be re-tracked
+            // onto another window, or the window may have been disposed
+            if (!this._isWindowAlive(scheduledWindow)) return;
+            if (this._window !== scheduledWindow) return;
+
+            this._computeBorderRadius(winActor)
+                .then(() => {
+                    // re-verify after the await: updateStyle reads this._window
+                    if (!this._isWindowAlive(scheduledWindow)) return;
+                    if (this._window !== scheduledWindow) return;
+                    this.updateStyle();
+                })
+                .catch(e => console.error('[autotile]', '[windowBorder]', e));
             if (this._timeout) clearTimeout(this._timeout);
             this._timeout = undefined;
         }, SMART_BORDER_RADIUS_FIRST_FRAME_DELAY);
     }
 
     private async _computeBorderRadius(winActor: Meta.WindowActor) {
+        const targetWindow = winActor.metaWindow;
+        if (!targetWindow) return;
         // we are only interested into analyze the leftmost pixels (i.e. the whole left border)
         const width = 3;
         const height = winActor.metaWindow.get_frame_rect().height;
@@ -275,6 +310,16 @@ export default class WindowBorder extends St.DrawingArea {
         );
         // @ts-expect-error "pixbuf has get_pixels() method"
         const pixels = pixbuf.get_pixels();
+
+        // the screenshot await may straddle the target's death or a border
+        // re-tracking: skip the radius update and the cache write entirely
+        if (
+            !this._isWindowAlive(targetWindow) ||
+            this._window !== targetWindow
+        ) {
+            stream.close(null);
+            return;
+        }
 
         const alphaThreshold = 240; // 255 would be the best value, however, some windows may still have a bit of transparency
         // iterate pixels from top to bottom

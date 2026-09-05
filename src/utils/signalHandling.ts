@@ -15,7 +15,7 @@ export default class SignalHandling {
     public connect(
         obj: ObjectWithSignals,
         key: string,
-        fun: (..._args: never[]) => void,
+        fun: (..._args: never[]) => void
     ) {
         const signalId = obj.connect(key, fun);
         this._signalsIds[key] = { id: signalId, obj };
@@ -28,22 +28,22 @@ export default class SignalHandling {
     public disconnect(obj?: ObjectWithSignals) {
         if (!obj) {
             const toDelete: string[] = [];
-            Object.keys(this._signalsIds).forEach((key) => {
+            Object.keys(this._signalsIds).forEach(key => {
                 this._signalsIds[key].obj.disconnect(this._signalsIds[key].id);
                 toDelete.push(key);
             });
             const result = toDelete.length > 0;
-            toDelete.forEach((key) => delete this._signalsIds[key]);
+            toDelete.forEach(key => delete this._signalsIds[key]);
             return result;
         } else {
-            const keyFound = Object.keys(this._signalsIds).find(
-                (key) => this._signalsIds[key].obj === obj,
+            const keysToRelease = Object.keys(this._signalsIds).filter(
+                key => this._signalsIds[key].obj === obj
             );
-            if (keyFound) {
-                obj.disconnect(this._signalsIds[keyFound].id);
-                delete this._signalsIds[keyFound];
-            }
-            return keyFound;
+            keysToRelease.forEach(key => {
+                obj.disconnect(this._signalsIds[key].id);
+                delete this._signalsIds[key];
+            });
+            return keysToRelease[keysToRelease.length - 1];
         }
     }
 }

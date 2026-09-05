@@ -55,8 +55,11 @@ dist_legacy/
 
 package-lock.json
 
-*tilingshell@ferrarodomenico.com.zip
+*autotile@kylelee.github.io.zip
 
 .vagrant
 
 shexli-result.html
+
+.omo
+.codegraph

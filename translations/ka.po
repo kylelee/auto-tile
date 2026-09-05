@@ -1,13 +1,13 @@
-# Georgian translation for tilingshell
-# Copyright (c) 2025 tilingshell's authors
-# This file is distributed under the same license as the tilingshell package.
+# Georgian translation for autotile
+# Copyright (c) 2025 autotile's authors
+# This file is distributed under the same license as the autotile package.
 # Ekaterine Papava <papava.e@gtu.ge>, 2025.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: tilingshell\n"
+"Project-Id-Version: autotile\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-25 18:00+0100\n"
+"POT-Creation-Date: 2026-09-04 19:09+0800\n"
 "PO-Revision-Date: 2025-12-13 06:31+0100\n"
 "Last-Translator: Ekaterine Papava <papava.e@gtu.ge>\n"
 "Language-Team: Georgian <(nothing)>\n"
@@ -65,31 +65,6 @@ msgstr ""
 msgid "Move to rightmost tile"
 msgstr ""
 
-#: dist/indicator/defaultMenu.js:297
-msgid "Edit Layouts"
-msgstr "განლაგებების ჩასწორება"
-
-#: dist/indicator/defaultMenu.js:307
-msgid "New Layout"
-msgstr "ახალი განლაგება"
-
-#: dist/indicator/editingMenu.js:19
-msgid "Menu"
-msgstr ""
-
-#: dist/indicator/editingMenu.js:26
-msgid "Info"
-msgstr ""
-
-#: dist/indicator/editingMenu.js:33 dist/prefs.js:404 dist/prefs.js:793
-msgid "Save"
-msgstr "შენახვა"
-
-#: dist/indicator/editingMenu.js:43 dist/prefs.js:405 dist/prefs.js:459
-#: dist/prefs.js:794 dist/prefs.js:849
-msgid "Cancel"
-msgstr "გაუქმება"
-
 #: dist/prefs.js:59
 msgid "General"
 msgstr "ზოგადი"
@@ -99,8 +74,8 @@ msgid "Appearance"
 msgstr "გარეგნობა"
 
 #: dist/prefs.js:65
-msgid "Configure the appearance of Tiling Shell"
-msgstr "Tiling Shell-ის გარეგნობის მორგება"
+msgid "Configure the appearance of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:70
 msgid "Show Indicator"
@@ -224,8 +199,8 @@ msgid "Behaviour"
 msgstr "ქცევა"
 
 #: dist/prefs.js:190
-msgid "Configure the behaviour of Tiling Shell"
-msgstr "Tiling Shell-ის ქცევის მორგება"
+msgid "Configure the behaviour of AutoTile"
+msgstr ""
 
 #: dist/prefs.js:195
 msgid "Enable Snap Assistant"
@@ -283,465 +258,511 @@ msgid "Automatically tile new windows to the best tile"
 msgstr "ახალი ფანჯრების ავტომატური განთავსება საუკეთესო ფილაზე"
 
 #: dist/prefs.js:249
+msgid "Search other workspaces when full"
+msgstr ""
+
+#: dist/prefs.js:251
+msgid ""
+"When every monitor is full, move a new window to a free tile on another "
+"workspace and switch to it"
+msgstr ""
+
+#: dist/prefs.js:262
+msgid "Fill freed tiles from the next workspaces"
+msgstr ""
+
+#: dist/prefs.js:264
+msgid ""
+"When a tiled window is closed or moved away, fill the freed tiles of its "
+"workspace by moving windows from the workspaces to the right, one after "
+"another, until no more windows are available"
+msgstr ""
+
+#: dist/prefs.js:270
 msgid "Enable auto-resize of the complementing tiled windows"
 msgstr "მეზობელი ფილების ზომის ავტომატური შეცვლის ცართვა"
 
-#: dist/prefs.js:251
+#: dist/prefs.js:272
 msgid ""
 "When a tiled window is resized, auto-resize the other tiled windows near it"
 msgstr ""
 "როცა ფანჯარას ზომა შეეცვლება, მისო ახლომდებარე ფანჯრების ზომის ავტომატური "
 "შეცვლა"
 
-#: dist/prefs.js:257
+#: dist/prefs.js:278
 msgid "Restore window size"
 msgstr "ფანჯრის ზომის აღდგენა"
 
-#: dist/prefs.js:259
+#: dist/prefs.js:280
 msgid "Whether to restore the windows to their original size when untiled"
 msgstr "აღდგება თუ არა ფანჯრები მათ ორიგინალ ზომებამდე მათი ფილიდან მოხსნისას"
 
-#: dist/prefs.js:265
+#: dist/prefs.js:286
 msgid "Add snap assistant and auto-tile buttons to window menu"
 msgstr ""
 
-#: dist/prefs.js:267
+#: dist/prefs.js:288
 msgid ""
 "Add snap assistant and auto-tile buttons in the menu that shows up when you "
 "right click on a window title"
 msgstr ""
 
-#: dist/prefs.js:273
+#: dist/prefs.js:294
 msgid "Add tiled windows to ALT+TAB menu"
 msgstr ""
 
-#: dist/prefs.js:275
+#: dist/prefs.js:296
 msgid ""
 "Add the tiled windows to the ALT+TAB menu to open all the tiled windows at "
 "once"
 msgstr ""
 
-#: dist/prefs.js:281
+#: dist/prefs.js:302
 msgid "Raise tiled windows together"
 msgstr ""
 
-#: dist/prefs.js:283
+#: dist/prefs.js:304
 msgid ""
 "When one tiled window is raised, raise all tiled windows into the foreground "
 "together"
 msgstr ""
 
-#: dist/prefs.js:288
+#: dist/prefs.js:309
 msgid "Screen Edges"
 msgstr "ეკრანის კიდეები"
 
-#: dist/prefs.js:290
+#: dist/prefs.js:311
 msgid ""
 "Drag windows against the top, left and right screen edges to resize them"
 msgstr ""
 
-#: dist/prefs.js:304
+#: dist/prefs.js:325
 msgid "Drag against top edge to maximize window"
 msgstr ""
 
-#: dist/prefs.js:305
+#: dist/prefs.js:326
 msgid "Drag windows against the top edge to maximize them"
 msgstr ""
 
-#: dist/prefs.js:314
+#: dist/prefs.js:335
 msgid "Quarter tiling activation area"
 msgstr "მეოთხედი ფილის აქტივაციის არე"
 
-#: dist/prefs.js:315
+#: dist/prefs.js:336
 #, javascript-format
 msgid "Activation area to trigger quarter tiling (%% of the screen)"
 msgstr ""
 
-#: dist/prefs.js:331
+#: dist/prefs.js:352
 msgid "Edge tiling offset"
 msgstr "წიბოს ფილის წანაცვლება"
 
-#: dist/prefs.js:332
+#: dist/prefs.js:353
 msgid "Offset from the screen edge to trigger edge tiling (in pixels)"
 msgstr ""
 
-#: dist/prefs.js:354
+#: dist/prefs.js:375
 msgid "Windows suggestions"
 msgstr "ფანჯრის მინიშნებები"
 
-#: dist/prefs.js:355
+#: dist/prefs.js:376
 msgid "Enable and disable windows suggestions"
 msgstr "ფანჯრის მინიშნებების ჩართვა და გამორთვა"
 
-#: dist/prefs.js:360
+#: dist/prefs.js:381
 msgid "Enable window suggestions for the tiling system"
 msgstr "ფანჯრის მინიშნებების ჩართვა ფილების სისტემისთვის"
 
-#: dist/prefs.js:362
+#: dist/prefs.js:383
 msgid ""
 "Provides smart suggestions to fill empty tiles when using the tiling system"
 msgstr ""
 
-#: dist/prefs.js:368
+#: dist/prefs.js:389
 msgid "Enable window suggestions for the snap assistant"
 msgstr ""
 
-#: dist/prefs.js:370
+#: dist/prefs.js:391
 msgid ""
 "Offers suggestions to populate empty tiles when using the snap assistant"
 msgstr ""
 
-#: dist/prefs.js:376
+#: dist/prefs.js:397
 msgid "Enable window suggestions for screen edge tiling"
 msgstr ""
 
-#: dist/prefs.js:378
+#: dist/prefs.js:399
 msgid "Suggests windows to occupy empty tiles when tiling to screen edges"
 msgstr ""
 
-#: dist/prefs.js:384
+#: dist/prefs.js:405
 msgid "Layouts"
 msgstr "განლაგებები"
 
-#: dist/prefs.js:385
-msgid "Configure the layouts of Tiling Shell"
-msgstr "Tiling Shell-ის განლაგებების მორგება"
+#: dist/prefs.js:406
+msgid "Configure the layouts of AutoTile"
+msgstr ""
 
-#: dist/prefs.js:389 dist/prefs.js:390
+#: dist/prefs.js:410 dist/prefs.js:411
 msgid "Edit layouts"
 msgstr "განლაგებების ჩასწორება"
 
-#: dist/prefs.js:391
+#: dist/prefs.js:412
 msgid "Open the layouts editor"
 msgstr "განლაგებების რედაქტორის გახსნა"
 
-#: dist/prefs.js:396 dist/prefs.js:397 dist/prefs.js:401
+#: dist/prefs.js:417 dist/prefs.js:418 dist/prefs.js:422
 msgid "Export layouts"
 msgstr "განლაგებების გატანა"
 
-#: dist/prefs.js:398
+#: dist/prefs.js:419
 msgid "Export layouts to a file"
 msgstr "განლაგებების გატანა ფაილში"
 
-#: dist/prefs.js:450 dist/prefs.js:451
+#: dist/prefs.js:425 dist/prefs.js:814 dist/indicator/editingMenu.js:33
+msgid "Save"
+msgstr "შენახვა"
+
+#: dist/prefs.js:426 dist/prefs.js:480 dist/prefs.js:815 dist/prefs.js:870
+#: dist/indicator/editingMenu.js:43
+msgid "Cancel"
+msgstr "გაუქმება"
+
+#: dist/prefs.js:471 dist/prefs.js:472
 msgid "Import layouts"
 msgstr "განლაგებების შემოტანა"
 
-#: dist/prefs.js:452
+#: dist/prefs.js:473
 msgid "Import layouts from a file"
 msgstr "განლაგებების შემოტანა ფაილიდან"
 
-#: dist/prefs.js:455
+#: dist/prefs.js:476
 msgid "Select layouts file"
 msgstr "აირჩიეთ განლაგებების ფაილი"
 
-#: dist/prefs.js:458 dist/prefs.js:848
+#: dist/prefs.js:479 dist/prefs.js:869
 msgid "Open"
 msgstr "გახსნა"
 
-#: dist/prefs.js:506 dist/prefs.js:507
+#: dist/prefs.js:527 dist/prefs.js:528
 msgid "Reset layouts"
 msgstr "განლაგებების ჩამოყრა"
 
-#: dist/prefs.js:508
+#: dist/prefs.js:529
 msgid "Bring back the default layouts"
 msgstr "ნაგულისხმევი განლაგებების დაბრუნება"
 
-#: dist/prefs.js:521
+#: dist/prefs.js:542
 msgid "Keybindings"
 msgstr "კლავიატურის მალსახმობები"
 
-#: dist/prefs.js:523
+#: dist/prefs.js:544
 msgid "Use hotkeys to perform actions on the focused window"
 msgstr ""
 "გამოიყენეთ კლავიატურის მალსახმობები ფოკუსის მქონე ფანჯარაზე ქმედებების "
 "განსახორციელებლად"
 
-#: dist/prefs.js:541
+#: dist/prefs.js:562
 msgid "Move window to right tile"
 msgstr "ფანჯრის გადატანა მარჯვენა ფილაზე"
 
-#: dist/prefs.js:543
+#: dist/prefs.js:564
 msgid "Move the focused window to the tile on its right"
 msgstr "ფოკუსის მქონე ფანჯრის გადატანა ფილაზე მარჯვნივ"
 
-#: dist/prefs.js:552
+#: dist/prefs.js:573
 msgid "Move window to left tile"
 msgstr "ფანჯრის გადატანა მარცხენა ფილაზე"
 
-#: dist/prefs.js:553
+#: dist/prefs.js:574
 msgid "Move the focused window to the tile on its left"
 msgstr "ფოკუსის მქონე ფანჯრის გადატანა ფილაზე მარცხნივ"
 
-#: dist/prefs.js:559
+#: dist/prefs.js:580
 msgid "Move window to tile above"
 msgstr "ფანჯრის გადატანა ზედა ფილაზე"
 
-#: dist/prefs.js:560
+#: dist/prefs.js:581
 msgid "Move the focused window to the tile above"
 msgstr "ფოკუსის მქონე ფანჯრის გადატანა ფილაზე ზემოთ"
 
-#: dist/prefs.js:566
+#: dist/prefs.js:587
 msgid "Move window to tile below"
 msgstr "ფანჯრის გადატანა ქვედა ფილაზე"
 
-#: dist/prefs.js:567
+#: dist/prefs.js:588
 msgid "Move the focused window to the tile below"
 msgstr "ფოკუსის მქონე ფანჯრის გადატანა ფილაზე ქვემოთ"
 
-#: dist/prefs.js:573
+#: dist/prefs.js:594
 msgid "Span window to right tile"
 msgstr "ფანჯრის გაწელვა მარჯვენა ფილამდე"
 
-#: dist/prefs.js:574
+#: dist/prefs.js:595
 msgid "Span the focused window to the tile on its right"
 msgstr "ფოკუსის მქონე ფანჯრის გაწელვა ფილამდე მარჯვნივ"
 
-#: dist/prefs.js:580
+#: dist/prefs.js:601
 msgid "Span window to left tile"
 msgstr "ფანჯრის გაწელვა მარცხენა ფილამდე"
 
-#: dist/prefs.js:581
+#: dist/prefs.js:602
 msgid "Span the focused window to the tile on its left"
 msgstr "ფოკუსის მქონე ფანჯრის გაწელვა ფილამდე მარცხნივ"
 
-#: dist/prefs.js:587
+#: dist/prefs.js:608
 msgid "Span window above"
 msgstr "ფანჯრის გაწელვა ზედა ფილამდე"
 
-#: dist/prefs.js:588
+#: dist/prefs.js:609
 msgid "Span the focused window to the tile above"
 msgstr "ფოკუსის მქონე ფანჯრის გაწელვა ფილამდე ზემოთ"
 
-#: dist/prefs.js:594
+#: dist/prefs.js:615
 msgid "Span window down"
 msgstr "ფანჯრის გაწელვა ქვედა ფილამდე"
 
-#: dist/prefs.js:595
+#: dist/prefs.js:616
 msgid "Span the focused window to the tile below"
 msgstr "ფოკუსის მქონე ფანჯრის გაწელვა ფილამდე ქვემოთ"
 
-#: dist/prefs.js:601
+#: dist/prefs.js:622
 msgid "Span window to all tiles"
 msgstr "ფანჯრის გაწელვა ყველა ფილამდე"
 
-#: dist/prefs.js:602
+#: dist/prefs.js:623
 msgid "Span the focused window to all the tiles"
 msgstr "ფოკუსის მქონე ფანჯრის გაწელვა ყველა ფილამდე"
 
-#: dist/prefs.js:608
+#: dist/prefs.js:629
 msgid "Untile focused window"
 msgstr "ფოკუსის მქონე ფანჯრის ფილიდან მოცილება"
 
-#: dist/prefs.js:616
+#: dist/prefs.js:637
 msgid "Move window to the center"
 msgstr "ფანჯრის გადატანა ცენტრისკენ"
 
-#: dist/prefs.js:618
+#: dist/prefs.js:639
 msgid "Move the focused window to the center of the screen"
 msgstr ""
 
-#: dist/prefs.js:627
+#: dist/prefs.js:648
 msgid "Focus window to the right"
 msgstr "ფოკუსის გადართვა მარჯვენა ფანჯარაზე"
 
-#: dist/prefs.js:629
+#: dist/prefs.js:650
 msgid "Focus the window to the right of the current focused window"
 msgstr ""
 "ფოკუსის გადატანა ამჟამად ფოკუსის მქონე ფანჯრიდან მარჯვენა მხარეს არსებულ "
 "ფანჯარაზე"
 
-#: dist/prefs.js:636
+#: dist/prefs.js:657
 msgid "Focus window to the left"
 msgstr "ფოკუსის გადართვა მარცხენა ფანჯარაზე"
 
-#: dist/prefs.js:637
+#: dist/prefs.js:658
 msgid "Focus the window to the left of the current focused window"
 msgstr ""
 "ფოკუსის გადატანა ამჟამად ფოკუსის მქონე ფანჯრიდან მარცხენა მხარეს არსებულ "
 "ფანჯარაზე"
 
-#: dist/prefs.js:643
+#: dist/prefs.js:664
 msgid "Focus window above"
 msgstr "ფოკუსის გადართვა ზედა ფანჯარაზე"
 
-#: dist/prefs.js:644
+#: dist/prefs.js:665
 msgid "Focus the window above the current focused window"
 msgstr ""
 "ფოკუსის გადატანა ამჟამად ფოკუსის მქონე ფანჯრიდან ზემო მხარეს არსებულ "
 "ფანჯარაზე"
 
-#: dist/prefs.js:650
+#: dist/prefs.js:671
 msgid "Focus window below"
 msgstr "ფოკუსის გადართვა ქვედა ფანჯარაზე"
 
-#: dist/prefs.js:651
+#: dist/prefs.js:672
 msgid "Focus the window below the current focused window"
 msgstr ""
 "ფოკუსის გადატანა ამჟამად ფოკუსის მქონე ფანჯრიდან ქვემო მხარეს არსებულ "
 "ფანჯარაზე"
 
-#: dist/prefs.js:657
+#: dist/prefs.js:678
 msgid "Focus next window"
 msgstr "ფოკუსის გადართვა შემდეგ ფანჯარაზე"
 
-#: dist/prefs.js:658
+#: dist/prefs.js:679
 msgid "Focus the window next to the current focused window"
 msgstr "ფოკუსის გადატანა ამჟამად ფოკუსის მქონე ფანჯრიდან შემდეგ ფანჯარაზე"
 
-#: dist/prefs.js:664
+#: dist/prefs.js:685
 msgid "Focus previous window"
 msgstr "ფოკუსის გადართვა წინა ფანჯარაზე"
 
-#: dist/prefs.js:665
+#: dist/prefs.js:686
 msgid "Focus the window prior to the current focused window"
 msgstr "ფოკუსის გადატანა ამჟამად ფოკუსის მქონე ფანჯრიდან წინა ფანჯარაზე"
 
-#: dist/prefs.js:671
+#: dist/prefs.js:692
 msgid "Highlight focused window"
 msgstr "ფოკუსის მქონე ფანჯრის გამოკვეთა"
 
-#: dist/prefs.js:673
+#: dist/prefs.js:694
 msgid "Minimize all the other windows and show only the focused window"
 msgstr "ყველა სხვა ფანჯრის ჩაკეცვა და, მხოლოდ, ფოკუსის მქონე ფანჯრის ჩვენება"
 
-#: dist/prefs.js:680
+#: dist/prefs.js:701
 msgid "Cycle layouts"
 msgstr "გადართვა განლაგებების შორის"
 
-#: dist/prefs.js:681
+#: dist/prefs.js:702
 msgid "Cycle through available workspace layouts"
 msgstr "წრიული გადართვა ხელმისაწვდომი სამუშაო სივრცის განლაგებების შორის"
 
-#: dist/prefs.js:711
+#: dist/prefs.js:732
 msgid "View and Customize all the Shortcuts"
 msgstr "ნახეთ და მოირგეთ ყველა მალსახმობი"
 
-#: dist/prefs.js:739 dist/prefs.js:740
+#: dist/prefs.js:760 dist/prefs.js:761
 msgid "View and Customize Shortcuts"
 msgstr "მალსახმობების ნახვა და მორცება"
 
-#: dist/prefs.js:763
+#: dist/prefs.js:784
 msgid "Enable next/previous window focus to wrap around"
 msgstr ""
 
-#: dist/prefs.js:765
+#: dist/prefs.js:786
 msgid "When focusing next or previous window, wrap around at the window edge"
 msgstr ""
 
-#: dist/prefs.js:771
+#: dist/prefs.js:792
 msgid "Restrict directional focus to tiled windows"
 msgstr ""
 
-#: dist/prefs.js:773
+#: dist/prefs.js:794
 msgid "When using directional focus navigation, only consider tiled windows"
 msgstr ""
 
-#: dist/prefs.js:778
+#: dist/prefs.js:799
 msgid "Import, export and reset"
 msgstr "შემოტანა, გატანა და ჩამოყრა"
 
-#: dist/prefs.js:780
-msgid "Import, export and reset the settings of Tiling Shell"
-msgstr "Tiling Shell-ის პარამეტრების შემოტანა, გატანა და ჩამოყრა"
+#: dist/prefs.js:801
+msgid "Import, export and reset the settings of AutoTile"
+msgstr ""
 
-#: dist/prefs.js:785 dist/prefs.js:786
+#: dist/prefs.js:806 dist/prefs.js:807
 msgid "Export settings"
 msgstr "გატანის მორგება"
 
-#: dist/prefs.js:787
+#: dist/prefs.js:808
 msgid "Export settings to a file"
 msgstr "პარამეტრების გატანა ფაილში"
 
-#: dist/prefs.js:790
+#: dist/prefs.js:811
 msgid "Export settings to a text file"
 msgstr "პარამეტრების გატანა ტექსტურ ფაილში"
 
-#: dist/prefs.js:797
+#: dist/prefs.js:818
 msgid "Text file"
 msgstr "ტექსტური ფაილი"
 
-#: dist/prefs.js:840 dist/prefs.js:841
+#: dist/prefs.js:861 dist/prefs.js:862
 msgid "Import settings"
 msgstr "პარამეტრების შემოტანა"
 
-#: dist/prefs.js:842
+#: dist/prefs.js:863
 msgid "Import settings from a file"
 msgstr "პარამეტრების შემოტანა ფაილიდან"
 
-#: dist/prefs.js:845
+#: dist/prefs.js:866
 msgid "Select a text file to import from"
 msgstr "აირჩიეთ შემოსატანი ტექსტური ფაილი"
 
-#: dist/prefs.js:887 dist/prefs.js:888
+#: dist/prefs.js:908 dist/prefs.js:909
 msgid "Reset settings"
 msgstr "პარამეტრების ნაგულისხმებ მნიშვნელობაზე დაბრუნება"
 
-#: dist/prefs.js:889
+#: dist/prefs.js:910
 msgid "Bring back the default settings"
 msgstr "ნაგულისხმევი პარამეტრების დაბრუნება"
 
-#: dist/prefs.js:904
+#: dist/prefs.js:925
 msgid "Donate on ko-fi"
 msgstr "შემოგვწირეთ ko-fi-ზე"
 
-#: dist/prefs.js:910
+#: dist/prefs.js:931
 msgid "Report a bug"
 msgstr "შეცდომის პატაკი"
 
-#: dist/prefs.js:916
+#: dist/prefs.js:937
 msgid "Request a feature"
 msgstr "ფუნქციის მოთხოვნა"
 
-#: dist/prefs.js:924
+#: dist/prefs.js:945
 msgid "Have issues, you want to suggest a new feature or contribute?"
 msgstr ""
 "გაქვთ პრობლემები, გნებავთ, შემოგვთავაზოთ ახალი ფუნქცია, ან იყოთ მოხალისე?"
 
-#: dist/prefs.js:931
+#: dist/prefs.js:952
 msgid "Open a new issue on"
 msgstr "გახსენით ახალი ბილეთი პრობლემის შესახებ ბმულზე"
 
-#: dist/prefs.js:999
+#: dist/prefs.js:1020
 msgid "Choose how windows snap to screen edges"
 msgstr ""
 
-#: dist/prefs.js:1014
+#: dist/prefs.js:1035
 msgid "Default"
 msgstr ""
 
-#: dist/prefs.js:1015
+#: dist/prefs.js:1036
 msgid "Follow quarters or screen halves"
 msgstr ""
 
-#: dist/prefs.js:1020
+#: dist/prefs.js:1041
 msgid "Adaptive"
 msgstr ""
 
-#: dist/prefs.js:1021
+#: dist/prefs.js:1042
 msgid "Follow corners of selected layout or screen halves"
 msgstr ""
 
-#: dist/prefs.js:1026
+#: dist/prefs.js:1047
 msgid "Granular"
 msgstr ""
 
-#: dist/prefs.js:1027
+#: dist/prefs.js:1048
 msgid "Follow currently selected layout"
 msgstr ""
 
-#: dist/prefs.js:1216
+#: dist/prefs.js:1237
 msgid "Choose custom color"
 msgstr "აირჩიეთ სასურველი ფერი"
 
-#: dist/prefs.js:1217
+#: dist/prefs.js:1238
 msgid "Use system accent color"
 msgstr "სისტემური აქცენტის ფერის გამოყენება"
 
-#: dist/prefs.js:1271 dist/prefs.js:1298
+#: dist/prefs.js:1292 dist/prefs.js:1319
 msgid "New accelerator…"
 msgstr "ახალი აქსელერატორი…"
 
-#: dist/prefs.js:1301
+#: dist/prefs.js:1322
 msgid "Use Backspace to clear"
 msgstr "გასასუფთავებლად გამოიყენეთ ღილაკი Backspace"
+
+#: dist/indicator/defaultMenu.js:298
+msgid "Edit Layouts"
+msgstr "განლაგებების ჩასწორება"
+
+#: dist/indicator/defaultMenu.js:308
+msgid "New Layout"
+msgstr "ახალი განლაგება"
+
+#: dist/indicator/editingMenu.js:19
+msgid "Menu"
+msgstr ""
+
+#: dist/indicator/editingMenu.js:26
+msgid "Info"
+msgstr ""

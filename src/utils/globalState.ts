@@ -250,6 +250,7 @@ export default class GlobalState extends GObject.Object {
     }
 
     public deleteLayout(layoutToDelete: Layout) {
+        if (this._layouts.length <= 1) return;
         const layFoundIndex = this._layouts.findIndex(
             (lay) => lay.id === layoutToDelete.id,
         );

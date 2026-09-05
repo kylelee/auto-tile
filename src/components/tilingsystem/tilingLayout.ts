@@ -11,6 +11,7 @@ import {
     isPointInsideRect,
     squaredEuclideanDistance,
 } from '../../utils/ui';
+import { clamp } from '../../utils/clamp';
 import TileUtils from '../../components/layout/TileUtils';
 import GlobalState from '../../utils/globalState';
 import { KeyBindingsDirection } from '../../keybindings';
@@ -365,7 +366,7 @@ export default class TilingLayout extends LayoutWidget<DynamicTilePreview> {
     public findNearestTileDirection(
         source: Mtk.Rectangle,
         direction: KeyBindingsDirection,
-        clamp: boolean,
+        clampToContainer: boolean,
         enlarge: number,
     ): { rect: Mtk.Rectangle; tile: Tile } | undefined {
         if (direction === KeyBindingsDirection.NODIRECTION) return undefined;
@@ -398,14 +399,14 @@ export default class TilingLayout extends LayoutWidget<DynamicTilePreview> {
             sourceCoords.y < this._containerRect.y ||
             sourceCoords.y > this._containerRect.height + this._containerRect.y
         ) {
-            if (!clamp) return undefined; // we can already return undefined
+            if (!clampToContainer) return undefined; // we can already return undefined
 
-            sourceCoords.x = Math.clamp(
+            sourceCoords.x = clamp(
                 sourceCoords.x,
                 this._containerRect.x,
                 this._containerRect.width + this._containerRect.x,
             );
-            sourceCoords.y = Math.clamp(
+            sourceCoords.y = clamp(
                 sourceCoords.y,
                 this._containerRect.y,
                 this._containerRect.height + this._containerRect.y,
@@ -448,16 +449,35 @@ export default class TilingLayout extends LayoutWidget<DynamicTilePreview> {
     public findNearestTile(
         source: Mtk.Rectangle,
     ): { rect: Mtk.Rectangle; tile: Tile } | undefined {
+        const previewFound = this._findNearestPreview(source);
+        if (!previewFound) return undefined;
+
+        return {
+            rect: buildRectangle({
+                x: previewFound.innerX,
+                y: previewFound.innerY,
+                width: previewFound.innerWidth,
+                height: previewFound.innerHeight,
+            }),
+            tile: previewFound.tile,
+        };
+    }
+
+    private _findNearestPreview(
+        source: Mtk.Rectangle,
+        isCandidate?: (preview: DynamicTilePreview) => boolean,
+    ): DynamicTilePreview | undefined {
         let previewFound: DynamicTilePreview | undefined;
         let bestDistance = -1;
 
         const sourceCenter = {
             x: source.x + source.width / 2,
-            y: source.x + source.height / 2,
+            y: source.y + source.height / 2,
         };
 
         for (let i = 0; i < this._previews.length; i++) {
             const preview = this._previews[i];
+            if (isCandidate && !isCandidate(preview)) continue;
 
             const previewCenter = {
                 x: preview.innerX + preview.innerWidth / 2,
@@ -475,6 +495,33 @@ export default class TilingLayout extends LayoutWidget<DynamicTilePreview> {
             }
         }
 
+        return previewFound;
+    }
+
+    // find the nearest tile that does not overlap any occupied rect
+    // (occupancy = frame rects of tiled windows); returns undefined when
+    // every tile is occupied
+    public findNearestFreeTile(
+        source: Mtk.Rectangle,
+        occupiedRects: Mtk.Rectangle[],
+    ): { rect: Mtk.Rectangle; tile: Tile } | undefined {
+        const previewFound = this._findNearestPreview(
+            source,
+            (preview) => {
+                // use apply_props(tile, containerRect) — NOT preview.rect —
+                // for exact parity with _findEmptyTile's occupancy test
+                // (preview.rect extends edge tiles by the outer gaps in
+                // LayoutWidget.draw_layout, which diverges whenever outer
+                // gaps > 0) — review round 1, finding 2
+                const tileRect = TileUtils.apply_props(
+                    preview.tile,
+                    this._containerRect,
+                );
+                return !occupiedRects.some((occupied) =>
+                    tileRect.overlap(occupied),
+                );
+            },
+        );
         if (!previewFound) return undefined;
 
         return {

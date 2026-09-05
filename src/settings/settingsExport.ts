@@ -2,7 +2,7 @@ import { Gio, GLib } from '../gi/prefs';
 import Settings from '../settings/settings';
 import SettingsOverride from '../settings/settingsOverride';
 
-const dconfPath = '/org/gnome/shell/extensions/tilingshell/';
+const dconfPath = '/org/gnome/shell/extensions/autotile/';
 const excludedKeys: string[] = [
     Settings.KEY_SETTING_LAYOUTS_JSON,
     Settings.KEY_LAST_VERSION_NAME_INSTALLED,
@@ -21,6 +21,8 @@ export default class SettingsExport {
     }
 
     importFromString(content: string) {
+        const backup = this._dumpDconf();
+
         this.restoreToDefault();
 
         const proc = Gio.Subprocess.new(
@@ -31,7 +33,18 @@ export default class SettingsExport {
         proc.communicate_utf8(content, null);
 
         if (!proc.get_successful()) {
-            this.restoreToDefault();
+            SettingsOverride.destroy();
+
+            const restoreProc = Gio.Subprocess.new(
+                ['dconf', 'load', dconfPath],
+                Gio.SubprocessFlags.STDIN_PIPE,
+            );
+
+            restoreProc.communicate_utf8(backup, null);
+
+            if (!restoreProc.get_successful()) {
+                console.error('Failed to restore dconf backup');
+            }
 
             throw new Error(
                 'Failed to import dconf dump file. Restoring to default...',

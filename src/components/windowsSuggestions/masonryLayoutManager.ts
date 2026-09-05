@@ -1,5 +1,6 @@
 import { registerGObjectClass } from '../../utils/gjs';
 import { Clutter } from '../../gi/ext';
+import { clamp } from '../../utils/clamp';
 
 const MASONRY_ROW_MIN_HEIGHT_PERCENTAGE = 0.15;
 
@@ -63,7 +64,7 @@ export default class MasonryLayoutManager extends Clutter.LayoutManager {
             // if the element has a width higher than the container
             // clamp its width and change its height preserving
             // aspect ratio
-            const childWidth = Math.clamp(width, width, availableWidth);
+            const childWidth = clamp(width, width, availableWidth);
             const childHeight = childWidth / aspectRatio;
 
             placements.push({
@@ -201,7 +202,7 @@ export default class MasonryLayoutManager extends Clutter.LayoutManager {
             // if the element has a width higher than the container
             // clamp its width and change its height preserving
             // aspect ratio
-            const childWidth = Math.clamp(width, width, availableWidth);
+            const childWidth = clamp(width, width, availableWidth);
             const childHeight = childWidth / aspectRatio;
 
             placements.push({

@@ -1,5 +1,5 @@
 const node = `<node>
-    <interface name="org.gnome.Shell.Extensions.TilingShell">
+    <interface name="org.gnome.Shell.Extensions.AutoTile">
         <method name="openLayoutEditor" />
     </interface>
 </node>`;
@@ -16,11 +16,16 @@ export default class DBus {
     public enable(ext: unknown) {
         if (this._dbus) return;
 
-        this._dbus = Gio.DBusExportedObject.wrapJSObject(node, ext);
-        this._dbus.export(
-            Gio.DBus.session,
-            '/org/gnome/Shell/Extensions/TilingShell',
-        );
+        try {
+            this._dbus = Gio.DBusExportedObject.wrapJSObject(node, ext);
+            this._dbus.export(
+                Gio.DBus.session,
+                '/org/gnome/Shell/Extensions/AutoTile',
+            );
+        } catch (e) {
+            console.error('[autotile]', '[dbus]', e);
+            this._dbus = null;
+        }
     }
 
     public disable() {

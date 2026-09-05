@@ -49,7 +49,7 @@ var Extension = class {
 const extensionFooter = `// For GNOME Shell version before 45
 function init(meta) {
     imports.misc.extensionUtils.initTranslations();
-    return new TilingShellExtension(meta);
+    return new AutoTileExtension(meta);
 }
 `;
 
@@ -74,7 +74,7 @@ function init() {
 
 function fillPreferencesWindow(window) {
     const metadata = imports.misc.extensionUtils.getCurrentExtension().metadata;
-    const prefs = new TilingShellExtensionPreferences(metadata, Me.dir.get_path());
+    const prefs = new AutoTileExtensionPreferences(metadata, Me.dir.get_path());
     prefs.fillPreferencesWindow(window);
 }
 `;

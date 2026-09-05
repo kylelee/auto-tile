@@ -1,7 +1,16 @@
-import { Gio } from '../../gi/ext';
+import { Gio, Meta } from '../../gi/ext';
 import WindowBorder from './windowBorder';
 import SignalHandling from '../../utils/signalHandling';
 import Settings from '../../settings/settings';
+import { isWindowEligibleForBorder } from './borderEligibility';
+
+// Meta.WindowType member NAMES are stable across GNOME 42-50, their
+// numeric values are not: reverse-map once and compare by name.
+// The typeof filter skips the enum object's non-numeric $gtype entry.
+const WINDOW_TYPE_NAMES = new Map<number, string>();
+for (const [name, value] of Object.entries(Meta.WindowType)) {
+    if (typeof value === 'number') WINDOW_TYPE_NAMES.set(value, name);
+}
 
 export class WindowBorderManager {
     private readonly _signals: SignalHandling;
@@ -29,7 +38,7 @@ export class WindowBorderManager {
             () => {
                 if (Settings.ENABLE_WINDOW_BORDER) this._turnOn();
                 else this._turnOff();
-            },
+            }
         );
     }
 
@@ -38,21 +47,21 @@ export class WindowBorderManager {
         this._signals.connect(
             global.display,
             'notify::focus-window',
-            this._onWindowFocused.bind(this),
+            this._onWindowFocused.bind(this)
         );
         this._signals.connect(Settings, Settings.KEY_WINDOW_BORDER_COLOR, () =>
-            this._border?.updateStyle(),
+            this._border?.updateStyle()
         );
         this._signals.connect(
             Settings,
             Settings.KEY_WINDOW_USE_CUSTOM_BORDER_COLOR,
-            () => this._border?.updateStyle(),
+            () => this._border?.updateStyle()
         );
         this._interfaceSettings.connect('changed::accent-color', () =>
-            this._border?.updateStyle(),
+            this._border?.updateStyle()
         );
         this._signals.connect(Settings, Settings.KEY_WINDOW_BORDER_WIDTH, () =>
-            this._border?.updateStyle(),
+            this._border?.updateStyle()
         );
     }
 
@@ -70,10 +79,23 @@ export class WindowBorderManager {
     private _onWindowFocused(): void {
         // connect signals on the window and create the border
         const metaWindow = global.display.focus_window;
+        if (!metaWindow) {
+            this._border?.destroy();
+            this._border = null;
+            return;
+        }
+
+        const frameRect = metaWindow.get_frame_rect();
         if (
-            !metaWindow ||
-            metaWindow.get_wm_class() === null ||
-            metaWindow.get_wm_class() === 'gjs'
+            !isWindowEligibleForBorder({
+                wmClass: metaWindow.get_wm_class(),
+                windowTypeName:
+                    WINDOW_TYPE_NAMES.get(metaWindow.get_window_type()) ?? '',
+                skipTaskbar: metaWindow.skip_taskbar,
+                showingOnItsWorkspace: metaWindow.showing_on_its_workspace(),
+                frameWidth: frameRect.width,
+                frameHeight: frameRect.height,
+            })
         ) {
             this._border?.destroy();
             this._border = null;

@@ -102,6 +102,8 @@ export default class Settings {
     static KEY_ENABLE_BLUR_SELECTED_TILEPREVIEW = 'enable-blur-selected-tilepreview';
     static KEY_ENABLE_MOVE_KEYBINDINGS = 'enable-move-keybindings';
     static KEY_ENABLE_AUTO_TILING = 'enable-autotiling';
+    static KEY_ENABLE_AUTO_TILING_OTHER_WORKSPACES = 'enable-autotiling-other-workspaces';
+    static KEY_ENABLE_AUTO_FILL_FREED_TILES = 'enable-auto-fill-freed-tiles';
     static KEY_RAISE_TOGETHER = 'raise-together';
     static KEY_ACTIVE_SCREEN_EDGES = 'active-screen-edges';
     static KEY_TOP_EDGE_MAXIMIZE = 'top-edge-maximize';
@@ -341,6 +343,22 @@ export default class Settings {
         set_boolean(Settings.KEY_ENABLE_AUTO_TILING, val);
     }
 
+    static get ENABLE_AUTO_TILING_OTHER_WORKSPACES(): boolean {
+        return get_boolean(Settings.KEY_ENABLE_AUTO_TILING_OTHER_WORKSPACES);
+    }
+
+    static set ENABLE_AUTO_TILING_OTHER_WORKSPACES(val: boolean) {
+        set_boolean(Settings.KEY_ENABLE_AUTO_TILING_OTHER_WORKSPACES, val);
+    }
+
+    static get ENABLE_AUTO_FILL_FREED_TILES(): boolean {
+        return get_boolean(Settings.KEY_ENABLE_AUTO_FILL_FREED_TILES);
+    }
+
+    static set ENABLE_AUTO_FILL_FREED_TILES(val: boolean) {
+        set_boolean(Settings.KEY_ENABLE_AUTO_FILL_FREED_TILES, val);
+    }
+
     static get RAISE_TOGETHER(): boolean {
         return get_boolean(Settings.KEY_RAISE_TOGETHER);
     }
@@ -544,9 +562,12 @@ export default class Settings {
                 this._settings?.get_string(this.KEY_SETTING_LAYOUTS_JSON) ||
                     '[]',
             ) as Layout[];
-            if (layouts.length === 0)
+            const nonEmptyLayouts = layouts.filter(
+                (layout) => layout.tiles.length > 0,
+            );
+            if (nonEmptyLayouts.length === 0)
                 throw new Error('At least one layout is required');
-            return layouts.filter((layout) => layout.tiles.length > 0);
+            return nonEmptyLayouts;
         } catch (_unused) {
             this.reset_layouts_json();
             return JSON.parse(
@@ -584,6 +605,25 @@ export default class Settings {
 
     static reset_layouts_json() {
         this.save_layouts_json([
+            new Layout(
+                [
+                    new Tile({
+                        x: 0,
+                        y: 0,
+                        height: 1,
+                        width: 0.5,
+                        groups: [1],
+                    }), // left half
+                    new Tile({
+                        x: 0.5,
+                        y: 0,
+                        height: 1,
+                        width: 0.5,
+                        groups: [1],
+                    }), // right half
+                ],
+                '27079420',
+            ),
             new Layout(
                 [
                     new Tile({
