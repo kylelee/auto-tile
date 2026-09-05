@@ -161,7 +161,7 @@ export default class FreeTileFiller {
         // priority contract: FocusOnCloseManager defers its successor
         // focus search to PRIORITY_LOW so that this pass applies the
         // whole cascade (synchronously, inside the callback) before the
-        // nearest-window search reads the post-merge geometry — keep
+        // that successor search reads the post-merge geometry — keep
         // this idle strictly below PRIORITY_LOW
         this._log(`deferring fill pass from ws ${wsIndex} to idle`);
         const sourceId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
