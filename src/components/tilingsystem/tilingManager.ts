@@ -45,6 +45,7 @@ import {
     isAutoFillSuppressed,
     withAutoFillSuppressed,
 } from './autoFillSuppression';
+import { shouldAutoTileWindow } from './autoTileCandidate';
 
 const MINIMUM_DISTANCE_TO_RESTORE_ORIGINAL_SIZE = 90;
 
@@ -1906,6 +1907,18 @@ export class TilingManager {
                     window.maximizedVertically ||
                     window.get_transient_for() !== null ||
                     window.is_attached_dialog()
+                )
+                    return;
+
+                // ghost-window immunity — wl-clipboard maps 0×0→1×1 for
+                // ~12ms; keep such windows floating (measured 2026-09-05)
+                const frame = window.get_frame_rect();
+                if (
+                    !shouldAutoTileWindow({
+                        wmClass: window.get_wm_class(),
+                        frameWidth: frame.width,
+                        frameHeight: frame.height,
+                    })
                 )
                     return;
 
