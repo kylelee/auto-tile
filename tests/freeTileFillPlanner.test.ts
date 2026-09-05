@@ -531,6 +531,336 @@ const scenarios: [string, () => void][] = [
             );
         },
     ],
+    [
+        '13. floating ranked after tiled candidates (regression)',
+        () => {
+            // ws1 has a tiled candidate AND a floating one: only the
+            // tiled window is pulled, the floating window stays put
+            deepEqual(
+                planFillCascade(
+                    snapshotOf({
+                        0: {
+                            tiles: pair,
+                            windowRects: [pair[0]],
+                            movableWindowIndexes: [0],
+                        },
+                        1: {
+                            tiles: pair,
+                            windowRects: [pair[1], rect(2, 2, 0.1, 0.1)],
+                            movableWindowIndexes: [0],
+                            floatingWindowIndexes: [1],
+                        },
+                    })
+                ),
+                [
+                    {
+                        kind: 'pull',
+                        fromWs: 1,
+                        toWs: 0,
+                        windowIndex: 0,
+                        fromTileIndex: 1,
+                        tileIndex: 1,
+                    },
+                ]
+            );
+        },
+    ],
+    [
+        '14. tiled candidates exhausted: pull floating, fromTileIndex=-1',
+        () => {
+            // floatingA is outside the grid (matchWindowToTile -1),
+            // floatingB is stacked exactly on pair[1] (match >= 0):
+            // classification is by floatingWindowIndexes membership
+            // only, so floatingA fills slot1 and floatingB stays (no
+            // vacancy left)
+            const floatingA = rect(2, 2, 0.1, 0.1);
+            const floatingB = rect(0.5, 0, 0.5, 1);
+            deepEqual(
+                planFillCascade(
+                    snapshotOf({
+                        0: {
+                            tiles: row3,
+                            windowRects: [row3[0]],
+                            movableWindowIndexes: [0],
+                        },
+                        1: {
+                            tiles: pair,
+                            windowRects: [pair[0], floatingA, floatingB],
+                            movableWindowIndexes: [0],
+                            floatingWindowIndexes: [1, 2],
+                        },
+                    })
+                ),
+                [
+                    {
+                        kind: 'pull',
+                        fromWs: 1,
+                        toWs: 0,
+                        windowIndex: 0,
+                        fromTileIndex: 0,
+                        tileIndex: 1,
+                    },
+                    {
+                        kind: 'pull',
+                        fromWs: 1,
+                        toWs: 0,
+                        windowIndex: 1,
+                        fromTileIndex: -1,
+                        tileIndex: 2,
+                    },
+                ]
+            );
+        },
+    ],
+    [
+        '15. floating does not block the source workspace compaction seats or fill tiles',
+        () => {
+            // the floating rect is stacked exactly on row3[0]: if it
+            // wrongly blocked (not merged into the gone view), tile0
+            // would be occupied, compaction would become 2->1 and the
+            // ws2 pull would land on tile2 instead
+            deepEqual(
+                planFillCascade(
+                    snapshotOf({
+                        0: {
+                            tiles: pair,
+                            windowRects: [pair[0], pair[1]],
+                            movableWindowIndexes: [0, 1],
+                        },
+                        1: {
+                            tiles: row3,
+                            windowRects: [row3[2], rect(0, 0, 1 / 3, 1)],
+                            movableWindowIndexes: [0],
+                            floatingWindowIndexes: [1],
+                        },
+                        2: {
+                            tiles: pair,
+                            windowRects: [pair[0]],
+                            movableWindowIndexes: [0],
+                        },
+                    })
+                ),
+                [
+                    {
+                        kind: 'compact',
+                        fromWs: 1,
+                        toWs: 1,
+                        windowIndex: 0,
+                        fromTileIndex: 2,
+                        tileIndex: 0,
+                    },
+                    {
+                        kind: 'pull',
+                        fromWs: 2,
+                        toWs: 1,
+                        windowIndex: 0,
+                        fromTileIndex: 0,
+                        tileIndex: 1,
+                    },
+                ]
+            );
+        },
+    ],
+    [
+        '16. consumed floating window is not re-pulled',
+        () => {
+            // two vacancies but a single floating candidate: the
+            // pulled floating is consumed, so tile2 stays free
+            deepEqual(
+                planFillCascade(
+                    snapshotOf({
+                        0: {
+                            tiles: row3,
+                            windowRects: [row3[0]],
+                            movableWindowIndexes: [0],
+                        },
+                        1: {
+                            tiles: pair,
+                            windowRects: [rect(2, 2, 0.1, 0.1)],
+                            movableWindowIndexes: [],
+                            floatingWindowIndexes: [0],
+                        },
+                    })
+                ),
+                [
+                    {
+                        kind: 'pull',
+                        fromWs: 1,
+                        toWs: 0,
+                        windowIndex: 0,
+                        fromTileIndex: -1,
+                        tileIndex: 1,
+                    },
+                ]
+            );
+        },
+    ],
+    [
+        '17. sustained closes (two cascade rounds): tiled refills first, then floating lands on the freed tile',
+        () => {
+            // round 1: ws1 still has a tiled window - it refills the
+            // freed tile before any floating candidate
+            deepEqual(
+                planFillCascade(
+                    snapshotOf({
+                        0: {
+                            tiles: row3,
+                            windowRects: [row3[0], row3[1]],
+                            movableWindowIndexes: [0, 1],
+                        },
+                        1: {
+                            tiles: pair,
+                            windowRects: [pair[0], rect(2, 2, 0.1, 0.1)],
+                            movableWindowIndexes: [0],
+                            floatingWindowIndexes: [1],
+                        },
+                    })
+                ),
+                [
+                    {
+                        kind: 'pull',
+                        fromWs: 1,
+                        toWs: 0,
+                        windowIndex: 0,
+                        fromTileIndex: 0,
+                        tileIndex: 2,
+                    },
+                ]
+            );
+            // round 2: fresh snapshot - the tiled window was pulled
+            // away in round 1 and the tile2 window on ws0 got closed;
+            // only the floating window is left to refill ws0
+            deepEqual(
+                planFillCascade(
+                    snapshotOf({
+                        0: {
+                            tiles: row3,
+                            windowRects: [row3[0], row3[1]],
+                            movableWindowIndexes: [0, 1],
+                        },
+                        1: {
+                            tiles: pair,
+                            windowRects: [rect(2, 2, 0.1, 0.1)],
+                            movableWindowIndexes: [],
+                            floatingWindowIndexes: [0],
+                        },
+                    })
+                ),
+                [
+                    {
+                        kind: 'pull',
+                        fromWs: 1,
+                        toWs: 0,
+                        windowIndex: 0,
+                        fromTileIndex: -1,
+                        tileIndex: 2,
+                    },
+                ]
+            );
+        },
+    ],
+    [
+        '18. cross-ws ordering: near-ws floating before far-ws tiled',
+        () => {
+            // slot0 must take the floating window of ws1 instead of
+            // skipping to the tiled window of ws2; an implementation
+            // that ignores floating yields a single ws2->ws0 pull on
+            // tile0
+            deepEqual(
+                planFillCascade(
+                    snapshotOf({
+                        0: {
+                            tiles: pair,
+                            windowRects: [],
+                            movableWindowIndexes: [],
+                        },
+                        1: {
+                            tiles: pair,
+                            windowRects: [rect(2, 2, 0.1, 0.1)],
+                            movableWindowIndexes: [],
+                            floatingWindowIndexes: [0],
+                        },
+                        2: {
+                            tiles: pair,
+                            windowRects: [pair[0]],
+                            movableWindowIndexes: [0],
+                        },
+                    })
+                ),
+                [
+                    {
+                        kind: 'pull',
+                        fromWs: 1,
+                        toWs: 0,
+                        windowIndex: 0,
+                        fromTileIndex: -1,
+                        tileIndex: 0,
+                    },
+                    {
+                        kind: 'pull',
+                        fromWs: 2,
+                        toWs: 0,
+                        windowIndex: 0,
+                        fromTileIndex: 0,
+                        tileIndex: 1,
+                    },
+                ]
+            );
+        },
+    ],
+    [
+        '19. triggering workspace floating windows are never absorbed (regression)',
+        () => {
+            // the trigger ws's own floating window neither compacts
+            // into the free tile nor gets pulled: fill scans only look
+            // rightward, and floating windows are never movers
+            deepEqual(
+                planFillCascade(
+                    snapshotOf({
+                        0: {
+                            tiles: pair,
+                            windowRects: [pair[0], rect(2, 2, 0.1, 0.1)],
+                            movableWindowIndexes: [0],
+                            floatingWindowIndexes: [1],
+                        },
+                    })
+                ),
+                []
+            );
+        },
+    ],
+    [
+        '20. defensive: an index both floating and movable is invisible to computeSeating (illegal input, no crash)',
+        () => {
+            // the executor never produces this snapshot; the planner
+            // must still not crash, and the duplicate window must
+            // neither move nor block a tile: gone.has precedes the
+            // movable check, so the survivor compacts onto tile0 (a
+            // visible duplicate would push it onto tile1 instead)
+            deepEqual(
+                planFillCascade(
+                    snapshotOf({
+                        0: {
+                            tiles: row3,
+                            windowRects: [row3[0], row3[2]],
+                            movableWindowIndexes: [0, 1],
+                            floatingWindowIndexes: [0],
+                        },
+                    })
+                ),
+                [
+                    {
+                        kind: 'compact',
+                        fromWs: 0,
+                        toWs: 0,
+                        windowIndex: 1,
+                        fromTileIndex: 2,
+                        tileIndex: 0,
+                    },
+                ]
+            );
+        },
+    ],
 ];
 
 let passed = 0;
