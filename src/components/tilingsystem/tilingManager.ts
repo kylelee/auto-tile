@@ -1313,7 +1313,11 @@ export class TilingManager {
         }
 
         // apply animations when tiling the window
-        windowActor.remove_all_transitions();
+        // never remove_all_transitions() here: it would kill the previous
+        // size-change ease, whose onStopped is GNOME's only cleanup path —
+        // without it the actor leaks into _resizing and later size changes
+        // early-return before resetting translation/scale (stale-transform
+        // displacement). Left running, the old ease completes and self-heals.
         // @ts-expect-error "Main.wm has the "private" function _prepareAnimationInfo"
         Main.wm._prepareAnimationInfo(
             global.windowManager,

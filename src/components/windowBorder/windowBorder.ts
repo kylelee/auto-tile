@@ -81,6 +81,9 @@ export default class WindowBorder extends St.DrawingArea {
             this._window.get_compositor_private() as Meta.WindowActor;
 
         // scale and translate like the window actor
+        // SYNC_CREATE is load-bearing: without the bind-time sync,
+        // re-tracking off a window mid size-change animation freezes the
+        // border's stale translation offset forever (one monitor off)
         this._bindings = [
             'scale-x',
             'scale-y',
@@ -91,8 +94,8 @@ export default class WindowBorder extends St.DrawingArea {
                 prop,
                 this,
                 prop,
-                GObject.BindingFlags.DEFAULT, // if winActor changes, this will change
-            ),
+                GObject.BindingFlags.SYNC_CREATE
+            )
         );
 
         if (Settings.ENABLE_SMART_WINDOW_BORDER_RADIUS) {
