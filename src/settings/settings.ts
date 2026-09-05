@@ -610,6 +610,25 @@ export default class Settings {
                     new Tile({
                         x: 0,
                         y: 0,
+                        height: 1,
+                        width: 0.5,
+                        groups: [1],
+                    }), // left half
+                    new Tile({
+                        x: 0.5,
+                        y: 0,
+                        height: 1,
+                        width: 0.5,
+                        groups: [1],
+                    }), // right half
+                ],
+                '27079420',
+            ),
+            new Layout(
+                [
+                    new Tile({
+                        x: 0,
+                        y: 0,
                         height: 0.5,
                         width: 0.22,
                         groups: [1, 2],

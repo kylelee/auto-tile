@@ -58,12 +58,12 @@
             <description>Which key to hold to span multiple tiles.</description>
         </key>
         <key name="layouts-json" type="s">
-            <default>'[]'</default>
+            <default>'[{"id":"27079420","tiles":[{"x":0,"y":0,"width":0.5,"height":1,"groups":[1]},{"x":0.5,"y":0,"width":0.5,"height":1,"groups":[1]}]},{"id":"Layout 1","tiles":[{"x":0,"y":0,"width":0.22,"height":0.5,"groups":[1,2]},{"x":0,"y":0.5,"width":0.22,"height":0.5,"groups":[1,2]},{"x":0.22,"y":0,"width":0.56,"height":1,"groups":[2,3]},{"x":0.78,"y":0,"width":0.22,"height":0.5,"groups":[3,4]},{"x":0.78,"y":0.5,"width":0.22,"height":0.5,"groups":[3,4]}]},{"id":"Layout 2","tiles":[{"x":0,"y":0,"width":0.22,"height":1,"groups":[1]},{"x":0.22,"y":0,"width":0.56,"height":1,"groups":[1,2]},{"x":0.78,"y":0,"width":0.22,"height":1,"groups":[2]}]},{"id":"Layout 3","tiles":[{"x":0,"y":0,"width":0.33,"height":1,"groups":[1]},{"x":0.33,"y":0,"width":0.67,"height":1,"groups":[1]}]},{"id":"Layout 4","tiles":[{"x":0,"y":0,"width":0.67,"height":1,"groups":[1]},{"x":0.67,"y":0,"width":0.33,"height":1,"groups":[1]}]}]'</default>
             <summary>Layouts</summary>
             <description>The layouts available to the tiling managers and the snap assist.</description>
         </key>
         <key name="selected-layouts" type="aas">
-            <default>[]</default>
+            <default>[['27079420', '27079420'], ['27079420', '27079420'], ['Layout 1', 'Layout 1'], ['Layout 1', 'Layout 1']]</default>
             <summary>Selected layouts</summary>
             <description>Each monitor's active layout used by the monitor tiling manager.</description>
         </key>
@@ -264,27 +264,27 @@
 			<summary>Move the focused window to the center of the screen</summary>
 		</key>
 		<key type="as" name="focus-window-right">
-			<default><![CDATA[['']]]></default>
+			<default><![CDATA[['<Alt>Right']]]></default>
 			<summary>Focus the window to the right the current focused window</summary>
 		</key>
 		<key type="as" name="focus-window-left">
-			<default><![CDATA[['']]]></default>
+			<default><![CDATA[['<Alt>Left']]]></default>
 			<summary>Focus the window to the left of the current focused window</summary>
 		</key>
 		<key type="as" name="focus-window-up">
-			<default><![CDATA[['']]]></default>
+			<default><![CDATA[['<Alt>Up']]]></default>
 			<summary>Focus the window above the current focused window</summary>
 		</key>
 		<key type="as" name="focus-window-down">
-			<default><![CDATA[['']]]></default>
+			<default><![CDATA[['<Alt>Down']]]></default>
 			<summary>Focus the window below the current focused window</summary>
 		</key>
 		<key type="as" name="focus-window-next">
-			<default><![CDATA[['']]]></default>
+			<default><![CDATA[['<Alt>Page_Down']]]></default>
 			<summary>Focus the window next to the current focused window</summary>
 		</key>
 		<key type="as" name="focus-window-prev">
-			<default><![CDATA[['']]]></default>
+			<default><![CDATA[['<Alt>Page_Up']]]></default>
 			<summary>Focus the window prior to the current focused window</summary>
 		</key>
 		<key type="as" name="highlight-current-window">
