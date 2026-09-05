@@ -99,7 +99,10 @@ export default class AutoTileExtension extends Extension {
                 Settings.ENABLE_WINDOW_BORDER;
         }
 
-        if (Settings.LAST_VERSION_NAME_INSTALLED !== '17.3') {
+        if (
+            Settings.LAST_VERSION_NAME_INSTALLED !== '17.3' &&
+            Settings.LAST_VERSION_NAME_INSTALLED !== '18.0'
+        ) {
             debug('apply compatibility changes for 17.3');
 
             // if users used cycle layouts keybinding, enable the backwards one
