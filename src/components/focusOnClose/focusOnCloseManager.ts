@@ -189,6 +189,13 @@ export class FocusOnCloseManager {
         }
 
         if (best) {
+            // activating a disposed wrapper throws in GJS: the deferred idle
+            // may run after the successor itself died, so probe before use
+            try {
+                best.get_id();
+            } catch (_e) {
+                return;
+            }
             this._debug(
                 `focusing nearest tiled window "${best.title}" (ws ${bestWsIndex})`
             );
