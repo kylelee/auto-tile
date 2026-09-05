@@ -99,7 +99,7 @@ export interface AppliedFillMove {
     windowId: number;
     window: Meta.Window;
     toWsIndex: number;
-    destRect: { x: number; y: number; width: number; height: number };
+    destRect: RectLike;
 }
 
 // module-level on purpose: every managed monitor owns a FreeTileFiller

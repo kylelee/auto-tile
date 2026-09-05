@@ -12,6 +12,7 @@ import { equal } from 'node:assert/strict';
 import {
     AREA_EPSILON,
     findPreviousSeatOccupant,
+    matchRectToSeat,
     pickFillSuccessor,
     positiveAreaIntersection,
     type FillMoveRecord,
@@ -332,6 +333,34 @@ const scenarios: [string, () => void][] = [
         'an empty workspaces list resolves nobody',
         () => {
             equal(findPreviousSeatOccupant(anchorOn(1, SEATS[2]), []), null);
+        },
+    ],
+    // --- matchRectToSeat -----------------------------------------------
+    [
+        'an exact rect match returns its seat index',
+        () => {
+            equal(matchRectToSeat(SEATS[2], SEATS), 2);
+        },
+    ],
+    [
+        'a rect with no positive intersection matches no seat (-1)',
+        () => {
+            equal(matchRectToSeat(rect(5000, 5000, 100, 100), SEATS), -1);
+        },
+    ],
+    [
+        'edge-adjacent contact at the seam between two seats matches neither',
+        () => {
+            // zero-width rect on the seat0/seat1 seam: zero area everywhere
+            equal(matchRectToSeat(rect(960, 0, 0, 540), SEATS), -1);
+        },
+    ],
+    [
+        'equal-area overlaps keep the reading-order-first seat',
+        () => {
+            // spans the vertical seam: 480*540 of overlap with each of
+            // seat 0 and seat 1 — the tie must resolve to seat 0
+            equal(matchRectToSeat(rect(480, 0, 960, 540), SEATS), 0);
         },
     ],
     // --- AREA_EPSILON ---------------------------------------------------

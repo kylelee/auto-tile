@@ -13,7 +13,8 @@
  * Geometry semantics mirror freeTileFillPlanner: every intersection test
  * compares against AREA_EPSILON (never a bare > 0), and seat matching
  * keeps the reading-order-first seat on area ties (strictly-greater
- * updates, like matchWindowToTile).
+ * updates, like matchWindowToTile). matchRectToSeat is exported so the
+ * executor gathering its seat map reuses the exact same matching rule.
  */
 
 export interface RectLike {
@@ -53,7 +54,10 @@ export function positiveAreaIntersection(a: RectLike, b: RectLike): number {
  * landing on the anchor workspace whose destination overlaps the anchor
  * frame rect. Multiple hits are defensive only (a single pass moves at
  * most one window per tile); the largest intersection wins and area
- * ties resolve to the LAST record, i.e. the latest applied move.
+ * ties resolve to the LAST record, i.e. the latest applied move —
+ * deliberately the opposite of matchRectToSeat, whose equal-area rule
+ * keeps the FIRST seat (there the reading-order-first seat is the
+ * meaningful winner).
  * Edge-adjacent contact (intersection <= AREA_EPSILON) never matches.
  */
 export function pickFillSuccessor(
@@ -140,7 +144,17 @@ interface SeatOccupant {
     area: number;
 }
 
-function matchRectToSeat(rect: RectLike, seats: RectLike[]): number {
+/**
+ * The seat a rect belongs to: the index, in the caller-supplied
+ * reading-order seat array, of the seat sharing the largest
+ * positive-area intersection with the rect. Area ties keep the FIRST
+ * seat (strictly-greater updates), so the reading-order-first seat
+ * wins — deliberately the opposite of pickFillSuccessor, where equal
+ * areas resolve to the LAST record because there the latest applied
+ * move is the meaningful winner. Returns -1 when no seat intersects
+ * the rect beyond AREA_EPSILON.
+ */
+export function matchRectToSeat(rect: RectLike, seats: RectLike[]): number {
     let bestIndex = -1;
     let bestArea = AREA_EPSILON;
     for (let index = 0; index < seats.length; index++) {

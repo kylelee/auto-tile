@@ -8,6 +8,7 @@ import ExtendedWindow from '../tilingsystem/extendedWindow';
 import {
     AREA_EPSILON,
     findPreviousSeatOccupant,
+    matchRectToSeat,
     pickFillSuccessor,
     positiveAreaIntersection,
     type RectLike,
@@ -337,23 +338,13 @@ export class FocusOnCloseManager {
                 };
                 windows.push({ windowId: win.get_id(), frameRect });
 
-                // the window's own seat: the largest intersection wins
-                // and strictly-greater updates keep the reading-order-
-                // first seat, the same rule findPreviousSeatOccupant
-                // uses to build seat occupancy
-                let seatRect: RectLike | undefined;
-                let seatArea = AREA_EPSILON;
-                for (const seat of seats) {
-                    const area = positiveAreaIntersection(frameRect, seat);
-                    if (area > seatArea) {
-                        seatArea = area;
-                        seatRect = seat;
-                    }
-                }
+                // the window's own seat by the policy's shared matching
+                // rule; -1 (overlaps no seat) leaves seatRect undefined
+                const seatIndex = matchRectToSeat(frameRect, seats);
                 seatsByWindowId.set(win.get_id(), {
                     window: win,
                     wsIndex: i,
-                    seatRect,
+                    seatRect: seatIndex < 0 ? undefined : seats[seatIndex],
                 });
             }
             wsSeats.push({ wsIndex: i, seats, windows });
