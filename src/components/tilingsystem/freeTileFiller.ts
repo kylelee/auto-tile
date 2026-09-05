@@ -10,7 +10,10 @@
  * DESTINATION monitor's manager - without switching the workspace view
  * and without stealing focus. A free tile on any monitor can therefore
  * be filled from a window tiled on any other monitor, both within the
- * trigger workspace and from the workspaces to its right.
+ * trigger workspace and from the workspaces to its right. Windows
+ * without an assignedTile but otherwise eligible enter the snapshot
+ * as last-rank pull candidates, participating in neither compaction
+ * nor tile blocking.
  *
  * Geometry space: the planner needs ONE consistent rect space, and
  * per-monitor proportion rects of different monitors would overlap each
@@ -341,36 +344,60 @@ export default class FreeTileFiller {
         const windows: Meta.Window[] = [];
         const windowRects: RectLike[] = [];
         const movableWindowIndexes: number[] = [];
+        const floatingWindowIndexes: number[] = [];
+        let tiledCount = 0;
 
         for (const window of getWindows(ws)) {
             // -1 (dying) and unmanaged monitors have no work area here
             const workArea = workAreas.get(window.get_monitor());
             if (!workArea) continue;
             const extWin = window as ExtendedWindow;
+
             if (
                 window === exclude ||
-                !extWin.assignedTile ||
                 window.minimized ||
                 window.maximizedHorizontally ||
                 window.maximizedVertically
             )
                 continue;
 
-            // global pixels: the same space as the scaled tiles above
-            const rect = window.get_frame_rect();
-            windows.push(window);
-            windowRects.push(rect);
-
-            // windows resized across tiles (or no longer mostly inside
-            // their own assigned tile) block but never move
-            const movable =
+            // non-geometric movability guards, shared verbatim between
+            // the floating and the tiled branch below
+            const eligible =
                 window.windowType === Meta.WindowType.NORMAL &&
                 !window.is_on_all_workspaces() &&
                 !window.is_fullscreen() &&
                 window.get_transient_for() === null &&
                 !window.is_attached_dialog() &&
                 window.allows_move() &&
-                window.allows_resize() &&
+                window.allows_resize();
+
+            if (!extWin.assignedTile) {
+                // floating: an eligible window joins the snapshot as a
+                // last-rank pull candidate (the planner treats it as
+                // gone - never moved by compaction, never blocking the
+                // tiles it covers); anything else stays completely
+                // invisible so a fullscreen/dialog floating window
+                // cannot block tiles it happens to cover
+                if (!eligible) continue;
+                // global pixels: the same space as the scaled tiles above
+                const rect = window.get_frame_rect();
+                windows.push(window);
+                windowRects.push(rect);
+                floatingWindowIndexes.push(windows.length - 1);
+                continue;
+            }
+
+            // global pixels: the same space as the scaled tiles above
+            const rect = window.get_frame_rect();
+            windows.push(window);
+            windowRects.push(rect);
+            tiledCount++;
+
+            // windows resized across tiles (or no longer mostly inside
+            // their own assigned tile) block but never move
+            const movable =
+                eligible &&
                 isSeatedOnSingleTile(rect, sortedRects) &&
                 rectMostlyInsideTile(
                     rect,
@@ -380,12 +407,18 @@ export default class FreeTileFiller {
         }
 
         this._log(
-            `ws ${wsIndex}: ${windows.length} tiled window(s) over ` +
-                `${sortedTiles.length} tile(s) of ${contexts.length} ` +
+            `ws ${wsIndex}: ${tiledCount} tiled window(s) + ` +
+                `${floatingWindowIndexes.length} floating candidate(s) ` +
+                `over ${sortedTiles.length} tile(s) of ${contexts.length} ` +
                 `monitor(s), ${movableWindowIndexes.length} movable`
         );
         this._snapshotCache.set(wsIndex, { windows, sortedTiles });
-        return { tiles: sortedRects, windowRects, movableWindowIndexes };
+        return {
+            tiles: sortedRects,
+            windowRects,
+            movableWindowIndexes,
+            floatingWindowIndexes,
+        };
     }
 
     private _isWorkspaceLive(ws: Meta.Workspace): boolean {
