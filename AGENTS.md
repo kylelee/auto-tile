@@ -14,14 +14,14 @@ npm run prettier:fix
 npm run install:extension  # copy build into ~/.local/share/gnome-shell/extensions (picks dist vs dist_legacy from local gnome-shell version)
 npm run build:package      # zips both builds for release
 
-# the only test (no test runner wired up):
-npx esbuild tests/freeTileFillPlanner.test.ts --bundle --platform=node --format=cjs --outfile=/tmp/t.cjs && node /tmp/t.cjs
+# run everything (lint + build + all tests):
+./scripts/test.sh
 ```
 
 - Build requires GLib dev tools on PATH (`glib-compile-schemas`, `glib-compile-resources`).
-- `scripts/build.sh` / `scripts/install.sh` wrap the npm build/install with tool checks; `EXTENSIONS_DIR=... ./scripts/install.sh` targets a custom directory.
-- **No CI.** Verification = `npm run lint` + `npm run build` + manual testing + the test above.
-- `tests/freeTileFillPlanner.test.ts` is a self-asserting script (plain `node:assert`) — it runs under plain node, so it can only import **GI-free modules** (no `gi://` imports). Keep pure logic that needs tests in such modules (e.g. `src/components/tilingsystem/freeTileFillPlanner.ts`, `autoFillSuppression.ts`).
+- `scripts/build.sh` / `scripts/install.sh` / `scripts/test.sh` wrap the npm build/install/verify with tool checks; `EXTENSIONS_DIR=... ./scripts/install.sh` targets a custom directory. `scripts/check_extension.sh` runs the shexli analyzer used by extensions.gnome.org over the built zips (`--dist` for a fast non-zip check) before an upload.
+- **No CI.** Verification = `./scripts/test.sh` (lint + build + tests) + manual testing.
+- `tests/` holds self-asserting test scripts (plain `node:assert`, no test runner): `freeTileFillPlanner`, `insertionPlanner`, `layoutValidation`, `signalHandling`, `borderEligibility`, `clamp`, `layoutAndLogger`, `metaWindowGroup`, `moCatalog`, `suggestionClosePolicy`, `autoTileCandidate`. They run under plain node, so they can only import **GI-free modules** (no `gi://` imports). Keep pure logic that needs tests in such modules (e.g. `src/components/tilingsystem/freeTileFillPlanner.ts`, `autoFillSuppression.ts`, `src/components/layout/layoutValidation.ts`, `src/utils/*`).
 - **No typecheck step exists** — esbuild does not type-check; type errors surface only in the editor/LSP.
 - Never edit or commit `dist/` / `dist_legacy/` (gitignored, fully generated — the build even runs `eslint --fix` over them).
 
@@ -30,6 +30,11 @@ npx esbuild tests/freeTileFillPlanner.test.ts --bundle --platform=node --format=
 - `npm run dev:wayland` — build + install + launch a nested Wayland GNOME Shell (dummy 1920x1080 monitor) without logging out. Fastest feedback loop.
 - Vagrant VMs per GNOME version: `npm run dev:vm:gnome46` / `gnome47` / `gnome49` (also gnome44/48 in Vagrantfile; rsyncs the repo and starts the VM). Every `vagrant up` re-provisions automatically: `npm install` + build + install + GDM restart (`vm:halt:*` / `vm:destroy:*` scripts exist too).
 - Logs: `npm run logs:follow` (shell process) or `journalctl -f -o cat /usr/bin/gjs` (prefs dialog).
+
+### Install & test — always via the `./scripts/*.sh` wrappers
+
+- Installing/testing the extension on the local machine must go through the scripts: build with `./scripts/build.sh`, install with `./scripts/install.sh` (run build first), full verification with `./scripts/test.sh` (lint + build + all tests). Do not hand-roll `cp`/`rm` install steps.
+- **Never** delete or wipe `~/.local/share/gnome-shell/extensions` (or anything else under `~/.local/share/...`) — the install script copies over the existing install in place; removing the directory would destroy the user's other extensions and state.
 
 ## Build pipeline (`esbuild.mjs`) — understand before touching imports
 
@@ -51,6 +56,7 @@ The extension process and the prefs dialog are separate processes with disjoint 
 
 - Extension code: import GI namespaces from `src/gi/ext.ts` (Clutter, Meta, Mtk, St, Shell, …). **Never** import `Gdk`/`Gtk`/`Adw` outside prefs.
 - `src/prefs.ts`: import only from `src/gi/prefs.ts` (Gdk, Gtk, Adw). **Never** import `Clutter`/`Meta`/`Mtk`/`St`/`Shell` in prefs.
+- Modules shared by both processes import only from `src/gi/shared.ts` (Gio, GLib, GObject) — safe in either namespace.
 - In `src/extension.ts`, `import { Extension } from './polyfill';` must remain the first import.
 
 ## Settings & keybindings
@@ -70,7 +76,11 @@ Adding a setting/keybinding touches 4 files — follow the step-by-step recipe i
 ## Orientation
 
 - `src/extension.ts` / `src/prefs.ts` — the two entrypoints (shell process / GTK4+Adw prefs dialog).
-- `src/components/` — feature modules (tilingsystem, snapassist, editor, layout, windowBorder, …).
+- `src/components/` — feature modules: `tilingsystem` (core tiling + edge tiling + resize), `snapassist`, `editor` (layout editor), `layout` (+ `layoutValidation` for imported JSON), `layoutSwitcher`, `windowBorder`, `windowManager`, `window_menu`, `windowsSuggestions`, `altTab`, `focusOnClose`, `raiseTogether`, `tilepreview`.
+- `src/dbus.ts` — D-Bus interface `org.gnome.Shell.Extensions.AutoTile` (currently `openLayoutEditor`).
+- `src/indicator/` — panel indicator and layout selection menu.
+- `src/keybindings.ts` — keybinding singleton emitting named signals (consumers connect in `src/extension.ts`).
+- `src/settings/` — `settings.ts` (Settings singleton over the gschema), `settingsExport.ts` / `settingsOverride.ts` (import/export and gschema overrides).
 - `src/utils/globalState.ts` — persistent state (layouts per monitor/workspace).
 - `resources/` — copied verbatim into builds: schemas, icons, `metadata.json`, compiled locales.
 - `gresources/` — gresource bundle spec (compiled by `npm run build:resources`, part of `build`).

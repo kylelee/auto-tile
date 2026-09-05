@@ -46,7 +46,8 @@ AutoTile runs on GNOME Shell **42 to 50**, on X11 and Wayland, with multi-monito
 |:---|:---|:---|:---|
 | [Layout editor](#layout-editor) | [Smart resize](#smart-resize) | [Tile with Keyboard](#tile-with-keyboard) | [Edge Tiling](#edge-tiling) |
 | [Per-workspace layout](#per-workspace-layout) | [Auto-tiling](#auto-tiling) | [Tiling context menu](#tiling-context-menu) | [Import/Export layouts](#export-and-import-layouts) |
-| [Smart border radius](#smart-border-radius) | [Windows Suggestions](#windows-suggestions) | | |
+| [Smart border radius](#smart-border-radius) | [Windows Suggestions](#windows-suggestions) | [Gaps](#gaps) | [ALT+TAB integration](#alttab-integration) |
+| [Raise together](#raise-together) | | | |
 
 ### Tiling System ###
 When grabbing and moving a window, press <kbd>CTRL</kbd> key to show the tiling layout (you can choose another key from the preferences). When moving on a tile, it will highlight. Ungrab the window to place that window on the highlighted tile.
@@ -108,6 +109,8 @@ Move the focused window through the tiles using keyboard shortcuts (<kbd>SUPER</
 Moving toward an occupied tile swaps the positions of the two windows, even across monitors, while free tiles are taken as-is in the movement direction. At the last monitor's edge, LEFT/RIGHT move the window to the adjacent workspace — creating one when dynamic workspaces are enabled — and swap there too when the landing tile is occupied.
 
 Dedicated keybindings also move the **window focus** (up/down/left/right, next/previous) in any direction, so you can walk the whole grid — tiled windows and beyond — without touching the mouse. They can be set from the preferences.
+
+Further keybinding-driven commands are available, all customizable from the preferences: **span** the focused window to the tile above/below/left/right, **untile** the focused window, **move the window to the center** of the screen, **highlight the focused window** (minimizing the others), and **cycle layouts** forward/backward. Next/previous focus navigation can optionally wrap around at the edges, and directional focus can be restricted to tiled windows only.
 
 [Tile with Keyboard Video](https://github.com/user-attachments/assets/6f8dedbb-2733-41d8-8a94-0fa62dffb915)
 
@@ -190,6 +193,24 @@ Yes. From the extension's preferences you find a section called Windows Suggesti
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
+### Gaps ###
+
+Add breathing room to your tiling: **inner gaps** put space between tiled windows, **outer gaps** keep windows off the monitor borders. Both are adjustable from the preferences and scale correctly across monitors with different scaling factors.
+
+<p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
+
+### ALT+TAB integration ###
+
+The preferences offer an option that adds the tiled windows to the <kbd>ALT</kbd>+<kbd>TAB</kbd> switcher as a single entry: selecting it raises all the tiled windows at once, so your tiling never hides behind a stack of floating windows.
+
+<p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
+
+### Raise together ###
+
+When one tiled window is raised, all the other tiled windows come to the foreground with it, keeping the tiling visually coherent. Toggleable from the preferences.
+
+<p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
+
 ## Installation
 
 This extension is published on [GitHub](https://github.com/kylelee/AutoTile)! You can install from there or install manually. By installing from [GitHub releases](https://github.com/kylelee/AutoTile/releases) you will always have the latest update.
@@ -208,10 +229,15 @@ Download the latest [release](https://github.com/kylelee/AutoTile/releases). Ext
 
 ### Install via Source
 
-Clone the repo then run ```npm i``` to install dependencies and then run ```npm run build``` to build the extension. To finally install the extension run
+Clone the repo, then use the wrapper scripts (they check the required build tools for you):
+
 ```bash
-npm run install:extension
+./scripts/build.sh     # install deps if needed + build dist/ (GNOME 45+) and dist_legacy/ (42-44)
+./scripts/install.sh   # install into ~/.local/share/gnome-shell/extensions
 ```
+
+The plain `npm` equivalents work too: `npm i`, `npm run build`, `npm run install:extension`. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the development workflow.
+
 You can restart your GNOME shell e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only) and enable the extension. Enjoy it!
 To enable via the command line you can run
 ```bash
