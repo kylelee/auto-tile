@@ -64,11 +64,13 @@ export class FocusOnCloseManager {
     public enable(): void {
         // bootstrap over ALL windows (every workspace, not only the active
         // one) so closes on hidden workspaces are tracked too
-        global
-            .get_window_actors()
-            .forEach(winActor =>
-                this._connectUnmanagingHandler(winActor.metaWindow)
-            );
+        global.get_window_actors().forEach(winActor => {
+            // a WindowActor can briefly outlive its Meta.Window
+            // during teardown; bootstrapping it would throw on
+            // the get_id() call inside the handler
+            if (winActor.metaWindow)
+                this._connectUnmanagingHandler(winActor.metaWindow);
+        });
         this._signals.connect(
             global.display,
             'window-created',
