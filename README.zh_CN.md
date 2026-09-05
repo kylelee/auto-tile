@@ -40,6 +40,98 @@ https://github.com/user-attachments/assets/2905f0a1-ecd4-47b5-a6bc-59f91716e685
 - 🔁 **交换相邻磁贴窗口** —— 将窗口移向已被占用的磁贴时会自动交换两个窗口的位置（跨显示器同样有效），空出的磁贴也会被自动回填。参见[键盘平铺](#键盘平铺)与[自动平铺](#自动平铺)。
 - 🧲 **窗口不脱离布局** —— 开启自动平铺的布局约束后，拖拽窗口将无法使其脱离平铺：随手一放会被吸回布局中，整个网格始终保持从左上角开始的连续铺满状态。参见[自动平铺](#自动平铺)。
 
+## 安装
+
+你可以从 GNOME Extensions 官网或 [GitHub](https://github.com/kylelee/AutoTile) 安装 AutoTile。通过 [GitHub Releases](https://github.com/kylelee/AutoTile/releases) 安装可以始终获得最新更新。
+
+<div align="center">
+  <a href="https://github.com/kylelee/AutoTile/releases" >
+      <img src="https://img.shields.io/badge/Get%20it%20on-GitHub-4A86CF?style=for-the-badge&logo=Gnome&logoColor=white"/>
+  </a>
+</div>
+
+### 从 extensions.gnome.org 安装
+
+本扩展已提交到 GNOME Extensions 官网：<https://extensions.gnome.org/extension/10872/autotile/>
+
+> ⚠️ 目前**仍在审核中**，页面可能暂时无法访问。审核通过前，请先通过 [GitHub Releases](#从-github-releases-安装) 安装。
+
+审核通过后，即可在官网一键安装（需浏览器扩展），或通过 Extension Manager 应用安装。
+
+### 从 GitHub Releases 安装
+
+从最新的 [Release](https://github.com/kylelee/AutoTile/releases) 下载与你的 GNOME Shell 版本对应的压缩包，本地安装：
+
+| GNOME Shell 版本 | 压缩包                                 |
+| --------------- | -------------------------------------- |
+| 45 – 50         | `autotile@kylelee.github.io.zip`       |
+| 42 – 44         | `GNOME.42-44.autotile@kylelee.github.io.zip` |
+
+不确定选哪个？先查看你的 GNOME Shell 版本：
+
+```bash
+gnome-shell --version
+```
+
+GNOME Shell 45–50：
+
+```bash
+curl -L -o /tmp/autotile.zip https://github.com/kylelee/AutoTile/releases/latest/download/autotile@kylelee.github.io.zip
+mkdir -p ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
+unzip -o /tmp/autotile.zip -d ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
+```
+
+GNOME Shell 42–44 请改用另一个压缩包，安装步骤相同：
+
+```bash
+curl -L -o /tmp/autotile.zip https://github.com/kylelee/AutoTile/releases/latest/download/GNOME.42-44.autotile@kylelee.github.io.zip
+mkdir -p ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
+unzip -o /tmp/autotile.zip -d ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
+```
+
+安装后重新加载 GNOME Shell（Wayland 注销再登录；X11 可按 <kbd>ALT</kbd>+<kbd>F2</kbd> 输入 `r` 原地重启），然后启用扩展：
+
+```bash
+/usr/bin/gnome-extensions enable autotile@kylelee.github.io
+```
+
+### 通过源码安装
+
+克隆仓库后，使用封装脚本完成构建与安装（脚本会自动检查所需的构建工具）：
+
+```bash
+./scripts/build.sh     # 按需安装依赖 + 构建 dist/（GNOME 45+）与 dist_legacy/（42-44）
+./scripts/install.sh   # 安装到 ~/.local/share/gnome-shell/extensions
+```
+
+直接使用 `npm` 等价命令也可以：`npm i`、`npm run build`、`npm run install:extension`。开发工作流参见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+
+之后重启 GNOME Shell，例如注销再登录，或在 X11 下按 `alt-F2` 输入 `r` 原地重启，然后启用扩展即可。也可以通过命令行启用：
+
+```bash
+/usr/bin/gnome-extensions enable autotile@kylelee.github.io
+```
+
+查看扩展日志可以运行：
+
+```bash
+journalctl --follow /usr/bin/gnome-shell
+```
+
+查看首选项日志可以运行：
+
+```bash
+journalctl -f -o cat /usr/bin/gjs
+```
+
+### 卸载 AutoTile
+
+卸载前请先禁用扩展，然后再删除。通过命令行禁用可以运行：
+
+```bash
+/usr/bin/gnome-extensions disable autotile@kylelee.github.io
+```
+
 ## 使用方法
 
 | [平铺系统](#平铺系统)                 | [贴靠助手](#贴靠助手)         | [选择布局](#选择布局)         | [选择多个磁贴](#选择多个磁贴) |
@@ -213,61 +305,6 @@ _可以自行选择开启或关闭吗？_
 当某个已平铺窗口被提升时，其余已平铺窗口会随之一同进入前台，保持平铺布局在视觉上的完整。可在首选项中开关。
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
-
-## 安装
-
-本扩展发布在 [GitHub](https://github.com/kylelee/AutoTile) 上！你可以从那里安装，也可以手动安装。通过 [GitHub Releases](https://github.com/kylelee/AutoTile/releases) 安装可以始终获得最新更新。
-
-<div align="center">
-  <a href="https://github.com/kylelee/AutoTile/releases" >
-      <img src="https://img.shields.io/badge/Get%20it%20on-GitHub-4A86CF?style=for-the-badge&logo=Gnome&logoColor=white"/>
-  </a>
-</div>
-
-### 手动安装
-
-下载最新的 [release](https://github.com/kylelee/AutoTile/releases)，解压下载的压缩包，将文件夹复制到 `~/.local/share/gnome-shell/extensions` 目录，然后重新加载 GNOME Shell（例如注销后重新登录）。之后即可启用扩展：
-
-```bash
-/usr/bin/gnome-extensions enable autotile@kylelee.github.io
-```
-
-### 通过源码安装
-
-克隆仓库后，使用封装脚本完成构建与安装（脚本会自动检查所需的构建工具）：
-
-```bash
-./scripts/build.sh     # 按需安装依赖 + 构建 dist/（GNOME 45+）与 dist_legacy/（42-44）
-./scripts/install.sh   # 安装到 ~/.local/share/gnome-shell/extensions
-```
-
-直接使用 `npm` 等价命令也可以：`npm i`、`npm run build`、`npm run install:extension`。开发工作流参见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
-
-之后重启 GNOME Shell，例如注销再登录，或在 X11 下按 `alt-F2` 输入 `r` 原地重启，然后启用扩展即可。也可以通过命令行启用：
-
-```bash
-/usr/bin/gnome-extensions enable autotile@kylelee.github.io
-```
-
-查看扩展日志可以运行：
-
-```bash
-journalctl --follow /usr/bin/gnome-shell
-```
-
-查看首选项日志可以运行：
-
-```bash
-journalctl -f -o cat /usr/bin/gjs
-```
-
-### 卸载 AutoTile
-
-卸载前请先禁用扩展，然后再删除。通过命令行禁用可以运行：
-
-```bash
-/usr/bin/gnome-extensions disable autotile@kylelee.github.io
-```
 
 ## 参与贡献
 
