@@ -30,8 +30,6 @@ interface WindowWithCachedWs {
 
 /** the closed window's seat, captured while its wrapper is still alive */
 interface CloseAnchor {
-    x: number;
-    y: number;
     wsIndex: number;
     frameRect: RectLike;
 }
@@ -138,8 +136,6 @@ export class FocusOnCloseManager {
 
         const rect = window.get_frame_rect();
         const anchor: CloseAnchor = {
-            x: rect.x + rect.width / 2,
-            y: rect.y + rect.height / 2,
             wsIndex: ws.index(),
             frameRect: {
                 x: rect.x,
