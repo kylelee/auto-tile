@@ -6,7 +6,7 @@
 
 [English](README.md) | **简体中文**
 
-# AutoTile #
+# AutoTile
 
 AutoTile 是一个为 GNOME Shell 提供**自动平铺窗口管理**的扩展。它深受 **[Omarchy](https://omarchy.org) 4.0** 以及 **[Hyprland](https://hyprland.org)** 窗口布局器的启发：正因如此，我们 fork 了优秀的 **[Tiling Shell](https://github.com/domferr/tilingshell)** 项目（在此特别感谢原作者 [Domenico Ferraro](https://github.com/domferr)），并在其基础上扩展了大量功能，让 GNOME 用户也能获得接近 **Omarchy Linux** 的自动平铺窗口管理体验（衷心感谢 DHH 与 Omarchy 的开发者们带来的审美、灵感、哲学以及卓越的代码贡献）。
 
@@ -30,7 +30,7 @@ AutoTile 兼容 GNOME Shell **42 至 50**，支持 X11 与 Wayland，即使多�
 <details>
   <summary><span align="center">点击查看视频总览</span></summary>
 
-  https://github.com/user-attachments/assets/2905f0a1-ecd4-47b5-a6bc-59f91716e685
+https://github.com/user-attachments/assets/2905f0a1-ecd4-47b5-a6bc-59f91716e685
 </details>
 
 ## ✨ 核心亮点
@@ -40,16 +40,17 @@ AutoTile 兼容 GNOME Shell **42 至 50**，支持 X11 与 Wayland，即使多�
 - 🔁 **交换相邻磁贴窗口** —— 将窗口移向已被占用的磁贴时会自动交换两个窗口的位置（跨显示器同样有效），空出的磁贴也会被自动回填。参见[键盘平铺](#键盘平铺)与[自动平铺](#自动平铺)。
 - 🧲 **窗口不脱离布局** —— 开启自动平铺的布局约束后，拖拽窗口将无法使其脱离平铺：随手一放会被吸回布局中，整个网格始终保持从左上角开始的连续铺满状态。参见[自动平铺](#自动平铺)。
 
-## 使用方法 ##
+## 使用方法
 
-| [平铺系统](#平铺系统) | [贴靠助手](#贴靠助手) | [选择布局](#选择布局) | [选择多个磁贴](#选择多个磁贴) |
-|:---|:---|:---|:---|
-| [布局编辑器](#布局编辑器) | [智能调整大小](#智能调整大小) | [键盘平铺](#键盘平铺) | [边缘平铺](#边缘平铺) |
-| [每个工作区的布局](#每个工作区的布局) | [自动平铺](#自动平铺) | [平铺右键菜单](#平铺右键菜单) | [导入导出布局](#导入导出布局) |
-| [智能圆角](#智能圆角) | [窗口建议](#窗口建议) | [间距](#间距) | [ALT+TAB 集成](#alttab-集成) |
-| [一起提升](#一起提升) | | | |
+| [平铺系统](#平铺系统)                 | [贴靠助手](#贴靠助手)         | [选择布局](#选择布局)         | [选择多个磁贴](#选择多个磁贴) |
+| :------------------------------------ | :---------------------------- | :---------------------------- | :---------------------------- |
+| [布局编辑器](#布局编辑器)             | [智能调整大小](#智能调整大小) | [键盘平铺](#键盘平铺)         | [边缘平铺](#边缘平铺)         |
+| [每个工作区的布局](#每个工作区的布局) | [自动平铺](#自动平铺)         | [平铺右键菜单](#平铺右键菜单) | [导入导出布局](#导入导出布局) |
+| [智能圆角](#智能圆角)                 | [窗口建议](#窗口建议)         | [间距](#间距)                 | [ALT+TAB 集成](#alttab-集成)  |
+| [一起提升](#一起提升)                 |                               |                               |                               |
 
-### 平铺系统 ###
+### 平铺系统
+
 抓起并移动窗口时，按住 <kbd>CTRL</kbd> 键即可显示平铺布局（可在首选项中更换按键）。移动到某个磁贴上时它会高亮，松开窗口即可将其放置到高亮的磁贴中。
 
 [tiling_system.webm](https://github.com/kylelee/AutoTile/assets/14203981/a45ec416-ad39-458d-9b9f-cddce8b25666)
@@ -58,7 +59,8 @@ AutoTile 兼容 GNOME Shell **42 至 50**，支持 X11 与 Wayland，即使多�
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 贴靠助手 ###
+### 贴靠助手
+
 抓起并移动窗口时，屏幕顶部会出现贴靠助手。将窗口移近即可激活它；保持抓取状态，把鼠标移到心仪的磁贴上，松开窗口即可将其平铺到所选磁贴！
 
 [snap_assistant.webm](https://github.com/kylelee/AutoTile/assets/14203981/33511582-fa92-445e-b1ba-8b08f9a8e43a)
@@ -67,14 +69,15 @@ AutoTile 兼容 GNOME Shell **42 至 50**，支持 X11 与 Wayland，即使多�
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 选择布局 ###
+### 选择布局
+
 点击面板上的 AutoTile 指示器即可显示所有可用布局，点击即可选用。如果你有多个显示器，该布局会被应用到每一个显示器上。
 
 [layout_selection.webm](https://github.com/kylelee/AutoTile/assets/14203981/f4956a34-64e3-4c24-b177-8f9b08fcc45c)
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 选择多个磁贴 ###
+### 选择多个磁贴
 
 布局并非死板固定，你也可以一次选择多个磁贴！只需在使用平铺系统时按住 <kbd>ALT</kbd>（可在首选项中更换按键）。
 
@@ -82,17 +85,17 @@ AutoTile 兼容 GNOME Shell **42 至 50**，支持 X11 与 Wayland，即使多�
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 布局编辑器 ###
+### 布局编辑器
 
-| 分割磁贴 | 垂直分割磁贴 | 删除磁贴 | 保存、关闭编辑器或打开菜单 |
-|:---:|:---:|:---:|:---:|
+|      分割磁贴       |             垂直分割磁贴              |      删除磁贴       |                                                          保存、关闭编辑器或打开菜单                                                          |
+| :-----------------: | :-----------------------------------: | :-----------------: | :------------------------------------------------------------------------------------------------------------------------------------------: |
 | <kbd>左键单击</kbd> | <kbd>左键单击</kbd> + <kbd>CTRL</kbd> | <kbd>右键单击</kbd> | 点击面板上的 AutoTile 图标 <img src="https://github.com/kylelee/AutoTile/assets/14203981/13e27ec1-6a5d-420f-a87f-8f3df0b34c92" width=96 />。 |
 
 [layout_editor.webm](https://github.com/kylelee/AutoTile/assets/14203981/c6e05589-69d9-4fa3-a4df-61ee875cf9e1)
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 智能调整大小 ###
+### 智能调整大小
 
 相邻的已平铺窗口可以一起调整大小！
 
@@ -102,7 +105,7 @@ AutoTile 兼容 GNOME Shell **42 至 50**，支持 X11 与 Wayland，即使多�
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 键盘平铺 ###
+### 键盘平铺
 
 使用键盘快捷键（<kbd>SUPER</kbd>+<kbd>←</kbd>/<kbd>↑</kbd>/<kbd>↓</kbd>/<kbd>→</kbd>）在磁贴间移动聚焦窗口。快捷键均可在首选项中自定义！
 
@@ -118,7 +121,7 @@ AutoTile 兼容 GNOME Shell **42 至 50**，支持 X11 与 Wayland，即使多�
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 边缘平铺 ###
+### 边缘平铺
 
 将窗口移到屏幕边缘即可平铺。
 
@@ -126,7 +129,7 @@ AutoTile 兼容 GNOME Shell **42 至 50**，支持 X11 与 Wayland，即使多�
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 平铺右键菜单 ###
+### 平铺右键菜单
 
 右键单击窗口即可使用自动平铺按钮和贴靠助手！自动平铺按钮可以基于当前布局将窗口平铺到最左或最右的空闲磁贴；"移动到最佳磁贴"按钮则会建议平铺到离屏幕中心最近的空闲磁贴。
 
@@ -140,7 +143,7 @@ AutoTile 兼容 GNOME Shell **42 至 50**，支持 X11 与 Wayland，即使多�
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 每个工作区的布局 ###
+### 每个工作区的布局
 
 可以为每个显示器的每个工作区单独选择喜欢的布局。
 
@@ -148,13 +151,13 @@ AutoTile 兼容 GNOME Shell **42 至 50**，支持 X11 与 Wayland，即使多�
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 自动平铺 ###
+### 自动平铺
 
 新建窗口时，会根据其他窗口的平铺情况和当前布局，自动将其移动到最合适的磁贴。该功能默认关闭，可在首选项中开启。
 
-当当前工作区的所有显示器都已占满时，窗口还可以被自动平铺到其他工作区的第一个空闲磁贴（并切换视图过去）；启用动态工作区时会先自动创建新工作区 —— 这由"自动平铺时搜索其他工作区"首选项控制。
+当当前工作区的所有显示器都已占满时，窗口还可以被自动平铺到后续工作区的第一个空闲磁贴（并切换视图过去），仅向前搜索、不回绕；启用动态工作区时会先自动创建新工作区 —— 这由"自动平铺时搜索其他工作区"首选项控制。
 
-启用自动平铺后，若当前聚焦的窗口已被平铺，新窗口会被放置在紧跟聚焦窗口的磁贴上：其后的已平铺窗口沿全局"从上到下、从左到右"的顺序整体前移一格，跨显示器级联 —— 在启用"自动平铺时搜索其他工作区"首选项时还会跨工作区级联。若聚焦窗口未被平铺，新窗口仍会像以前一样被移动到最近的空闲磁贴。
+启用自动平铺后，若当前聚焦的窗口已被平铺，新窗口必定会被放置在紧跟聚焦窗口的磁贴上：其后的已平铺窗口沿全局"从上到下、从左到右"的顺序整体前移一格，跨显示器级联 —— 在启用"自动平铺时搜索其他工作区"首选项时还会跨工作区级联。若聚焦窗口未被平铺（或焦点不可得），新窗口会按严格的"从上到下、从左到右"阅读顺序落在第一个空位上：从当前工作区开始，仅向前跨工作区搜索、不回绕；启用动态工作区且所有工作区都已占满时，会追加新工作区并让新窗口落在其 0 号磁贴。若放置无法完成（例如目标磁贴被不可移动的窗口占用），新窗口会保持浮动并记录日志，不会执行任何"最近空位"或环回搜索。
 
 当已平铺的窗口被关闭或移走时，其工作区中空出的磁贴会被自动回填：同工作区的已平铺窗口沿全局"从上到下、从左到右"的顺序前移 —— 跨所有显示器级联 —— 剩余的空位会依次从右侧的工作区拉取窗口补齐，使每个工作区的每个显示器都始终保持从左上角开始的连续平铺。这由"从下一个工作区回填空出的磁贴"首选项控制（默认启用），且键盘移动/交换命令绝不会触发该行为。
 
@@ -164,13 +167,13 @@ AutoTile 兼容 GNOME Shell **42 至 50**，支持 X11 与 Wayland，即使多�
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 导入导出布局 ###
+### 导入导出布局
 
-*AutoTile* 支持将布局导入/导出为 JSON 文件。你可以不使用内置图形编辑器、直接创建自己的自定义布局，或与他人分享你的布局！如果你想了解布局文件内容的更多细节，请查阅官方[文档](./doc/json-internal-documentation.md)。
+_AutoTile_ 支持将布局导入/导出为 JSON 文件。你可以不使用内置图形编辑器、直接创建自己的自定义布局，或与他人分享你的布局！如果你想了解布局文件内容的更多细节，请查阅官方[文档](./doc/json-internal-documentation.md)。
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 智能圆角 ###
+### 智能圆角
 
 在 GNOME 中，不同窗口可能拥有不同的圆角半径。由于无法得知窗口的圆角，围绕聚焦窗口绘制边框一直是个难题。现有扩展都只是用固定的静态值绘制边框，观感大打折扣。AutoTile 会在运行时**动态**计算聚焦窗口的圆角半径；而且如果你安装了自定义圆角的扩展或其他工具，聚焦窗口的边框圆角也会随之自适应！同样可在扩展首选项中启用/禁用。
 
@@ -181,7 +184,7 @@ AutoTile 兼容 GNOME Shell **42 至 50**，支持 X11 与 Wayland，即使多�
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 窗口建议 ###
+### 窗口建议
 
 通过平铺系统、贴靠助手或屏幕边缘将窗口放入磁贴后，你会看到用于填充其余磁贴的其他窗口建议。打开的窗口太多？没问题！当建议无法全部放下时，会出现一个**可滚动列表**，方便快速导航。实际效果：
 
@@ -193,19 +196,19 @@ _可以自行选择开启或关闭吗？_
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 间距 ###
+### 间距
 
 为平铺布局留出呼吸空间：**内间距（inner gaps）**在已平铺窗口之间加入间隔，**外间距（outer gaps）**让窗口与显示器边缘保持距离。两者均可在首选项中调整，并在不同缩放比例的显示器之间正确换算。
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### ALT+TAB 集成 ###
+### ALT+TAB 集成
 
 首选项提供一个选项，可以把所有已平铺的窗口作为一个整体条目加入 <kbd>ALT</kbd>+<kbd>TAB</kbd> 切换器：选中它即可一次性提升全部已平铺窗口，你的平铺布局不会再被一堆浮动窗口挡在后面。
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
-### 一起提升 ###
+### 一起提升
 
 当某个已平铺窗口被提升时，其余已平铺窗口会随之一同进入前台，保持平铺布局在视觉上的完整。可在首选项中开关。
 
@@ -222,7 +225,9 @@ _可以自行选择开启或关闭吗？_
 </div>
 
 ### 手动安装
+
 下载最新的 [release](https://github.com/kylelee/AutoTile/releases)，解压下载的压缩包，将文件夹复制到 `~/.local/share/gnome-shell/extensions` 目录，然后重新加载 GNOME Shell（例如注销后重新登录）。之后即可启用扩展：
+
 ```bash
 /usr/bin/gnome-extensions enable autotile@kylelee.github.io
 ```
@@ -239,6 +244,7 @@ _可以自行选择开启或关闭吗？_
 直接使用 `npm` 等价命令也可以：`npm i`、`npm run build`、`npm run install:extension`。开发工作流参见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
 
 之后重启 GNOME Shell，例如注销再登录，或在 X11 下按 `alt-F2` 输入 `r` 原地重启，然后启用扩展即可。也可以通过命令行启用：
+
 ```bash
 /usr/bin/gnome-extensions enable autotile@kylelee.github.io
 ```
@@ -258,6 +264,7 @@ journalctl -f -o cat /usr/bin/gjs
 ### 卸载 AutoTile
 
 卸载前请先禁用扩展，然后再删除。通过命令行禁用可以运行：
+
 ```bash
 /usr/bin/gnome-extensions disable autotile@kylelee.github.io
 ```
@@ -269,6 +276,7 @@ journalctl -f -o cat /usr/bin/gjs
 ### 如何新增快捷键
 
 1. 编辑文件 `resources/schemas/org.gnome.shell.extensions.autotile.gschema.xml`，新增一个带有名称、默认空值和摘要（summary）的 key。例如，名称为 `highlight-current-window`、摘要为 `Minimize all the other windows and show only the focused window` 时，添加如下内容：
+
 ```xml
 <key type="as" name="highlight-current-window">
   <default><![CDATA[['']]]></default>
@@ -277,11 +285,13 @@ journalctl -f -o cat /usr/bin/gjs
 ```
 
 2. 编辑文件 `src/settings/settings.ts`，在静态常量列表的末尾添加一个新的静态常量（例如[这里](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/settings/settings.ts#L138)）。静态常量必须是一个与 key 名称相同的字符串；常量名必须以 `SETTING_` 开头，并使用 key 名称的大写下划线形式。例如 key 名称为 `highlight-current-window` 时，向文件中添加：
+
 ```js
 static SETTING_HIGHLIGHT_CURRENT_WINDOW = 'highlight-current-window';
 ```
 
 3. 编辑文件 `src/keybindings.ts`，添加一个与 key 同名的新信号（signal）。请务必先写 `Meta.Display.$gtype`，后跟你需要的所有参数类型（如果有的话）。例如，key 名称为 `highlight-current-window` 且不需要任何参数时，添加：
+
 ```js
 'highlight-current-window': {
     param_types: [Meta.Display.$gtype], // Meta.Display,
@@ -289,6 +299,7 @@ static SETTING_HIGHLIGHT_CURRENT_WINDOW = 'highlight-current-window';
 ```
 
 4. 思路是：当用户按下快捷键时，Keybinding 单例类会发出该信号。为此，编辑文件 `src/keybindings.ts`，在快捷键被使用时发出信号（例如[这里](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L223)）。例如 key 名称为 `highlight-current-window` 时，添加：
+
 ```js
 Main.wm.addKeybinding(
     Settings.SETTING_HIGHLIGHT_CURRENT_WINDOW,
@@ -300,14 +311,17 @@ Main.wm.addKeybinding(
     },
 );
 ```
+
 如有需要，可以在 `display` 之后添加所有你需要的参数。
 
 5. 请确保在扩展被禁用时移除快捷键。为此，编辑文件 `src/keybindings.ts` 来移除快捷键（例如[这里](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L318)）。例如，key 名称为 `highlight-current-window` 时，添加：
+
 ```js
 Main.wm.removeKeybinding(Settings.SETTING_HIGHLIGHT_CURRENT_WINDOW);
 ```
 
 6. 现在，你可以在任何地方通过连接该信号来监听快捷键。推荐的位置是 `src/extension.ts` 文件（例如[这里](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/extension.ts#L264)）。例如，key 名称为 `highlight-current-window` 时，添加：
+
 ```js
 this._signals.connect(
   this._keybindings,
@@ -321,6 +335,7 @@ this._signals.connect(
 ```
 
 7. 编辑文件 `src/prefs.ts`，允许用户选择自己偏好的快捷键。只需在 `keybindings` 数组中新增一项即可（例如在[这里](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/prefs.ts#L639)添加新条目）。例如，key 名称为 `highlight-current-window` 时，添加：
+
 ```js
 [
     Settings.SETTING_HIGHLIGHT_CURRENT_WINDOW,
@@ -330,6 +345,7 @@ this._signals.connect(
     false,
 ],
 ```
+
 第一个元素是设置项的 key，第二个元素是标题，第三个元素是描述。第四个是布尔值，供首选项记录该设置是否已被设置。最后一个是布尔值，表示该设置是否必须显示在主页面上；否则只能通过展开可用快捷键列表来访问。不过，用户已设置过的快捷键始终会显示在主页面。
 _请使用与第 1 步 schema 中相同的描述。_
 
@@ -345,6 +361,7 @@ running Vagrant:
 ```
 
 如果你使用的是 NTFS 文件系统，则需要把密钥移出去：
+
 ```
 mv /path/to/box/virtualbox/private_key $HOME/.ssh/vagrant_key
 ln -sr $HOME/.ssh/vagrant_key /path/to/box/virtualbox/private_key

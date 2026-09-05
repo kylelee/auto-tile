@@ -6,7 +6,7 @@
 
 **English** | [简体中文](README.zh_CN.md)
 
-# AutoTile #
+# AutoTile
 
 AutoTile is a GNOME Shell extension that brings **automatic tiling window management** to GNOME. It is heavily inspired by **[Omarchy](https://omarchy.org) 4.0** and the window layouters of **[Hyprland](https://hyprland.org)**: that is why we forked the excellent **[Tiling Shell](https://github.com/domferr/tilingshell)** project (many thanks to its original author [Domenico Ferraro](https://github.com/domferr)) and extended it, so that GNOME users can enjoy an auto-tiling experience that comes close to **Omarchy Linux** — huge thanks to DHH and the Omarchy developers for their aesthetics, inspiration, philosophy and outstanding code contributions.
 
@@ -30,7 +30,7 @@ AutoTile runs on GNOME Shell **42 to 50**, on X11 and Wayland, with multi-monito
 <details>
   <summary><span align="center">See here the video overview</span></summary>
 
-  https://github.com/user-attachments/assets/2905f0a1-ecd4-47b5-a6bc-59f91716e685
+https://github.com/user-attachments/assets/2905f0a1-ecd4-47b5-a6bc-59f91716e685
 </details>
 
 ## ✨ Highlights
@@ -40,16 +40,17 @@ AutoTile runs on GNOME Shell **42 to 50**, on X11 and Wayland, with multi-monito
 - 🔁 **Swap adjacent tiled windows** — moving a window toward an occupied tile swaps the positions of the two windows, even across monitors, and freed tiles are refilled automatically. See [Tile with Keyboard](#tile-with-keyboard) and [Auto-tiling](#auto-tiling).
 - 🧲 **Windows stay in the layout** — when auto-tiling's layout enforcement is enabled, windows can no longer leave the tiling by dragging: stray drops snap back into the layout, and the whole grid keeps itself continuously filled from the top-left. See [Auto-tiling](#auto-tiling).
 
-## Usage ##
+## Usage
 
-| [Tiling System](#tiling-system) | [Snap Assistant](#snap-assistant) | [Select a layout](#select-a-layout) | [Select multiple tiles](#select-multiple-tiles) |
-|:---|:---|:---|:---|
-| [Layout editor](#layout-editor) | [Smart resize](#smart-resize) | [Tile with Keyboard](#tile-with-keyboard) | [Edge Tiling](#edge-tiling) |
-| [Per-workspace layout](#per-workspace-layout) | [Auto-tiling](#auto-tiling) | [Tiling context menu](#tiling-context-menu) | [Import/Export layouts](#export-and-import-layouts) |
-| [Smart border radius](#smart-border-radius) | [Windows Suggestions](#windows-suggestions) | [Gaps](#gaps) | [ALT+TAB integration](#alttab-integration) |
-| [Raise together](#raise-together) | | | |
+| [Tiling System](#tiling-system)               | [Snap Assistant](#snap-assistant)           | [Select a layout](#select-a-layout)         | [Select multiple tiles](#select-multiple-tiles)     |
+| :-------------------------------------------- | :------------------------------------------ | :------------------------------------------ | :-------------------------------------------------- |
+| [Layout editor](#layout-editor)               | [Smart resize](#smart-resize)               | [Tile with Keyboard](#tile-with-keyboard)   | [Edge Tiling](#edge-tiling)                         |
+| [Per-workspace layout](#per-workspace-layout) | [Auto-tiling](#auto-tiling)                 | [Tiling context menu](#tiling-context-menu) | [Import/Export layouts](#export-and-import-layouts) |
+| [Smart border radius](#smart-border-radius)   | [Windows Suggestions](#windows-suggestions) | [Gaps](#gaps)                               | [ALT+TAB integration](#alttab-integration)          |
+| [Raise together](#raise-together)             |                                             |                                             |                                                     |
 
-### Tiling System ###
+### Tiling System
+
 When grabbing and moving a window, press <kbd>CTRL</kbd> key to show the tiling layout (you can choose another key from the preferences). When moving on a tile, it will highlight. Ungrab the window to place that window on the highlighted tile.
 
 [tiling_system.webm](https://github.com/kylelee/AutoTile/assets/14203981/a45ec416-ad39-458d-9b9f-cddce8b25666)
@@ -58,7 +59,8 @@ When grabbing and moving a window, press <kbd>CTRL</kbd> key to show the tiling 
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Snap Assistant ###
+### Snap Assistant
+
 When grabbing and moving a window, the snap assistant will be available on top of the screen. Move the window near it to activate the snap assistant. While still grabbing the window, move your mouse to the tile you are interested in. By stopping grabbing the window will be tiled to the selected tile!
 
 [snap_assistant.webm](https://github.com/kylelee/AutoTile/assets/14203981/33511582-fa92-445e-b1ba-8b08f9a8e43a)
@@ -67,14 +69,15 @@ When grabbing and moving a window, the snap assistant will be available on top o
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Select a layout ###
+### Select a layout
+
 Click on AutoTile's panel indicator and the available layouts will be shown. Select the one you prefer by clicking on it. That layout will be applied to every monitor in case you have more than one.
 
 [layout_selection.webm](https://github.com/kylelee/AutoTile/assets/14203981/f4956a34-64e3-4c24-b177-8f9b08fcc45c)
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Select multiple tiles ###
+### Select multiple tiles
 
 The layout is not strict. You can select multiple tiles too! Just hold <kbd>ALT</kbd> while using the tiling system (you can choose another key from the preferences).
 
@@ -82,17 +85,17 @@ The layout is not strict. You can select multiple tiles too! Just hold <kbd>ALT<
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Layout editor ###
+### Layout editor
 
-| Split a tile | Split a tile _vertically_ | Delete a tile | Save, close the editor or open the menu |
-|:---:|:---:|:---:|:---:|
+|     Split a tile      |        Split a tile _vertically_        |     Delete a tile      |                                                         Save, close the editor or open the menu                                                         |
+| :-------------------: | :-------------------------------------: | :--------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------: |
 | <kbd>LEFT CLICK</kbd> | <kbd>LEFT CLICK</kbd> + <kbd>CTRL</kbd> | <kbd>RIGHT CLICK</kbd> | Click the AutoTile's icon <img src="https://github.com/kylelee/AutoTile/assets/14203981/13e27ec1-6a5d-420f-a87f-8f3df0b34c92" width=96 /> on the panel. |
 
 [layout_editor.webm](https://github.com/kylelee/AutoTile/assets/14203981/c6e05589-69d9-4fa3-a4df-61ee875cf9e1)
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Smart resize ###
+### Smart resize
 
 You can resize adjacent tiled windows together!
 
@@ -102,7 +105,7 @@ You can resize adjacent tiled windows together!
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Tile with Keyboard ###
+### Tile with Keyboard
 
 Move the focused window through the tiles using keyboard shortcuts (<kbd>SUPER</kbd>+<kbd>←</kbd>/<kbd>↑</kbd>/<kbd>↓</kbd>/<kbd>→</kbd>). They can be customized from the preferences!
 
@@ -118,7 +121,7 @@ Further keybinding-driven commands are available, all customizable from the pref
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Edge Tiling ###
+### Edge Tiling
 
 You can tile a window by moving it to the edge.
 
@@ -126,7 +129,7 @@ You can tile a window by moving it to the edge.
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Tiling context menu ###
+### Tiling context menu
 
 Right-click on a window to use the auto-tile buttons and the snap assistant from there! The auto-tile buttons allow you to tile to the leftmost or rightmost empty tile, based on your selected layout. The "Move to best tile" button suggests tiling to the nearest empty tile to the center of the screen.
 
@@ -140,7 +143,7 @@ Right-click on a window to use the auto-tile buttons and the snap assistant from
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Per-workspace layout ###
+### Per-workspace layout
 
 You can select your favorite layout for each workspace of each monitor.
 
@@ -148,13 +151,13 @@ You can select your favorite layout for each workspace of each monitor.
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Auto-tiling ###
+### Auto-tiling
 
 When a window is created, it is automatically moved to the best tile according to where other windows are tiled and the current layout. This is disabled by default and can be enabled in the preferences.
 
-When every monitor on the current workspace is full, the window can also be auto-tiled to the first free tile on another workspace (switching the view to it), and a new workspace is created first when dynamic workspaces are enabled — controlled by the 'Search other workspaces when auto tiling' preference.
+When every monitor on the current workspace is full, the window can also be auto-tiled to the first free tile on a later workspace (switching the view to it), searching forward only and never wrapping around, and a new workspace is created first when dynamic workspaces are enabled — controlled by the 'Search other workspaces when auto tiling' preference.
 
-When auto-tiling is enabled and the focused window is tiled, a new window is placed on the tile right after the currently focused window: the tiled windows behind it shift one slot forward along the global top-to-bottom/left-to-right order, cascading across monitors and — when the 'Search other workspaces when auto tiling' preference is enabled — across workspaces. When the focused window is not tiled, the new window is moved to the nearest free tile as before.
+When auto-tiling is enabled and the focused window is tiled, a new window is always placed on the tile right after the currently focused window: the tiled windows behind it shift one slot forward along the global top-to-bottom/left-to-right order, cascading across monitors and — when the 'Search other workspaces when auto tiling' preference is enabled — across workspaces. When the focused window is not tiled (or no focused window can be resolved), the new window takes the first empty tile in the same global top-to-bottom/left-to-right order, starting from the current workspace and searching forward across workspaces only, never wrapping around; with dynamic workspaces enabled and every workspace full, a new workspace is created and the window lands on its slot 0. If the placement cannot be completed, for example when the target tile is occupied by an immovable window, the new window stays floating and the failure is logged: no nearest-tile or wraparound search is ever performed.
 
 When a tiled window is closed or moved away, the freed tiles of its workspace are automatically filled again: the tiled windows of the same workspace shift forward along the global top-to-bottom/left-to-right order — cascading across every monitor — and the remaining gaps pull windows from the workspaces to the right, one after another, so that every monitor of every workspace stays continuously tiled from the top-left. This is controlled by the 'Fill freed tiles from the next workspaces' preference, which is enabled by default, and it is never triggered by the keyboard move and swap commands.
 
@@ -164,13 +167,13 @@ While that preference is enabled, dragging can no longer un-tile a window: stray
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Export and import layouts ###
+### Export and import layouts
 
-*AutoTile* supports importing and exporting its layouts to a JSON file. With this you can create your own custom layouts without the built-in graphical editor, or share your layouts with others! If you are interested into knowing more about the contents of the layout file check the official [documentation](./doc/json-internal-documentation.md).
+_AutoTile_ supports importing and exporting its layouts to a JSON file. With this you can create your own custom layouts without the built-in graphical editor, or share your layouts with others! If you are interested into knowing more about the contents of the layout file check the official [documentation](./doc/json-internal-documentation.md).
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Smart border radius ###
+### Smart border radius
 
 In GNOME, different windows may have different border radius. Drawing a border around the focused window is hard because it is not possible to know the window border radius. All the existing extensions just draw a border with a static value, making the UI less polished. AutoTile, **dynamically** computes the focused window border radius at runtime. Moreover, if you have an extension or anything else who customize the border radius, the focused window border radius adapts as well! This can be enabled/disabled from the extension's preferences too.
 
@@ -181,7 +184,7 @@ In GNOME, different windows may have different border radius. Drawing a border a
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Windows Suggestions ###
+### Windows Suggestions
 
 After placing a window in a tile using the tiling system, snap assistant or active screen edges, you’ll see suggestions for other windows to fill the remaining tiles. Got too many windows open? No problem! If all suggestions don’t fit within the available space, you’ll get a **scrollable list** for quick and easy navigation. See it in action:
 
@@ -193,19 +196,19 @@ Yes. From the extension's preferences you find a section called Windows Suggesti
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Gaps ###
+### Gaps
 
 Add breathing room to your tiling: **inner gaps** put space between tiled windows, **outer gaps** keep windows off the monitor borders. Both are adjustable from the preferences and scale correctly across monitors with different scaling factors.
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### ALT+TAB integration ###
+### ALT+TAB integration
 
 The preferences offer an option that adds the tiled windows to the <kbd>ALT</kbd>+<kbd>TAB</kbd> switcher as a single entry: selecting it raises all the tiled windows at once, so your tiling never hides behind a stack of floating windows.
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
-### Raise together ###
+### Raise together
 
 When one tiled window is raised, all the other tiled windows come to the foreground with it, keeping the tiling visually coherent. Toggleable from the preferences.
 
@@ -222,7 +225,9 @@ This extension is published on [GitHub](https://github.com/kylelee/AutoTile)! Yo
 </div>
 
 ### Install manually
+
 Download the latest [release](https://github.com/kylelee/AutoTile/releases). Extract the downloaded archive. Copy the folder to `~/.local/share/gnome-shell/extensions` directory. You need to reload GNOME Shell afterwards (e.g. by logging out). Then you can enable the extension:
+
 ```bash
 /usr/bin/gnome-extensions enable autotile@kylelee.github.io
 ```
@@ -240,6 +245,7 @@ The plain `npm` equivalents work too: `npm i`, `npm run build`, `npm run install
 
 You can restart your GNOME shell e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only) and enable the extension. Enjoy it!
 To enable via the command line you can run
+
 ```bash
 /usr/bin/gnome-extensions enable autotile@kylelee.github.io
 ```
@@ -255,9 +261,11 @@ To read the logs of the preferences you can run
 ```bash
 journalctl -f -o cat /usr/bin/gjs
 ```
+
 ### Uninstall AutoTile
 
 To uninstall, first disable the extension and then remove it. To disable via the command line you can run
+
 ```bash
 /usr/bin/gnome-extensions disable autotile@kylelee.github.io
 ```
@@ -269,6 +277,7 @@ Feel free to submit [issues](https://github.com/kylelee/AutoTile/issues/new/choo
 ### How to add new keybindings
 
 1. Edit the file `resources/schemas/org.gnome.shell.extensions.autotile.gschema.xml` and add a new key with a name, default empty value and a summary. For example, add the following if the name is `highlight-current-window` and the summary is `Minimize all the other windows and show only the focused window`:
+
 ```xml
 <key type="as" name="highlight-current-window">
   <default><![CDATA[['']]]></default>
@@ -277,11 +286,13 @@ Feel free to submit [issues](https://github.com/kylelee/AutoTile/issues/new/choo
 ```
 
 2. Edit the file `src/settings/settings.ts` and add a static constant at the end of the list of the static constants (for example [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/settings/settings.ts#L138)). The static constant must be a string equal to the key name. The constant name must start with `SETTING_` and must be the key name capitalized and using underscores. For example if the key name is `highlight-current-window`, add this to the file:
+
 ```js
 static SETTING_HIGHLIGHT_CURRENT_WINDOW = 'highlight-current-window';
 ```
 
 3. Edit the file `src/keybindings.ts` by adding a new signal with a name equal to the key name. Be sure to put `Meta.Display.$gtype` followed by all the parameter types you need (if any). For example, if the key name is `highlight-current-window` and it doesn't need any parameter, add this:
+
 ```js
 'highlight-current-window': {
     param_types: [Meta.Display.$gtype], // Meta.Display,
@@ -289,6 +300,7 @@ static SETTING_HIGHLIGHT_CURRENT_WINDOW = 'highlight-current-window';
 ```
 
 4. The idea is that, when the user presses the keybindings, the Keybinding singleton class will emit that signal. To achieve that, edit the file `src/keybindings.ts` by emitting the signal when the keybindings are used, for example [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L223). For example if the key name is `highlight-current-window`, add this:
+
 ```js
 Main.wm.addKeybinding(
     Settings.SETTING_HIGHLIGHT_CURRENT_WINDOW,
@@ -300,14 +312,17 @@ Main.wm.addKeybinding(
     },
 );
 ```
+
 You can put after `display` all the parameters you need (if any).
 
 5. Ensure you disable the keybindings when the extension is disabled. To achieve that edit the file `src/keybindings.ts` to remove the keybindings, for example [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L318). For example, if the key name is `highlight-current-window` then add this:
+
 ```js
 Main.wm.removeKeybinding(Settings.SETTING_HIGHLIGHT_CURRENT_WINDOW);
 ```
 
 6. You can now listen to the keybindings from everywhere by just connecting to the signal. A good place to do so is in the `src/extension.ts` file, for example [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/extension.ts#L264). For example, if the key name is `highlight-current-window` then add this:
+
 ```js
 this._signals.connect(
   this._keybindings,
@@ -321,6 +336,7 @@ this._signals.connect(
 ```
 
 7. Edit the file `src/prefs.ts` to allow the user to choose its preferred keybindings. This can be easily done by adding a new entry in the `keybindings` array. For example by adding a new entry [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/prefs.ts#L639). For example, if the key name is `highlight-current-window` then add this:
+
 ```js
 [
     Settings.SETTING_HIGHLIGHT_CURRENT_WINDOW,
@@ -330,6 +346,7 @@ this._signals.connect(
     false,
 ],
 ```
+
 The first element is the settings key, the second element is the title and the third is the description. The fourth is a boolean used by the preferences to store if that setting is set or not. The last is a boolean that indicates whether or not this setting must be on the main page, otherwise it can be accessed by expanding the list of available keybindings. However, any keybinding set by the user is always put on the main page.
 _Please use the same description you wrote in the schema at step 1._
 
@@ -345,6 +362,7 @@ running Vagrant:
 ```
 
 If you are running on a NTFS file system then you have to move out the key:
+
 ```
 mv /path/to/box/virtualbox/private_key $HOME/.ssh/vagrant_key
 ln -sr $HOME/.ssh/vagrant_key /path/to/box/virtualbox/private_key
