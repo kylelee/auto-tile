@@ -1,6 +1,7 @@
 # AutoTile: advanced and modern window management for GNOME
 #
 # Copyright (C) 2026 Domenico Ferraro
+# Copyright (C) 2026 Kyle Lee
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -141,4 +142,3 @@ Vagrant.configure("2") do |config|
     configure_gnome_vm(gnome49, "bento/fedora-43")
   end
 end
-

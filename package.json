@@ -1,7 +1,7 @@
 {
   "name": "autotile",
   "version": "17.3",
-  "author": "Domenico Ferraro <ferraro.domenico125@gmail.com>",
+  "author": "Kyle Lee <kylelee@users.noreply.github.com>",
   "private": true,
   "license": "GPL v2.0",
   "scripts": {
