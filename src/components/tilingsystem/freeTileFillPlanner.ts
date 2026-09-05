@@ -14,6 +14,13 @@
  * _findEmptyTile / _getTiledWindowRects convention: frame rects of
  * windows with an assigned tile, not minimized, not maximized).
  *
+ * Floating candidates: untiled (floating) windows of the workspaces
+ * to the right are LAST-RANK pull candidates - strictly after all
+ * tiled candidates of the same source workspace, taken in snapshot
+ * order (tiled windows by rank, then floating windows by snapshot
+ * order); a floating window never blocks compaction and never
+ * compacts itself.
+ *
  * Index conventions used by every exported function:
  * - tile indexes refer to the READING-ORDER-sorted tile array (rows
  *   top-to-bottom, left-to-right within a row - the sort used by
@@ -36,6 +43,13 @@ export interface WorkspaceSnapshot {
     windowRects: RectLike[];
     /** executor-decided movable subset of windowRects indexes */
     movableWindowIndexes: number[];
+    /**
+     * indexes into windowRects of untiled (floating) windows that
+     * passed all non-geometric guards: last-rank pull candidates,
+     * never blocking and never compacting. Absent = no floating
+     * candidates.
+     */
+    floatingWindowIndexes?: number[];
 }
 
 /** same-workspace compaction move */
@@ -55,7 +69,9 @@ export interface CompactionMove {
  *
  * windowIndex always indexes the windowRects array of the fromWs
  * snapshot; fromTileIndex is the window's matched reading-order tile
- * on fromWs; tileIndex is the destination reading-order tile on toWs.
+ * on fromWs, or -1 for a floating pull (the window has no matched
+ * tile on its source workspace); tileIndex is the destination
+ * reading-order tile on toWs.
  */
 export interface CascadeMove {
     kind: 'compact' | 'pull';
@@ -260,6 +276,8 @@ interface WsState {
     movable: Set<number>;
     /** window indexes already pulled away by earlier cascade steps */
     consumed: Set<number>;
+    /** untiled last-rank pull candidates, never blocking */
+    floating: Set<number>;
 }
 
 export function planFillCascade(
@@ -285,6 +303,7 @@ export function planFillCascade(
             windowRects: snap.windowRects,
             movable: new Set(snap.movableWindowIndexes),
             consumed: new Set(),
+            floating: new Set(snap.floatingWindowIndexes ?? []),
         };
         states.set(wsIndex, state);
         return state;
@@ -294,9 +313,11 @@ export function planFillCascade(
         const state = getState(ws);
         if (!state) break;
 
-        // 1) compaction pass: consumed windows already left this ws and
-        // neither move nor block; movable windows that span tiles (not
-        // seated) block like any other excluded window
+        // 1) compaction pass: consumed windows already left this ws
+        // and neither move nor block; floating windows are gone for
+        // seating purposes too (last-rank candidates, never blocking);
+        // movable windows that span tiles (not seated) block like any
+        // other excluded window
         const movers: number[] = [];
         for (const windowIndex of state.movable) {
             if (!state.consumed.has(windowIndex)) movers.push(windowIndex);
@@ -305,7 +326,7 @@ export function planFillCascade(
             state.sortedTiles,
             state.windowRects,
             movers,
-            state.consumed
+            new Set([...state.consumed, ...state.floating])
         );
         for (const move of seating.moves) {
             moves.push({
@@ -351,6 +372,24 @@ export function planFillCascade(
                         sourceState = rightState;
                         sourceWindow = windowIndex;
                         sourceRank = rank;
+                    }
+                }
+                // floating fallback: only when the tile scan above
+                // missed this workspace, strictly after all its tiled
+                // candidates; first floating window in snapshot order
+                // (= executor MRU order), matchWindowToTile result
+                // ignored - membership in floating is the only
+                // classification. Breaking here stops the rightward
+                // scan (outer condition), so a nearer floating window
+                // wins over any farther workspace's tiled candidate.
+                if (sourceWs < 0) {
+                    for (const windowIndex of rightState.floating) {
+                        if (rightState.consumed.has(windowIndex)) continue;
+                        sourceWs = right;
+                        sourceState = rightState;
+                        sourceWindow = windowIndex;
+                        sourceRank = -1;
+                        break;
                     }
                 }
             }
