@@ -108,7 +108,7 @@ Move the focused window through the tiles using keyboard shortcuts (<kbd>SUPER</
 
 Moving toward an occupied tile swaps the positions of the two windows, even across monitors, while free tiles are taken as-is in the movement direction. At the last monitor's edge, LEFT/RIGHT move the window to the adjacent workspace — creating one when dynamic workspaces are enabled — and swap there too when the landing tile is occupied.
 
-Dedicated keybindings also move the **window focus** (up/down/left/right, next/previous) in any direction, so you can walk the whole grid — tiled windows and beyond — without touching the mouse. They can be set from the preferences.
+Dedicated keybindings also move the **window focus** in any direction (up/down/left/right, next/previous), so you can walk the whole grid — tiled windows and beyond — without touching the mouse. By default, directional focus is bound to <kbd>ALT</kbd>+<kbd>←</kbd>/<kbd>↑</kbd>/<kbd>↓</kbd>/<kbd>→</kbd>, and next/previous window focus to <kbd>ALT</kbd>+<kbd>Page_Down</kbd>/<kbd>Page_Up</kbd>. They can be customized from the preferences.
 
 Further keybinding-driven commands are available, all customizable from the preferences: **span** the focused window to the tile above/below/left/right, **untile** the focused window, **move the window to the center** of the screen, **highlight the focused window** (minimizing the others), and **cycle layouts** forward/backward. Next/previous focus navigation can optionally wrap around at the edges, and directional focus can be restricted to tiled windows only.
 
