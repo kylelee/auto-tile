@@ -273,8 +273,8 @@ export function planFillCascade(
     // triggered the cascade. An executor owning an absolute trigger
     // offset wraps its snapshot with it and adds the offset back to
     // fromWs/toWs. A null return means "no workspace here" and ENDS
-    // the iteration: the cascade walks strictly rightward and, unlike
-    // tilingManager._findVacancyInOtherWorkspaces, never wraps around.
+    // the iteration: the cascade walks strictly rightward and never
+    // wraps around.
     const getState = (wsIndex: number): WsState | null => {
         const cached = states.get(wsIndex);
         if (cached) return cached;

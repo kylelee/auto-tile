@@ -8,6 +8,7 @@
  *   node /tmp/insertionPlanner.test.cjs
  */
 
+import { AssertionError } from 'node:assert';
 import { deepEqual, equal, ok } from 'node:assert/strict';
 import {
     buildWorkspaceChain,
@@ -15,15 +16,58 @@ import {
     mapWindowsToSlots,
     planInsertion,
     type ChainInputs,
+    type ChainSlot,
     type InsertionFallback,
     type InsertionPlan,
     type PlanInsertionOptions,
 } from '../src/components/tilingsystem/insertionPlanner';
+import * as plannerModule from '../src/components/tilingsystem/insertionPlanner';
 
 /** unwrap a plan result, failing the scenario on any fallback cause */
 const asPlan = (p: InsertionPlan | InsertionFallback): InsertionPlan => {
     if ('fallback' in p) throw new Error(`unexpected fallback: ${p.fallback}`);
     return p;
+};
+
+/** the injected contract task 4 consumes; pinned verbatim by the scenarios */
+type FindFirstVacancyOpts = {
+    fromWs: number;
+    nWorkspaces: number;
+    allowCrossWorkspace: boolean;
+    allowAppend: boolean;
+    getChain: PlanInsertionOptions['getChain'];
+    inputs: ChainInputs;
+    getWorkspaceByIndex: PlanInsertionOptions['getWorkspaceByIndex'];
+};
+
+type FindFirstVacancyResult = {
+    wsIndex: number;
+    slot: ChainSlot;
+    appendWorkspace: boolean;
+};
+
+/**
+ * Resolved through the module namespace on purpose: while the export does
+ * not exist yet (red phase) a named import would break the esbuild bundle
+ * with "no matching export" - through the namespace the file still bundles
+ * and every scenario below fails with an AssertionError instead.
+ */
+const findFirstVacancy = (
+    opts: FindFirstVacancyOpts
+): FindFirstVacancyResult | null => {
+    const fn = (
+        plannerModule as unknown as {
+            findFirstVacancy?: (
+                o: FindFirstVacancyOpts
+            ) => FindFirstVacancyResult | null;
+        }
+    ).findFirstVacancy;
+    if (typeof fn !== 'function') {
+        throw new AssertionError({
+            message: 'findFirstVacancy not implemented',
+        });
+    }
+    return fn(opts);
 };
 
 // ---------------------------------------------------------------------------
@@ -742,6 +786,192 @@ const scenarios: [string, () => void][] = [
                 planInsertion(asMeta(drifted.win(0, 0)), drifted.opts()),
                 { fallback: 'anchor-unmapped' }
             );
+        },
+    ],
+    [
+        '16. findFirstVacancy: empty workspace returns the fromWs slot 0',
+        () => {
+            const world = makeWorld({
+                monitorsInRowOrder: [0],
+                tilesFor: () => thirds,
+                windowsByWs: { 0: [] },
+            });
+            const v = findFirstVacancy({ ...world.opts(), fromWs: 0 });
+            deepEqual(
+                [v?.wsIndex, v?.slot.slotIndex, v?.appendWorkspace],
+                [0, 0, false]
+            );
+            ok(v?.slot.tile === thirds[0]);
+        },
+    ],
+    [
+        '17. findFirstVacancy: first vacancy in strict reading order (y-major inside a monitor, monitors in row order)',
+        () => {
+            const grid: TileLike[] = [
+                tile(0, 0, 0.5, 0.5),
+                tile(0.5, 0, 0.5, 0.5),
+                tile(0, 0.5, 0.5, 0.5),
+                tile(0.5, 0.5, 0.5, 0.5),
+            ];
+            const world = makeWorld({
+                monitorsInRowOrder: [1, 0], // monitor 1 reads first
+                workAreas: {
+                    1: rect(0, 0, 900, 900),
+                    0: rect(900, 0, 900, 900),
+                },
+                tilesFor: m => (m === 1 ? grid : halves),
+                windowsByWs: {
+                    0: [
+                        { frame: frameOf(grid[0]), monitor: 1 },
+                        { frame: frameOf(grid[1]), monitor: 1 },
+                        { frame: frameOf(grid[3]), monitor: 1 }, // slot 2 free
+                        // pixel frames inside monitor 0's work area (x 900+)
+                        { frame: rect(900, 0, 450, 900), monitor: 0 },
+                        { frame: rect(1350, 0, 450, 900), monitor: 0 },
+                    ],
+                },
+            });
+            const v = findFirstVacancy({ ...world.opts(), fromWs: 0 });
+            deepEqual(
+                [v?.wsIndex, v?.slot.slotIndex, v?.appendWorkspace],
+                [0, 2, false]
+            );
+            ok(v?.slot.tile === grid[2]);
+        },
+    ],
+    [
+        '18. findFirstVacancy: no wraparound - full fromWs and later workspaces return null even when ws0 has a vacancy',
+        () => {
+            const world = makeWorld({
+                monitorsInRowOrder: [0],
+                tilesFor: () => halves,
+                windowsByWs: {
+                    0: [{ frame: frameOf(halves[0]) }], // slot 1 stays free
+                    1: [
+                        { frame: frameOf(halves[0]) },
+                        { frame: frameOf(halves[1]) },
+                    ],
+                    2: [
+                        { frame: frameOf(halves[0]) },
+                        { frame: frameOf(halves[1]) },
+                    ],
+                },
+                nWorkspaces: 3,
+            });
+            equal(
+                findFirstVacancy({
+                    ...world.opts({
+                        allowCrossWorkspace: true,
+                        allowAppend: false,
+                    }),
+                    fromWs: 1,
+                }),
+                null
+            );
+        },
+    ],
+    [
+        '19. findFirstVacancy: everything full with cross-workspace allowed but no append returns null',
+        () => {
+            const world = makeWorld({
+                monitorsInRowOrder: [0],
+                tilesFor: () => halves,
+                windowsByWs: {
+                    0: [
+                        { frame: frameOf(halves[0]) },
+                        { frame: frameOf(halves[1]) },
+                    ],
+                },
+                nWorkspaces: 1,
+            });
+            equal(
+                findFirstVacancy({
+                    ...world.opts({
+                        allowCrossWorkspace: true,
+                        allowAppend: false,
+                    }),
+                    fromWs: 0,
+                }),
+                null
+            );
+        },
+    ],
+    [
+        '20. findFirstVacancy: append workspace requires cross-workspace AND append together',
+        () => {
+            const world = makeWorld({
+                monitorsInRowOrder: [0],
+                tilesFor: () => quarters, // also the appended ws chain
+                windowsByWs: {
+                    0: [
+                        { frame: frameOf(quarters[0]) },
+                        { frame: frameOf(quarters[1]) },
+                        { frame: frameOf(quarters[2]) },
+                        { frame: frameOf(quarters[3]) },
+                    ],
+                },
+                nWorkspaces: 1,
+            });
+            const v = findFirstVacancy({
+                ...world.opts({
+                    allowCrossWorkspace: true,
+                    allowAppend: true,
+                }),
+                fromWs: 0,
+            });
+            deepEqual(
+                [v?.wsIndex, v?.slot.slotIndex, v?.appendWorkspace],
+                [1, 0, true]
+            );
+            ok(v?.slot.tile === quarters[0]);
+            // append alone is not enough: both flags must be true together
+            equal(
+                findFirstVacancy({
+                    ...world.opts({
+                        allowCrossWorkspace: false,
+                        allowAppend: true,
+                    }),
+                    fromWs: 0,
+                }),
+                null
+            );
+        },
+    ],
+    [
+        '21. planInsertion: a chain-tail anchor crosses forward to the next workspace even when an earlier slot on the anchor ws is free',
+        () => {
+            const world = makeWorld({
+                monitorsInRowOrder: [0],
+                tilesFor: () => quarters,
+                windowsByWs: {
+                    0: [
+                        { frame: frameOf(quarters[0]) },
+                        { frame: frameOf(quarters[1]) },
+                        { frame: frameOf(quarters[3]) }, // anchor on the chain tail
+                    ],
+                    1: [], // vacancy on the next workspace
+                },
+            });
+            const plan = asPlan(
+                planInsertion(
+                    asMeta(world.win(0, 2)),
+                    world.opts({ allowCrossWorkspace: true })
+                )
+            );
+            // the insertion point sits past the chain end, so the new window
+            // never back-fills the free slot 2 of the anchor ws: it crosses
+            // forward to ws1 slot 0 and the view follows it
+            deepEqual(
+                [
+                    plan.newWindowTarget.wsIndex,
+                    plan.newWindowTarget.slot.slotIndex,
+                ],
+                [1, 0]
+            );
+            ok(plan.newWindowTarget.slot.tile === quarters[0]);
+            deepEqual(plan.moves, []);
+            equal(plan.switchView, true);
+            equal(plan.appendWorkspace, undefined);
         },
     ],
 ];
