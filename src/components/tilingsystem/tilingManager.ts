@@ -1859,22 +1859,27 @@ export class TilingManager {
         // capture the pre-creation focus anchor synchronously: at
         // window-created time the new window is neither mapped nor
         // focused, so the focused window is normally the previously
-        // focused one
+        // focused one. When the focus is unreportable (undefined or the
+        // new window itself — Wayland timing), scan the MRU list of the
+        // birth workspace for the first eligible tiled anchor. A
+        // REPORTED focus is never replaced by that scan — it is the
+        // authoritative signal of user intent, so when it fails
+        // eligibility the path stays no-anchor.
         let anchorCandidate: Meta.Window | undefined =
             global.display.get_focus_window() ?? undefined;
-        let anchorFromFocus = anchorCandidate !== undefined;
-        if (anchorCandidate === undefined || anchorCandidate === window) {
-            // Wayland timing defense (not verified on every mutter
-            // version): fall back to the MRU head of the birth workspace,
-            // excluding the new window itself
+        let anchorSource: 'focus' | 'mru-scan' | 'none';
+        if (anchorCandidate !== undefined && anchorCandidate !== window) {
+            anchorSource = 'focus';
+        } else {
+            anchorSource = 'none';
             anchorCandidate = getWindows(window.get_workspace()).find(
-                (win) => win !== window,
+                (win) =>
+                    win !== window &&
+                    this._isEligibleInsertionAnchor(win, window),
             );
-            anchorFromFocus = false;
+            if (anchorCandidate !== undefined) anchorSource = 'mru-scan';
         }
-        this._debug(
-            `insertion: anchor source=${anchorFromFocus ? 'focus' : 'mru'}`,
-        );
+        this._debug(`insertion: anchor source=${anchorSource}`);
 
         // the create -> first-frame gap can be long (delayed-mapping apps
         // are not rare): property access on a released Meta.Window throws
