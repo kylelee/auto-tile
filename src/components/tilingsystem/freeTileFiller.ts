@@ -94,6 +94,28 @@ interface ResolvedMove {
 // another one is still applying, not even from a second FreeTileFiller
 let _fillInProgress = false;
 
+/** one cascade move that a fill pass actually applied to a window */
+export interface AppliedFillMove {
+    windowId: number;
+    window: Meta.Window;
+    toWsIndex: number;
+    destRect: { x: number; y: number; width: number; height: number };
+}
+
+// module-level on purpose: every managed monitor owns a FreeTileFiller
+// instance and they all share this table, so records survive across
+// fillers; FocusOnClose consumes them to focus the successor after the
+// cascade has settled
+const _appliedFillMoves: AppliedFillMove[] = [];
+
+export function takeAppliedFillMoves(): AppliedFillMove[] {
+    return _appliedFillMoves.splice(0);
+}
+
+export function clearAppliedFillMoves(): void {
+    _appliedFillMoves.length = 0;
+}
+
 export default class FreeTileFiller {
     private _deps: FreeTileFillerDependencies;
     private _log = logger('FreeTileFiller');
@@ -214,6 +236,12 @@ export default class FreeTileFiller {
                 `planned ${plannedMoves.length} move(s) from ws ${startWsIndex}`
             );
 
+            // gated clear: only a pass that actually planned moves may
+            // wipe the table - a redundant 0-move pass (e.g. the second
+            // idle when two windows are closed in quick succession) must
+            // keep the fresh records of the previous pass
+            clearAppliedFillMoves();
+
             // resolve every ws index to a Meta.Workspace OBJECT before
             // mutating anything: dynamic workspaces reindex when one is
             // removed mid-cascade, objects stay valid, indexes do not
@@ -280,6 +308,19 @@ export default class FreeTileFiller {
                     // its work area, gaps and move_to_monitor migration
                     targetContext.tileWindow(tile, window);
                     appliedCount++;
+                    // shallow-copied rect: the snapshot tile's rect must
+                    // never be shared with consumers of this record
+                    _appliedFillMoves.push({
+                        windowId: window.get_id(),
+                        window,
+                        toWsIndex: move.toWs,
+                        destRect: {
+                            x: targetTile.rect.x,
+                            y: targetTile.rect.y,
+                            width: targetTile.rect.width,
+                            height: targetTile.rect.height,
+                        },
+                    });
                     this._log(
                         `${move.kind}: window moved to ws ${move.toWs} ` +
                             `monitor ${targetTile.monitorIndex} tile ${move.tileIndex}`
