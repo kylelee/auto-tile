@@ -1,6 +1,6 @@
 {
   "name": "AutoTile",
-  "description": "Extend Gnome Shell with advanced tiling window management. Supports multiple monitors, Windows 11 Snap Assistant, Fancy Zones, automatic tiling, keyboard shortcuts, customised tiling layouts and more!",
+  "description": "AutoTile is a GNOME Shell extension that brings **automatic tiling window management** to GNOME. It is heavily inspired by **[Omarchy](https://omarchy.org) 4.0** and the window layouters of **[Hyprland](https://hyprland.org)**: that is why we forked the excellent **[Tiling Shell](https://github.com/domferr/tilingshell)** project (many thanks to its original author [Domenico Ferraro](https://github.com/domferr)) and extended it, so that GNOME users can enjoy an auto-tiling experience that comes close to **Omarchy Linux** — huge thanks to DHH and the Omarchy developers for their aesthetics, inspiration, philosophy and outstanding code contributions.",
   "uuid": "autotile@kylelee.github.io",
   "shell-version": [
     "42",
