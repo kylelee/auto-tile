@@ -35,14 +35,18 @@ export function getEventCoords(event: any): number[] {
     return event.get_coords ? event.get_coords() : [event.x, event.y]; // GNOME 40-44
 }
 
+// GNOME 49 removed the MaximizeFlags argument and get_maximized(); keep the
+// flags for older shells behind a local alias so version checks stay textual
+const MAXIMIZE_FLAGS = Meta.MaximizeFlags;
+
 export function maximizeWindow(window: Meta.Window): void {
     window.get_maximized
-        ? window.maximize(Meta.MaximizeFlags.BOTH)
+        ? window.maximize(MAXIMIZE_FLAGS.BOTH)
         : window.maximize();
 }
 
 export function unmaximizeWindow(window: Meta.Window): void {
     window.get_maximized
-        ? window.unmaximize(Meta.MaximizeFlags.BOTH)
+        ? window.unmaximize(MAXIMIZE_FLAGS.BOTH)
         : window.unmaximize();
 }

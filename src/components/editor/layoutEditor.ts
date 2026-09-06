@@ -14,20 +14,24 @@ import Layout from '../layout/Layout';
 import TileUtils from '../layout/TileUtils';
 import Slider from './slider';
 import EditableTilePreview from './editableTilePreview';
+import SignalHandling from '../../utils/signalHandling';
 import Tile from '../layout/Tile';
 import HoverLine from './hoverLine';
 import { Monitor } from 'resource:///org/gnome/shell/ui/layout.js';
 import { getEventCoords } from '../../utils/gnomesupport';
 
 export default class LayoutEditor extends St.Widget {
-    static { registerGObjectClass(this) }
-    
+    static {
+        registerGObjectClass(this);
+    }
+
     private _layout: Layout;
     private _containerRect: Mtk.Rectangle;
     private _innerGaps: Clutter.Margin;
     private _outerGaps: Clutter.Margin;
     private _hoverWidget: HoverLine;
     private _sliders: Slider[];
+    private _signals: SignalHandling;
 
     private _minimizedWindows: Meta.Window[];
 
@@ -39,7 +43,7 @@ export default class LayoutEditor extends St.Widget {
             'visible',
             this,
             'visible',
-            GObject.BindingFlags.DEFAULT,
+            GObject.BindingFlags.DEFAULT
         );
 
         if (enableScaling) {
@@ -48,7 +52,7 @@ export default class LayoutEditor extends St.Widget {
         }
 
         const workArea = Main.layoutManager.getWorkAreaForMonitor(
-            monitor.index,
+            monitor.index
         );
         this.set_position(workArea.x, workArea.y);
         this.set_size(workArea.width, workArea.height);
@@ -63,13 +67,14 @@ export default class LayoutEditor extends St.Widget {
         });
 
         this._minimizedWindows = getWindowsOfMonitor(monitor).filter(
-            (win) => !win.is_hidden(),
+            win => !win.is_hidden()
         );
         this._minimizedWindows.forEach(
-            (win) => win.can_minimize() && win.minimize(),
+            win => win.can_minimize() && win.minimize()
         );
 
         this._hoverWidget = new HoverLine(this);
+        this._signals = new SignalHandling();
 
         this._layout = layout;
         this._drawEditor();
@@ -98,10 +103,10 @@ export default class LayoutEditor extends St.Widget {
         const groups = new Map<number, EditableTilePreview[]>();
 
         // render layout's tile and group tiles
-        this._layout.tiles.forEach((tile) => {
+        this._layout.tiles.forEach(tile => {
             const rect = TileUtils.apply_props(tile, this._containerRect);
             const prev = this._buildEditableTile(tile, rect);
-            tile.groups.forEach((id) => {
+            tile.groups.forEach(id => {
                 if (!groups.has(id)) groups.set(id, []);
                 groups.get(id)?.push(prev);
             });
@@ -111,7 +116,7 @@ export default class LayoutEditor extends St.Widget {
         groups.forEach((tiles, groupdId) => {
             // sweep-line algorithm to check if it is a horizontal group
             let lines = tiles
-                .flatMap((t) => [
+                .flatMap(t => [
                     {
                         c: Math.round(t.tile.x * 1000) / 1000,
                         end: false,
@@ -140,7 +145,7 @@ export default class LayoutEditor extends St.Widget {
             if (coord === -1) {
                 // sweep-line algorithm to check if it is a vertical group
                 lines = tiles
-                    .flatMap((t) => [
+                    .flatMap(t => [
                         {
                             c: Math.round(t.tile.y * 1000) / 1000,
                             end: false,
@@ -155,7 +160,7 @@ export default class LayoutEditor extends St.Widget {
                         },
                     ])
                     .sort((a, b) =>
-                        a.c - b.c !== 0 ? a.c - b.c : a.end ? -1 : 1,
+                        a.c - b.c !== 0 ? a.c - b.c : a.end ? -1 : 1
                     );
                 count = 0;
                 for (const line of lines) {
@@ -168,19 +173,19 @@ export default class LayoutEditor extends St.Widget {
             }
             const slider = this._buildSlider(horizontal, coord, groupdId);
             this._sliders.push(slider);
-            tiles.forEach((editable) => slider.addTile(editable));
+            tiles.forEach(editable => slider.addTile(editable));
         });
     }
 
     private _buildEditableTile(
         tile: Tile,
-        rect: Mtk.Rectangle,
+        rect: Mtk.Rectangle
     ): EditableTilePreview {
         const gaps = buildTileGaps(
             rect,
             this._innerGaps,
             this._outerGaps,
-            this._containerRect,
+            this._containerRect
         ).gaps;
         const editableTile = new EditableTilePreview({
             parent: this,
@@ -190,27 +195,35 @@ export default class LayoutEditor extends St.Widget {
             gaps,
         });
         editableTile.open();
-        editableTile.connect('clicked', (_, clicked_button: number) => {
-            // St.ButtonMask.ONE is left click. 3 is right click (but for some reason St.ButtonMask.THREE is equal to 4, so we cannot use it)
-            if (clicked_button === St.ButtonMask.ONE)
-                this.splitTile(editableTile);
-            else if (clicked_button === 3) this.deleteTile(editableTile);
-        });
-        editableTile.connect('motion-event', (_, event: Clutter.Event) => {
-            const [stageX, stageY] = getEventCoords(event);
-            this._hoverWidget.handleMouseMove(
-                editableTile,
-                stageX - this.x,
-                stageY - this.y,
-            );
-            return Clutter.EVENT_PROPAGATE;
-        });
-        editableTile.connect('notify::hover', () => {
+        this._signals.connect(
+            editableTile,
+            'clicked',
+            (_, clicked_button: number) => {
+                // St.ButtonMask.ONE is left click. 3 is right click (but for some reason St.ButtonMask.THREE is equal to 4, so we cannot use it)
+                if (clicked_button === St.ButtonMask.ONE)
+                    this.splitTile(editableTile);
+                else if (clicked_button === 3) this.deleteTile(editableTile);
+            }
+        );
+        this._signals.connect(
+            editableTile,
+            'motion-event',
+            (_, event: Clutter.Event) => {
+                const [stageX, stageY] = getEventCoords(event);
+                this._hoverWidget.handleMouseMove(
+                    editableTile,
+                    stageX - this.x,
+                    stageY - this.y
+                );
+                return Clutter.EVENT_PROPAGATE;
+            }
+        );
+        this._signals.connect(editableTile, 'notify::hover', () => {
             const [stageX, stageY] = Shell.Global.get().get_pointer();
             this._hoverWidget.handleMouseMove(
                 editableTile,
                 stageX - this.x,
-                stageY - this.y,
+                stageY - this.y
             );
         });
         if (this._sliders.length > 0)
@@ -270,7 +283,7 @@ export default class LayoutEditor extends St.Widget {
             splitHorizontally,
             splitHorizontally
                 ? nextEditableTile.rect.x
-                : nextEditableTile.rect.y,
+                : nextEditableTile.rect.y
         );
         this._sliders.push(slider);
         slider.addTile(prevEditableTile);
@@ -328,13 +341,13 @@ export default class LayoutEditor extends St.Widget {
             const success = slider.deleteSlider(
                 editableTile,
                 this._innerGaps,
-                this._outerGaps,
+                this._outerGaps
             );
             if (success) {
                 this._layout.tiles = this._layout.tiles.filter(
-                    (tile) => tile !== editableTile.tile,
+                    tile => tile !== editableTile.tile
                 );
-                this._sliders = this._sliders.filter((sl) => sl !== slider);
+                this._sliders = this._sliders.filter(sl => sl !== slider);
                 this._hoverWidget.handleTileDestroy(editableTile);
                 editableTile.destroy();
                 slider.destroy();
@@ -346,10 +359,10 @@ export default class LayoutEditor extends St.Widget {
     private _buildSlider(
         isHorizontal: boolean,
         coord: number,
-        groupId?: number,
+        groupId?: number
     ): Slider {
         if (!groupId) {
-            const groups = this._sliders.map((slider) => slider.groupId).sort();
+            const groups = this._sliders.map(slider => slider.groupId).sort();
             groupId = groups.length === 0 ? 1 : groups[groups.length - 1] + 1;
             for (let i = 1; i < groups.length; i++) {
                 if (groups[i - 1] + 1 < groups[i]) {
@@ -362,7 +375,8 @@ export default class LayoutEditor extends St.Widget {
     }
 
     private _onDestroy() {
-        this._minimizedWindows.forEach((win) => win.unminimize());
+        this._signals.disconnect();
+        this._minimizedWindows.forEach(win => win.unminimize());
 
         this.destroy_all_children();
         this._sliders = [];

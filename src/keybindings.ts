@@ -22,42 +22,44 @@ export enum FocusSwitchDirection {
 }
 
 export default class KeyBindings extends GObject.Object {
-    static { registerGObjectClass(this, {
-        GTypeName: 'KeyBindings',
-        Signals: {
-            'move-window': {
-                param_types: [Meta.Display.$gtype, GObject.TYPE_INT], // Meta.Display, KeyBindingsDirection
+    static {
+        registerGObjectClass(this, {
+            GTypeName: 'KeyBindings',
+            Signals: {
+                'move-window': {
+                    param_types: [Meta.Display.$gtype, GObject.TYPE_INT], // Meta.Display, KeyBindingsDirection
+                },
+                'span-window': {
+                    param_types: [Meta.Display.$gtype, GObject.TYPE_INT], // Meta.Display, KeyBindingsDirection
+                },
+                'span-window-all-tiles': {
+                    param_types: [Meta.Display.$gtype], // Meta.Display
+                },
+                'untile-window': {
+                    param_types: [Meta.Display.$gtype], // Meta.Display
+                },
+                'move-window-center': {
+                    param_types: [Meta.Display.$gtype], // Meta.Display
+                },
+                'focus-window-direction': {
+                    param_types: [Meta.Display.$gtype, GObject.TYPE_INT], // Meta.Display, KeyBindingsDirection
+                },
+                'focus-window': {
+                    param_types: [Meta.Display.$gtype, GObject.TYPE_INT], // Meta.Display, FocusSwitchDirection
+                },
+                'highlight-current-window': {
+                    param_types: [Meta.Display.$gtype], // Meta.Display
+                },
+                'cycle-layouts': {
+                    param_types: [
+                        Meta.Display.$gtype,
+                        GObject.TYPE_INT,
+                        GObject.TYPE_INT,
+                    ], // Meta.Display, action number, mask number
+                },
             },
-            'span-window': {
-                param_types: [Meta.Display.$gtype, GObject.TYPE_INT], // Meta.Display, KeyBindingsDirection
-            },
-            'span-window-all-tiles': {
-                param_types: [Meta.Display.$gtype], // Meta.Display
-            },
-            'untile-window': {
-                param_types: [Meta.Display.$gtype], // Meta.Display
-            },
-            'move-window-center': {
-                param_types: [Meta.Display.$gtype], // Meta.Display
-            },
-            'focus-window-direction': {
-                param_types: [Meta.Display.$gtype, GObject.TYPE_INT], // Meta.Display, KeyBindingsDirection
-            },
-            'focus-window': {
-                param_types: [Meta.Display.$gtype, GObject.TYPE_INT], // Meta.Display, FocusSwitchDirection
-            },
-            'highlight-current-window': {
-                param_types: [Meta.Display.$gtype], // Meta.Display
-            },
-            'cycle-layouts': {
-                param_types: [
-                    Meta.Display.$gtype,
-                    GObject.TYPE_INT,
-                    GObject.TYPE_INT
-                ], // Meta.Display, action number, mask number
-            },
-        },
-    })};
+        });
+    }
 
     private _signals: SignalHandling;
     private _cycleLayoutsAction?: number;
@@ -73,17 +75,17 @@ export default class KeyBindings extends GObject.Object {
             Settings.KEY_ENABLE_MOVE_KEYBINDINGS,
             () => {
                 this._setupKeyBindings(extensionSettings);
-            },
+            }
         );
         if (Settings.ENABLE_MOVE_KEYBINDINGS)
             this._setupKeyBindings(extensionSettings);
     }
 
-    public get cycleLayoutsAction(){
+    public get cycleLayoutsAction() {
         return this._cycleLayoutsAction;
     }
 
-    public get cycleLayoutsBackwardAction(){
+    public get cycleLayoutsBackwardAction() {
         return this._cycleLayoutsBackwardAction;
     }
 
@@ -104,7 +106,7 @@ export default class KeyBindings extends GObject.Object {
             Shell.ActionMode.NORMAL,
             (display: Meta.Display) => {
                 this.emit('span-window', display, KeyBindingsDirection.RIGHT);
-            },
+            }
         );
 
         Main.wm.addKeybinding(
@@ -114,7 +116,7 @@ export default class KeyBindings extends GObject.Object {
             Shell.ActionMode.NORMAL,
             (display: Meta.Display) => {
                 this.emit('span-window', display, KeyBindingsDirection.LEFT);
-            },
+            }
         );
 
         Main.wm.addKeybinding(
@@ -124,7 +126,7 @@ export default class KeyBindings extends GObject.Object {
             Shell.ActionMode.NORMAL,
             (display: Meta.Display) => {
                 this.emit('span-window', display, KeyBindingsDirection.UP);
-            },
+            }
         );
 
         Main.wm.addKeybinding(
@@ -134,7 +136,7 @@ export default class KeyBindings extends GObject.Object {
             Shell.ActionMode.NORMAL,
             (display: Meta.Display) => {
                 this.emit('span-window', display, KeyBindingsDirection.DOWN);
-            },
+            }
         );
 
         Main.wm.addKeybinding(
@@ -144,7 +146,7 @@ export default class KeyBindings extends GObject.Object {
             Shell.ActionMode.NORMAL,
             (display: Meta.Display) => {
                 this.emit('span-window-all-tiles', display);
-            },
+            }
         );
 
         // untile window with keybinding
@@ -153,7 +155,7 @@ export default class KeyBindings extends GObject.Object {
             extensionSettings,
             Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL,
-            (dp: Meta.Display) => this.emit('untile-window', dp),
+            (dp: Meta.Display) => this.emit('untile-window', dp)
         );
 
         // center the window with keybinding
@@ -162,7 +164,7 @@ export default class KeyBindings extends GObject.Object {
             extensionSettings,
             Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL,
-            (dp: Meta.Display) => this.emit('move-window-center', dp),
+            (dp: Meta.Display) => this.emit('move-window-center', dp)
         );
 
         Main.wm.addKeybinding(
@@ -174,9 +176,9 @@ export default class KeyBindings extends GObject.Object {
                 this.emit(
                     'focus-window-direction',
                     display,
-                    KeyBindingsDirection.RIGHT,
+                    KeyBindingsDirection.RIGHT
                 );
-            },
+            }
         );
 
         Main.wm.addKeybinding(
@@ -188,9 +190,9 @@ export default class KeyBindings extends GObject.Object {
                 this.emit(
                     'focus-window-direction',
                     display,
-                    KeyBindingsDirection.LEFT,
+                    KeyBindingsDirection.LEFT
                 );
-            },
+            }
         );
 
         Main.wm.addKeybinding(
@@ -202,9 +204,9 @@ export default class KeyBindings extends GObject.Object {
                 this.emit(
                     'focus-window-direction',
                     display,
-                    KeyBindingsDirection.UP,
+                    KeyBindingsDirection.UP
                 );
-            },
+            }
         );
 
         Main.wm.addKeybinding(
@@ -216,9 +218,9 @@ export default class KeyBindings extends GObject.Object {
                 this.emit(
                     'focus-window-direction',
                     display,
-                    KeyBindingsDirection.DOWN,
+                    KeyBindingsDirection.DOWN
                 );
-            },
+            }
         );
 
         Main.wm.addKeybinding(
@@ -228,7 +230,7 @@ export default class KeyBindings extends GObject.Object {
             Shell.ActionMode.NORMAL,
             (display: Meta.Display) => {
                 this.emit('focus-window', display, FocusSwitchDirection.NEXT);
-            },
+            }
         );
 
         Main.wm.addKeybinding(
@@ -238,7 +240,7 @@ export default class KeyBindings extends GObject.Object {
             Shell.ActionMode.NORMAL,
             (display: Meta.Display) => {
                 this.emit('focus-window', display, FocusSwitchDirection.PREV);
-            },
+            }
         );
 
         Main.wm.addKeybinding(
@@ -248,7 +250,7 @@ export default class KeyBindings extends GObject.Object {
             Shell.ActionMode.NORMAL,
             (display: Meta.Display) => {
                 this.emit('highlight-current-window', display);
-            },
+            }
         );
 
         this._cycleLayoutsAction = Main.wm.addKeybinding(
@@ -260,10 +262,15 @@ export default class KeyBindings extends GObject.Object {
                 display: Meta.Display,
                 _unused,
                 event: Clutter.Event,
-                binding: Meta.KeyBinding,
+                binding: Meta.KeyBinding
             ) => {
-                this._onCycleLayouts(display, event, binding, this._cycleLayoutsAction!);
-            },
+                this._onCycleLayouts(
+                    display,
+                    event,
+                    binding,
+                    this._cycleLayoutsAction!
+                );
+            }
         );
 
         this._cycleLayoutsBackwardAction = Main.wm.addKeybinding(
@@ -275,14 +282,24 @@ export default class KeyBindings extends GObject.Object {
                 display: Meta.Display,
                 _unused,
                 event: Clutter.Event,
-                binding: Meta.KeyBinding,
+                binding: Meta.KeyBinding
             ) => {
-                this._onCycleLayouts(display, event, binding, this._cycleLayoutsBackwardAction!);
-            },
+                this._onCycleLayouts(
+                    display,
+                    event,
+                    binding,
+                    this._cycleLayoutsBackwardAction!
+                );
+            }
         );
     }
 
-    private _onCycleLayouts(display: Meta.Display, event: Clutter.Event, binding: Meta.KeyBinding, action: number) {
+    private _onCycleLayouts(
+        display: Meta.Display,
+        event: Clutter.Event,
+        binding: Meta.KeyBinding,
+        action: number
+    ) {
         const mask = event.get_mask ? event.get_mask() : binding.get_mask();
         this.emit('cycle-layouts', display, action, mask);
     }
@@ -299,7 +316,7 @@ export default class KeyBindings extends GObject.Object {
             },
             extensionSettings,
             mutterKeybindings,
-            'toggle-tiled-right',
+            'toggle-tiled-right'
         );
         this._overrideKeyBinding(
             Settings.SETTING_MOVE_WINDOW_LEFT,
@@ -308,7 +325,7 @@ export default class KeyBindings extends GObject.Object {
             },
             extensionSettings,
             mutterKeybindings,
-            'toggle-tiled-left',
+            'toggle-tiled-left'
         );
 
         // Disable native keybindings for Super + Up/Down
@@ -322,7 +339,7 @@ export default class KeyBindings extends GObject.Object {
             },
             extensionSettings,
             desktopWm,
-            'maximize',
+            'maximize'
         );
         this._overrideKeyBinding(
             Settings.SETTING_MOVE_WINDOW_DOWN,
@@ -331,7 +348,7 @@ export default class KeyBindings extends GObject.Object {
             },
             extensionSettings,
             desktopWm,
-            'unmaximize',
+            'unmaximize'
         );
     }
 
@@ -340,12 +357,12 @@ export default class KeyBindings extends GObject.Object {
         handler: Meta.KeyHandlerFunc,
         extensionSettings: Gio.Settings,
         nativeSettings: Gio.Settings,
-        nativeKeyName: string,
+        nativeKeyName: string
     ) {
         const done = SettingsOverride.get().override(
             nativeSettings,
             nativeKeyName,
-            new GLib.Variant('as', []),
+            new GLib.Variant('as', [])
         );
         if (!done) {
             debug(`failed to override ${nativeKeyName}`);
@@ -357,7 +374,7 @@ export default class KeyBindings extends GObject.Object {
             extensionSettings,
             Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL,
-            handler,
+            handler
         );
     }
 
@@ -392,11 +409,11 @@ export default class KeyBindings extends GObject.Object {
         });
         SettingsOverride.get().restoreKey(
             mutterKeybindings,
-            'toggle-tiled-right',
+            'toggle-tiled-right'
         );
         SettingsOverride.get().restoreKey(
             mutterKeybindings,
-            'toggle-tiled-left',
+            'toggle-tiled-left'
         );
 
         // Disable native keybindings for Super + Up/Down
@@ -408,6 +425,7 @@ export default class KeyBindings extends GObject.Object {
     }
 
     public destroy() {
+        this._signals.disconnect();
         this._removeKeybindings();
     }
 }

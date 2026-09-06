@@ -151,6 +151,9 @@ export class TilingManager {
     private _getTilingManager?: (index: number) => TilingManager | undefined;
 
     private _movingWindowTimerId: number | null = null;
+    // one-shot idle/timeout sources still pending: cancelled on destroy so no
+    // callback touches a destroyed manager after the extension is disabled
+    private readonly _pendingMainloopSources = new Set<number>();
 
     private _freeTileFiller?: FreeTileFiller;
     private _grabOrigin: GrabOrigin | null = null;
@@ -166,7 +169,7 @@ export class TilingManager {
     constructor(
         monitor: Monitor,
         enableScaling: boolean,
-        getTilingManager?: (index: number) => TilingManager | undefined,
+        getTilingManager?: (index: number) => TilingManager | undefined
     ) {
         this._isGrabbingWindow = false;
         this._wasSpanMultipleTilesActivated = false;
@@ -182,10 +185,10 @@ export class TilingManager {
 
         // get the monitor's workarea
         this._workArea = Main.layoutManager.getWorkAreaForMonitor(
-            this._monitor.index,
+            this._monitor.index
         );
         this._debug(
-            `Work area for monitor ${this._monitor.index}: ${this._workArea.x} ${this._workArea.y} ${this._workArea.width}x${this._workArea.height}`,
+            `Work area for monitor ${this._monitor.index}: ${this._workArea.x} ${this._workArea.y} ${this._workArea.width}x${this._workArea.height}`
         );
         this._edgeTilingManager = new EdgeTilingManager(this._workArea);
         this._edgeTilingManager.monitorIndex = this._monitor.index;
@@ -205,7 +208,7 @@ export class TilingManager {
             const outerGaps = buildMargin(Settings.get_outer_gaps());
             const layout = GlobalState.get().getSelectedLayoutOfMonitor(
                 monitor.index,
-                ws.index(),
+                ws.index()
             );
             this._workspaceTilingLayout.set(
                 ws,
@@ -214,8 +217,8 @@ export class TilingManager {
                     innerGaps,
                     outerGaps,
                     this._workArea,
-                    monitorScalingFactor,
-                ),
+                    monitorScalingFactor
+                )
             );
         }
 
@@ -223,7 +226,7 @@ export class TilingManager {
             buildMargin(Settings.get_inner_gaps()),
             buildMargin(Settings.get_outer_gaps()),
             this._workArea,
-            monitorScalingFactor,
+            monitorScalingFactor
         );
 
         // build the selection tile
@@ -236,7 +239,7 @@ export class TilingManager {
             Main.uiGroup,
             this._workArea,
             this._monitor.index,
-            monitorScalingFactor,
+            monitorScalingFactor
         );
     }
 
@@ -256,10 +259,10 @@ export class TilingManager {
 
                 const layout = GlobalState.get().getSelectedLayoutOfMonitor(
                     this._monitor.index,
-                    ws.index(),
+                    ws.index()
                 );
                 this._workspaceTilingLayout.get(ws)?.relayout({ layout });
-            },
+            }
         );
         this._signals.connect(
             GlobalState.get(),
@@ -270,22 +273,22 @@ export class TilingManager {
 
                 const layout = GlobalState.get().getSelectedLayoutOfMonitor(
                     this._monitor.index,
-                    ws.index(),
+                    ws.index()
                 );
                 this._workspaceTilingLayout.get(ws)?.relayout({ layout });
-            },
+            }
         );
 
         this._signals.connect(Settings, Settings.KEY_INNER_GAPS, () => {
             const innerGaps = buildMargin(Settings.get_inner_gaps());
-            this._workspaceTilingLayout.forEach((tilingLayout) =>
-                tilingLayout.relayout({ innerGaps }),
+            this._workspaceTilingLayout.forEach(tilingLayout =>
+                tilingLayout.relayout({ innerGaps })
             );
         });
         this._signals.connect(Settings, Settings.KEY_OUTER_GAPS, () => {
             const outerGaps = buildMargin(Settings.get_outer_gaps());
-            this._workspaceTilingLayout.forEach((tilingLayout) =>
-                tilingLayout.relayout({ outerGaps }),
+            this._workspaceTilingLayout.forEach(tilingLayout =>
+                tilingLayout.relayout({ outerGaps })
             );
         });
 
@@ -295,13 +298,13 @@ export class TilingManager {
             (
                 _display: Meta.Display,
                 window: Meta.Window,
-                grabOp: Meta.GrabOp,
+                grabOp: Meta.GrabOp
             ) => {
                 const moving = (grabOp & ~1024) === 1;
                 if (!moving) return;
 
                 this._onWindowGrabBegin(window, grabOp);
-            },
+            }
         );
 
         this._signals.connect(
@@ -314,13 +317,13 @@ export class TilingManager {
                 // placed AFTER _onWindowGrabEnd returns so it also runs on
                 // each of its early returns (drag-away included)
                 this._onGrabEndFollowUp(window);
-            },
+            }
         );
 
         this._signals.connect(
             this._snapAssist,
             'snap-assist',
-            this._onSnapAssist.bind(this),
+            this._onSnapAssist.bind(this)
         );
 
         this._signals.connect(
@@ -329,13 +332,13 @@ export class TilingManager {
             () => {
                 const ws = global.workspaceManager.get_active_workspace();
                 this._ensureTilingLayout(ws);
-            },
+            }
         );
 
         this._signals.connect(
             global.workspaceManager,
             'workspace-removed',
-            (_) => {
+            _ => {
                 const newMap: Map<Meta.Workspace, TilingLayout> = new Map();
                 const n_workspaces = global.workspaceManager.get_n_workspaces();
                 for (let i = 0; i < n_workspaces; i++) {
@@ -349,13 +352,13 @@ export class TilingManager {
                     newMap.set(ws, tl);
                 }
 
-                [...this._workspaceTilingLayout.values()].forEach((tl) =>
-                    tl.destroy(),
+                [...this._workspaceTilingLayout.values()].forEach(tl =>
+                    tl.destroy()
                 );
                 this._workspaceTilingLayout.clear();
                 this._workspaceTilingLayout = newMap;
                 this._debug('deleted workspace');
-            },
+            }
         );
 
         this._signals.connect(
@@ -363,14 +366,14 @@ export class TilingManager {
             'window-created',
             (_display: Meta.Display, window: Meta.Window) => {
                 if (Settings.ENABLE_AUTO_TILING) this._autoTile(window, true);
-            },
+            }
         );
         this._signals.connect(
             AutoTileWindowManager.get(),
             'unmaximized',
             (_, window: Meta.Window) => {
                 if (Settings.ENABLE_AUTO_TILING) this._autoTile(window, false);
-            },
+            }
         );
 
         // forget assigned tile when window is maximized
@@ -379,7 +382,7 @@ export class TilingManager {
             'maximized',
             (_, window: Meta.Window) => {
                 delete (window as ExtendedWindow).assignedTile;
-            },
+            }
         );
 
         // auto-fill of freed tiles: one executor per monitor, each
@@ -412,7 +415,7 @@ export class TilingManager {
                     ?.workspace;
                 if (!trackedWs) {
                     console.warn(
-                        'AutoTile: unmanaged window has no tracked workspace, skipping auto-fill trigger',
+                        'AutoTile: unmanaged window has no tracked workspace, skipping auto-fill trigger'
                     );
                     return;
                 }
@@ -420,15 +423,15 @@ export class TilingManager {
                     const oldWsIndex = trackedWs.index();
                     this._getTilingManager?.(monitorIndex)?.scheduleAutoFill(
                         oldWsIndex,
-                        window,
+                        window
                     );
                 } catch (e) {
                     console.warn(
                         'AutoTile: tracked workspace of unmanaged window was disposed, skipping auto-fill trigger',
-                        e,
+                        e
                     );
                 }
-            },
+            }
         );
 
         this._signals.connect(
@@ -459,7 +462,8 @@ export class TilingManager {
                     !window.is_on_all_workspaces() &&
                     window.get_workspace() !== null
                 ) {
-                    const assignedTile = (window as ExtendedWindow).assignedTile;
+                    const assignedTile = (window as ExtendedWindow)
+                        .assignedTile;
                     // the tracked workspace OBJECT read at signal time is
                     // still the OLD workspace (the tracker is refreshed
                     // only after this signal is emitted)
@@ -482,13 +486,13 @@ export class TilingManager {
                                 wsIndex: oldIdx,
                                 tile: new Tile({ ...assignedTile }),
                             },
-                            { ignoreGeometry: true },
+                            { ignoreGeometry: true }
                         );
                     }
                 }
 
                 this.scheduleAutoFill(oldIdx);
-            },
+            }
         );
     }
 
@@ -501,7 +505,7 @@ export class TilingManager {
             : undefined;
         const layout: Layout = GlobalState.get().getSelectedLayoutOfMonitor(
             this._monitor.index,
-            ws.index(),
+            ws.index()
         );
         const innerGaps = buildMargin(Settings.get_inner_gaps());
         const outerGaps = buildMargin(Settings.get_outer_gaps());
@@ -512,7 +516,7 @@ export class TilingManager {
             innerGaps,
             outerGaps,
             this._workArea,
-            monitorScalingFactor,
+            monitorScalingFactor
         );
         this._workspaceTilingLayout.set(ws, tilingLayout);
         return tilingLayout;
@@ -533,7 +537,7 @@ export class TilingManager {
             tilingLayout.innerGaps.right,
             tilingLayout.innerGaps.left,
             tilingLayout.innerGaps.right,
-            tilingLayout.innerGaps.bottom,
+            tilingLayout.innerGaps.bottom
         );
     }
 
@@ -546,7 +550,7 @@ export class TilingManager {
         // freeTileOnly is superseded by uniform swap semantics (Q2 user decision)
         // and kept only so src/extension.ts' call signature stays untouched; it
         // has no effect for directional moves now.
-        opts: { deferEdgeToNeighbor?: boolean; freeTileOnly?: boolean } = {},
+        opts: { deferEdgeToNeighbor?: boolean; freeTileOnly?: boolean } = {}
     ): boolean {
         let destination: { rect: Mtk.Rectangle; tile: Tile } | undefined;
         const isMaximized =
@@ -613,7 +617,7 @@ export class TilingManager {
                 windowRectCopy,
                 direction,
                 clamp,
-                enlargeFactor,
+                enlargeFactor
             );
         } else {
             // the window comes from another monitor: the direction-adjacent tile
@@ -628,7 +632,7 @@ export class TilingManager {
                 // code alive for future direct callers of this public method.
                 destination = tilingLayout.findNearestFreeTile(
                     windowRectCopy,
-                    this._getTiledWindowRects(currentWs),
+                    this._getTiledWindowRects(currentWs)
                 );
                 if (!destination && !opts.freeTileOnly)
                     destination = tilingLayout.findNearestTile(windowRectCopy);
@@ -637,7 +641,7 @@ export class TilingManager {
                     windowRectCopy,
                     direction,
                     true, // clamp: the offset point must land inside this monitor
-                    this._directionEnlargeFactor(tilingLayout),
+                    this._directionEnlargeFactor(tilingLayout)
                 );
                 if (!destination) return false; // defensive: no tile resolvable
             }
@@ -682,7 +686,7 @@ export class TilingManager {
             destination.rect = destination.rect.union(windowRectCopy);
             destination.tile = TileUtils.build_tile(
                 destination.rect,
-                this._workArea,
+                this._workArea
             );
         }
 
@@ -702,7 +706,7 @@ export class TilingManager {
             const swapTarget = this._findSwapTargetOnTile(
                 destination.tile,
                 currentWs,
-                window,
+                window
             );
             if (swapTarget) this._performKeyboardSwap(window, swapTarget);
         }
@@ -728,6 +732,10 @@ export class TilingManager {
             GLib.Source.remove(this._movingWindowTimerId);
             this._movingWindowTimerId = null;
         }
+        this._pendingMainloopSources.forEach(id => GLib.Source.remove(id));
+        this._pendingMainloopSources.clear();
+        // a cancelled FORM TWO idle would otherwise leave the flag latched
+        _insertionShiftInProgress = false;
         this._signals.disconnect();
         this._grabSignals.disconnect();
         this._grabOrigin = null;
@@ -736,7 +744,7 @@ export class TilingManager {
         this._isGrabbingWindow = false;
         this._snapAssistingInfo.update(undefined);
         this._edgeTilingManager.abortEdgeTiling();
-        this._workspaceTilingLayout.forEach((tl) => tl.destroy());
+        this._workspaceTilingLayout.forEach(tl => tl.destroy());
         this._workspaceTilingLayout.clear();
         this._snapAssist.destroy();
         this._selectedTilesPreview.destroy();
@@ -748,13 +756,13 @@ export class TilingManager {
 
         this._workArea = newWorkArea;
         this._debug(
-            `new work area for monitor ${this._monitor.index}: ${newWorkArea.x} ${newWorkArea.y} ${newWorkArea.width}x${newWorkArea.height}`,
+            `new work area for monitor ${this._monitor.index}: ${newWorkArea.x} ${newWorkArea.y} ${newWorkArea.width}x${newWorkArea.height}`
         );
 
         // notify the tiling layout that the workarea changed and trigger a new relayout
         // so we will have the layout already computed to be shown quickly when needed
-        this._workspaceTilingLayout.forEach((tl) =>
-            tl.relayout({ containerRect: this._workArea }),
+        this._workspaceTilingLayout.forEach(tl =>
+            tl.relayout({ containerRect: this._workArea })
         );
         this._snapAssist.workArea = this._workArea;
         this._edgeTilingManager.workarea = this._workArea;
@@ -789,7 +797,7 @@ export class TilingManager {
             (_source, event: Clutter.Event) => {
                 const [x, y] = event.get_coords();
                 TouchPointer.get().onTouchEvent(x, y);
-            },
+            }
         );
         // Add Wacom tablet support, listen to tablet events
         this._grabSignals.connect(
@@ -802,20 +810,22 @@ export class TilingManager {
                 const deviceType = device.get_device_type();
 
                 // Check for tablet device types
-                if (deviceType === Clutter.InputDeviceType.TABLET_DEVICE ||
-                    deviceType === Clutter.InputDeviceType.PEN_DEVICE) {
-
+                if (
+                    deviceType === Clutter.InputDeviceType.TABLET_DEVICE ||
+                    deviceType === Clutter.InputDeviceType.PEN_DEVICE
+                ) {
                     const eventType = event.type();
                     // Capture motion events from tablet
                     if (eventType === Clutter.EventType.MOTION) {
                         const [x, y] = event.get_coords();
                         TouchPointer.get().onTouchEvent(x, y);
                         // Move the actual mouse cursor to match tablet position
-                        const seat = Clutter.get_default_backend().get_default_seat();
+                        const seat =
+                            Clutter.get_default_backend().get_default_seat();
                         seat.warp_pointer(x, y);
                     }
                 }
-            },
+            }
         );
 
         // workaround for gnome-shell bug https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/2857
@@ -842,7 +852,7 @@ export class TilingManager {
         this._movingWindowTimerId = GLib.timeout_add(
             GLib.PRIORITY_DEFAULT_IDLE,
             this._movingWindowTimerDuration,
-            this._onMovingWindow.bind(this, window, grabOp),
+            this._onMovingWindow.bind(this, window, grabOp)
         );
 
         this._onMovingWindow(window, grabOp);
@@ -850,7 +860,7 @@ export class TilingManager {
 
     private _activationKeyStatus(
         modifier: number,
-        key: ActivationKey,
+        key: ActivationKey
     ): boolean {
         if (key === ActivationKey.NONE) return true;
 
@@ -953,7 +963,7 @@ export class TilingManager {
                         modifier,
                         global.get_current_time(),
                         x,
-                        y,
+                        y
                     );
                 }
             }
@@ -963,11 +973,11 @@ export class TilingManager {
 
         const isSpanMultiTilesActivated = this._activationKeyStatus(
             modifier,
-            Settings.SPAN_MULTIPLE_TILES_ACTIVATION_KEY,
+            Settings.SPAN_MULTIPLE_TILES_ACTIVATION_KEY
         );
         const isTilingSystemActivated = this._activationKeyStatus(
             modifier,
-            Settings.TILING_SYSTEM_ACTIVATION_KEY,
+            Settings.TILING_SYSTEM_ACTIVATION_KEY
         );
         const deactivationKey = Settings.TILING_SYSTEM_DEACTIVATION_KEY;
         const isTilingSystemDeactivated =
@@ -1029,7 +1039,7 @@ export class TilingManager {
                     this._snapAssist.onMovingWindow(
                         window,
                         currPointerPos,
-                        true,
+                        true
                     );
                 }
             }
@@ -1063,14 +1073,14 @@ export class TilingManager {
 
         let selectionRect = tilingLayout.getTileBelow(
             currPointerPos,
-            changedSpanMultipleTiles && !allowSpanMultipleTiles,
+            changedSpanMultipleTiles && !allowSpanMultipleTiles
         );
         if (!selectionRect) return GLib.SOURCE_CONTINUE;
 
         selectionRect = selectionRect.copy();
         if (allowSpanMultipleTiles && this._selectedTilesPreview.showing) {
             selectionRect = selectionRect.union(
-                this._selectedTilesPreview.rect,
+                this._selectedTilesPreview.rect
             );
         }
         tilingLayout.hoverTilesInRect(selectionRect, !allowSpanMultipleTiles);
@@ -1103,7 +1113,7 @@ export class TilingManager {
 
         const isTilingSystemActivated = this._activationKeyStatus(
             global.get_pointer()[2],
-            Settings.TILING_SYSTEM_ACTIVATION_KEY,
+            Settings.TILING_SYSTEM_ACTIVATION_KEY
         );
         if (
             !isTilingSystemActivated &&
@@ -1114,7 +1124,7 @@ export class TilingManager {
 
         const wasSnapAssistingLayout = this._snapAssistingInfo.isSnapAssisting
             ? GlobalState.get().layouts.find(
-                  (lay) => lay.id === this._snapAssistingInfo.layoutId,
+                  lay => lay.id === this._snapAssistingInfo.layoutId
               )
             : undefined;
 
@@ -1162,7 +1172,7 @@ export class TilingManager {
         if (wasSnapAssistingLayout && Settings.SNAP_ASSIST_SYNC_LAYOUT) {
             GlobalState.get().setSelectedLayoutOfMonitor(
                 wasSnapAssistingLayout.id,
-                this._monitor.index,
+                this._monitor.index
             );
         }
 
@@ -1171,23 +1181,50 @@ export class TilingManager {
         // retrieve the current layout for the monitor and workspace
         // were the window was tiled
         const layout = wasEdgeTiling
-            ? (Settings.EDGE_TILING_MODE === EdgeTilingMode.DEFAULT
-                ? new Layout([
-                    new Tile({ x: 0, y: 0, height: 0.5, width: 0.5, groups: []}),
-                    new Tile({ x: 0.5, y: 0, height: 0.5, width: 0.5, groups: []}),
-                    new Tile({ x: 0, y: 0.5, height: 0.5, width: 0.5, groups: []}),
-                    new Tile({ x: 0.5, y: 0.5, height: 0.5, width: 0.5, groups: []})],
-                    "quarters"
-                )
+            ? Settings.EDGE_TILING_MODE === EdgeTilingMode.DEFAULT
+                ? new Layout(
+                      [
+                          new Tile({
+                              x: 0,
+                              y: 0,
+                              height: 0.5,
+                              width: 0.5,
+                              groups: [],
+                          }),
+                          new Tile({
+                              x: 0.5,
+                              y: 0,
+                              height: 0.5,
+                              width: 0.5,
+                              groups: [],
+                          }),
+                          new Tile({
+                              x: 0,
+                              y: 0.5,
+                              height: 0.5,
+                              width: 0.5,
+                              groups: [],
+                          }),
+                          new Tile({
+                              x: 0.5,
+                              y: 0.5,
+                              height: 0.5,
+                              width: 0.5,
+                              groups: [],
+                          }),
+                      ],
+                      'quarters'
+                  )
                 : GlobalState.get().getSelectedLayoutOfMonitor(
-                  this._monitor.index,
-                  window.get_workspace().index())
-            ): (wasSnapAssistingLayout
+                      this._monitor.index,
+                      window.get_workspace().index()
+                  )
+            : wasSnapAssistingLayout
               ? wasSnapAssistingLayout
               : GlobalState.get().getSelectedLayoutOfMonitor(
                     this._monitor.index,
-                    window.get_workspace().index(),
-                ));
+                    window.get_workspace().index()
+                );
         this._openWindowsSuggestions(
             window,
             desiredWindowRect,
@@ -1195,7 +1232,7 @@ export class TilingManager {
             layout,
             tilingLayout.innerGaps,
             tilingLayout.outerGaps,
-            tilingLayout.scalingFactor,
+            tilingLayout.scalingFactor
         );
     }
 
@@ -1252,11 +1289,11 @@ export class TilingManager {
         layout: Layout,
         innerGaps: Clutter.Margin,
         outerGaps: Clutter.Margin,
-        scalingFactor: number,
+        scalingFactor: number
     ): void {
         const tiledWindows: ExtendedWindow[] = [];
         const nontiledWindows: Meta.Window[] = [];
-        getWindows().forEach((extWin) => {
+        getWindows().forEach(extWin => {
             if (
                 extWin &&
                 !extWin.minimized &&
@@ -1273,7 +1310,7 @@ export class TilingManager {
             innerGaps,
             outerGaps,
             this._workArea,
-            scalingFactor,
+            scalingFactor
         );
         this._tilingSuggestionsLayout.relayout({ layout });
         /* this._tilingSuggestionsLayout.relayout({
@@ -1287,7 +1324,7 @@ export class TilingManager {
             nontiledWindows,
             window,
             windowDesiredRect,
-            monitorIndex,
+            monitorIndex
         );
     }
 
@@ -1295,7 +1332,7 @@ export class TilingManager {
         window: Meta.Window,
         destRect: Mtk.Rectangle,
         user_op: boolean = false,
-        force: boolean = false,
+        force: boolean = false
     ) {
         _windowsUnderPlacement.add(window);
         const windowActor = window.get_compositor_private() as Clutter.Actor;
@@ -1323,7 +1360,7 @@ export class TilingManager {
             global.windowManager,
             windowActor,
             beforeRect.copy(),
-            Meta.SizeChange.UNMAXIMIZE,
+            Meta.SizeChange.UNMAXIMIZE
         );
 
         // move and resize the window to the current selection
@@ -1334,7 +1371,7 @@ export class TilingManager {
             destRect.x,
             destRect.y,
             destRect.width,
-            destRect.height,
+            destRect.height
         );
         _windowsUnderPlacement.delete(window);
     }
@@ -1388,7 +1425,7 @@ export class TilingManager {
         position: Mtk.Rectangle,
         isAboveLayout: boolean,
         ease: boolean,
-        window?: Meta.Window,
+        window?: Meta.Window
     ) {
         const currentWs = global.workspaceManager.get_active_workspace();
         const tilingLayout = this._workspaceTilingLayout.get(currentWs);
@@ -1401,7 +1438,7 @@ export class TilingManager {
             this._workArea,
             this._enableScaling
                 ? getScalingFactorOf(tilingLayout)[1]
-                : undefined,
+                : undefined
         ).gaps;
         this._selectedTilesPreview
             .get_parent()
@@ -1413,7 +1450,7 @@ export class TilingManager {
                 gaps.top > 0,
                 gaps.right > 0,
                 gaps.bottom > 0,
-                gaps.left > 0,
+                gaps.left > 0
             );
         } else {
             const { isTop, isRight, isBottom, isLeft } =
@@ -1424,13 +1461,13 @@ export class TilingManager {
                         width: position.width - gaps.left - gaps.right,
                         height: position.height - gaps.top - gaps.bottom,
                     }),
-                    this._workArea,
+                    this._workArea
                 );
             this._selectedTilesPreview.updateBorderRadius(
                 !isTop,
                 !isRight,
                 !isBottom,
-                !isLeft,
+                !isLeft
             );
         }
         if (window)
@@ -1453,7 +1490,7 @@ export class TilingManager {
                 y,
                 width: 1,
                 height: 1,
-            }),
+            })
         );
         return this._monitor.index === pointerMonitorIndex;
     }
@@ -1463,7 +1500,7 @@ export class TilingManager {
         edgeTile: Mtk.Rectangle,
         pointerX: number,
         pointerY: number,
-        tilingLayout: TilingLayout,
+        tilingLayout: TilingLayout
     ) {
         this._selectedTilesPreview.gaps = buildTileGaps(
             edgeTile,
@@ -1472,7 +1509,7 @@ export class TilingManager {
             this._workArea,
             this._enableScaling
                 ? getScalingFactorOf(tilingLayout)[1]
-                : undefined,
+                : undefined
         ).gaps;
 
         if (!this._selectedTilesPreview.showing) {
@@ -1496,7 +1533,7 @@ export class TilingManager {
         tile: Tile,
         window: Meta.Window,
         skipAnimation: boolean = false,
-        targetMonitorIndex: number | undefined = undefined,
+        targetMonitorIndex: number | undefined = undefined
     ) {
         const currentWs = window.get_workspace();
         const tilingLayout = this._workspaceTilingLayout.get(currentWs);
@@ -1534,7 +1571,7 @@ export class TilingManager {
             this._workArea,
             this._enableScaling
                 ? getScalingFactorOf(tilingLayout)[1]
-                : undefined,
+                : undefined
         ).gaps;
 
         const destinationRect = buildRectangle({
@@ -1564,7 +1601,7 @@ export class TilingManager {
                 width: scaledRect.width,
                 height: scaledRect.height,
             }),
-            this._workArea,
+            this._workArea
         );
         if (skipAnimation) {
             _windowsUnderPlacement.add(window);
@@ -1580,7 +1617,7 @@ export class TilingManager {
                 destinationRect.x,
                 destinationRect.y,
                 destinationRect.width,
-                destinationRect.height,
+                destinationRect.height
             );
             _windowsUnderPlacement.delete(window);
         } else {
@@ -1615,7 +1652,7 @@ export class TilingManager {
             contexts.push({
                 monitorIndex: index,
                 getWorkArea: () => manager._workArea,
-                ensureTilingLayout: (ws) => manager._ensureTilingLayout(ws),
+                ensureTilingLayout: ws => manager._ensureTilingLayout(ws),
                 tileWindow: (tile, window) =>
                     manager.autoTileWindowToTile(tile, window),
                 isInteracting: () => manager._isGrabbingWindow,
@@ -1631,7 +1668,7 @@ export class TilingManager {
         // windows into seats that are about to be taken
         if (isInsertionShiftInProgress()) {
             this._debug(
-                'auto-fill deferred: insert-after-focused shift in flight',
+                'auto-fill deferred: insert-after-focused shift in flight'
             );
             return;
         }
@@ -1649,7 +1686,7 @@ export class TilingManager {
     public enforceTiledPlacement(
         window: Meta.Window,
         origin: GrabOrigin,
-        opts?: EnforceTiledPlacementOptions,
+        opts?: EnforceTiledPlacementOptions
     ): void {
         // dying-window guards, before everything else (even the suppression
         // check, so re-entrances on dying windows are cheaply dropped): an
@@ -1692,7 +1729,7 @@ export class TilingManager {
             const referenceTile = extWin.assignedTile ?? origin.tile;
             const normalizedFrameRect = TileUtils.build_tile(
                 window.get_frame_rect(),
-                Main.layoutManager.getWorkAreaForMonitor(monitorIdx),
+                Main.layoutManager.getWorkAreaForMonitor(monitorIdx)
             );
             if (rectMostlyInsideTile(normalizedFrameRect, referenceTile))
                 return;
@@ -1729,26 +1766,27 @@ export class TilingManager {
                 if (originWs !== undefined) {
                     ws =
                         global.workspaceManager.get_workspace_by_index(
-                            wsIndexOf(originWs),
+                            wsIndexOf(originWs)
                         ) === originWs
                             ? originWs
                             : null;
                 } else if (originWsIndex !== undefined) {
-                    ws = global.workspaceManager.get_workspace_by_index(
-                        originWsIndex,
-                    );
+                    ws =
+                        global.workspaceManager.get_workspace_by_index(
+                            originWsIndex
+                        );
                 }
 
                 if (!ws) {
                     // the origin workspace vanished (dynamic collapse):
                     // re-seat on the window's current workspace
                     console.warn(
-                        'AutoTile: origin workspace of enforced window vanished, re-seating on the current one',
+                        'AutoTile: origin workspace of enforced window vanished, re-seating on the current one'
                     );
                     const tile = this._findEmptyTile(
                         window,
                         originMonitorIndex,
-                        window.get_workspace().index(),
+                        window.get_workspace().index()
                     );
                     if (tile) {
                         const originalSize = extWin.originalSize;
@@ -1832,7 +1870,7 @@ export class TilingManager {
                 height: 1,
                 groups: [],
             }),
-            window,
+            window
         );
     }
 
@@ -1878,9 +1916,9 @@ export class TilingManager {
         } else {
             anchorSource = 'none';
             anchorCandidate = getWindows(window.get_workspace()).find(
-                (win) =>
+                win =>
                     win !== window &&
-                    this._isEligibleInsertionAnchor(win, window),
+                    this._isEligibleInsertionAnchor(win, window)
             );
             if (anchorCandidate !== undefined) anchorSource = 'mru-scan';
         }
@@ -1969,7 +2007,7 @@ export class TilingManager {
     // another workspace would break the same-workspace insertion premise.
     private _isEligibleInsertionAnchor(
         anchor: Meta.Window | undefined,
-        window: Meta.Window,
+        window: Meta.Window
     ): anchor is Meta.Window {
         if (anchor === undefined || anchor === window) return false;
         if (anchor.windowType !== Meta.WindowType.NORMAL) return false;
@@ -1980,8 +2018,7 @@ export class TilingManager {
             return false;
         if (anchor.is_fullscreen()) return false;
         if (anchor.is_on_all_workspaces()) return false;
-        if ((anchor as ExtendedWindow).assignedTile === undefined)
-            return false;
+        if ((anchor as ExtendedWindow).assignedTile === undefined) return false;
         if (anchor.get_workspace().index() !== window.get_workspace().index())
             return false;
         return true;
@@ -1992,7 +2029,7 @@ export class TilingManager {
     // index would produce wrong geometry and drag windows onto the wrong
     // monitor.
     private _getInsertionTargetManager(
-        monitorIndex: number,
+        monitorIndex: number
     ): TilingManager | undefined {
         if (monitorIndex === this._monitor.index) return this;
         return this._getTilingManager?.(monitorIndex);
@@ -2003,10 +2040,10 @@ export class TilingManager {
     // searches.
     private _isInsertionSlotOccupied(
         ws: Meta.Workspace,
-        tileRect: Mtk.Rectangle,
+        tileRect: Mtk.Rectangle
     ): boolean {
-        return this._getTiledWindowRects(ws).some((rect) =>
-            tileRect.overlap(rect),
+        return this._getTiledWindowRects(ws).some(rect =>
+            tileRect.overlap(rect)
         );
     }
 
@@ -2024,11 +2061,10 @@ export class TilingManager {
         const monitorScalingFactor = this._enableScaling
             ? getMonitorScalingFactor(this._monitor.index)
             : undefined;
-        const layout: Layout =
-            GlobalState.get().getSelectedLayoutOfMonitor(
-                this._monitor.index,
-                ws.index(),
-            );
+        const layout: Layout = GlobalState.get().getSelectedLayoutOfMonitor(
+            this._monitor.index,
+            ws.index()
+        );
         const innerGaps = buildMargin(Settings.get_inner_gaps());
         const outerGaps = buildMargin(Settings.get_outer_gaps());
 
@@ -2040,8 +2076,8 @@ export class TilingManager {
                 innerGaps,
                 outerGaps,
                 this._workArea,
-                monitorScalingFactor,
-            ),
+                monitorScalingFactor
+            )
         );
     }
 
@@ -2084,7 +2120,7 @@ export class TilingManager {
     // routes the window to the no-anchor first-vacancy path.
     private _runInsertionAfterFocused(
         window: Meta.Window,
-        anchorCandidate: Meta.Window | undefined,
+        anchorCandidate: Meta.Window | undefined
     ): boolean {
         if (!this._isEligibleInsertionAnchor(anchorCandidate, window)) {
             this._debug('insertion: no anchor, default behavior');
@@ -2161,20 +2197,20 @@ export class TilingManager {
             _insertionShiftInProgress = true;
             try {
                 const manager = this._getInsertionTargetManager(
-                    plan.newWindowTarget.slot.monitorIndex,
+                    plan.newWindowTarget.slot.monitorIndex
                 );
                 if (!manager) {
                     this._debug(
-                        'insertion: fallback, monitor manager unavailable',
+                        'insertion: fallback, monitor manager unavailable'
                     );
                     return true; // handled: the window stays floating
                 }
                 manager.autoTileWindowToTile(
                     plan.newWindowTarget.slot.tile,
-                    window,
+                    window
                 );
                 this._debug(
-                    `insertion: direct placement ws=${plan.newWindowTarget.wsIndex} slot=${plan.newWindowTarget.slot.slotIndex} moves=0`,
+                    `insertion: direct placement ws=${plan.newWindowTarget.wsIndex} slot=${plan.newWindowTarget.slot.slotIndex} moves=0`
                 );
             } finally {
                 _insertionShiftInProgress = false;
@@ -2193,17 +2229,19 @@ export class TilingManager {
                 ? plan.moves[0].target // largest target key: exactly E
                 : plan.newWindowTarget;
         this._debug(
-            `insertion: shifting ${plan.moves.length} windows, absorb at ws=${absorbTarget.wsIndex} slot=${absorbTarget.slot.slotIndex}`,
+            `insertion: shifting ${plan.moves.length} windows, absorb at ws=${absorbTarget.wsIndex} slot=${absorbTarget.slot.slotIndex}`
         );
         _insertionShiftInProgress = true;
-        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+        const idleId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             try {
                 this._executeInsertionPlan(window, plan, anchorWs);
                 return GLib.SOURCE_REMOVE;
             } finally {
                 _insertionShiftInProgress = false;
+                this._pendingMainloopSources.delete(idleId);
             }
         });
+        this._pendingMainloopSources.add(idleId);
         return true;
     }
 
@@ -2240,12 +2278,10 @@ export class TilingManager {
             // to run synchronously inside the first-frame emission (same
             // precedent as the zero-move FORM ONE placement above)
             const manager = this._getInsertionTargetManager(
-                vacancy.slot.monitorIndex,
+                vacancy.slot.monitorIndex
             );
             if (!manager) {
-                this._debug(
-                    'insertion: fallback, monitor manager unavailable',
-                );
+                this._debug('insertion: fallback, monitor manager unavailable');
                 return; // terminal: the window stays floating
             }
             // suppressed: on a cross-monitor hit,
@@ -2257,7 +2293,7 @@ export class TilingManager {
                 manager.autoTileWindowToTile(vacancy.slot.tile, window);
             });
             this._debug(
-                `insertion: no-anchor first vacancy ws=${vacancy.wsIndex} slot=${vacancy.slot.slotIndex}`,
+                `insertion: no-anchor first vacancy ws=${vacancy.wsIndex} slot=${vacancy.slot.slotIndex}`
             );
             return;
         }
@@ -2267,61 +2303,69 @@ export class TilingManager {
         // moving the window while mutter's frame is still in progress
         // aborts the compositor. Run it from the main loop once the
         // current frame is done.
-        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-            // the window state may have changed since the first frame
-            if (
-                window.minimized ||
-                window.maximizedHorizontally ||
-                window.maximizedVertically ||
-                window.get_transient_for() !== null ||
-                window.is_attached_dialog()
-            )
-                return GLib.SOURCE_REMOVE;
+        const idleId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            try {
+                // the window state may have changed since the first frame
+                if (
+                    window.minimized ||
+                    window.maximizedHorizontally ||
+                    window.maximizedVertically ||
+                    window.get_transient_for() !== null ||
+                    window.is_attached_dialog()
+                )
+                    return GLib.SOURCE_REMOVE;
 
-            if (!Settings.ENABLE_AUTO_TILING_OTHER_WORKSPACES)
-                return GLib.SOURCE_REMOVE;
-            if (window.is_on_all_workspaces())
-                return GLib.SOURCE_REMOVE; // sticky windows just float
+                if (!Settings.ENABLE_AUTO_TILING_OTHER_WORKSPACES)
+                    return GLib.SOURCE_REMOVE;
+                if (window.is_on_all_workspaces()) return GLib.SOURCE_REMOVE; // sticky windows just float
 
-            // an append hit references a workspace that does not exist
-            // yet: create it without activating it (activate=false
-            // fires no active-workspace-changed; the activation inside
-            // _placeWindowOnWorkspace creates the tiling layouts the
-            // placement depends on)
-            const ws = vacancy.appendWorkspace
-                ? global.workspaceManager.append_new_workspace(
-                      false,
-                      global.get_current_time(),
-                  )
-                : global.workspaceManager.get_workspace_by_index(
-                      vacancy.wsIndex,
-                  );
-            if (ws === null) {
-                this._debug('insertion: no-anchor aborted, workspace vanished');
+                // an append hit references a workspace that does not exist
+                // yet: create it without activating it (activate=false
+                // fires no active-workspace-changed; the activation inside
+                // _placeWindowOnWorkspace creates the tiling layouts the
+                // placement depends on)
+                const ws = vacancy.appendWorkspace
+                    ? global.workspaceManager.append_new_workspace(
+                          false,
+                          global.get_current_time()
+                      )
+                    : global.workspaceManager.get_workspace_by_index(
+                          vacancy.wsIndex
+                      );
+                if (ws === null) {
+                    this._debug(
+                        'insertion: no-anchor aborted, workspace vanished'
+                    );
+                    return GLib.SOURCE_REMOVE;
+                }
+
+                // the target slot must still be free: a concurrent placement
+                // may have filled it in the first-frame -> idle gap (an
+                // appended workspace is empty by construction)
+                if (
+                    !vacancy.appendWorkspace &&
+                    this._isInsertionSlotOccupied(ws, vacancy.slot.tileRect)
+                ) {
+                    this._debug(
+                        'insertion: no-anchor aborted, target occupied'
+                    );
+                    return GLib.SOURCE_REMOVE;
+                }
+
+                this._debug(
+                    `insertion: no-anchor forward cross-ws ws=${ws.index()} slot=${vacancy.slot.slotIndex}`
+                );
+                this._placeWindowOnWorkspace(window, {
+                    ws,
+                    monitorIndex: vacancy.slot.monitorIndex,
+                    tile: vacancy.slot.tile,
+                });
                 return GLib.SOURCE_REMOVE;
+            } finally {
+                this._pendingMainloopSources.delete(idleId);
             }
-
-            // the target slot must still be free: a concurrent placement
-            // may have filled it in the first-frame -> idle gap (an
-            // appended workspace is empty by construction)
-            if (
-                !vacancy.appendWorkspace &&
-                this._isInsertionSlotOccupied(ws, vacancy.slot.tileRect)
-            ) {
-                this._debug('insertion: no-anchor aborted, target occupied');
-                return GLib.SOURCE_REMOVE;
-            }
-
-            this._debug(
-                `insertion: no-anchor forward cross-ws ws=${ws.index()} slot=${vacancy.slot.slotIndex}`,
-            );
-            this._placeWindowOnWorkspace(window, {
-                ws,
-                monitorIndex: vacancy.slot.monitorIndex,
-                tile: vacancy.slot.tile,
-            });
-            return GLib.SOURCE_REMOVE;
         });
+        this._pendingMainloopSources.add(idleId);
     }
 
     // Executes a FORM TWO plan inside its idle callback: every move plus
@@ -2336,7 +2380,7 @@ export class TilingManager {
     private _executeInsertionPlan(
         window: Meta.Window,
         plan: InsertionPlan,
-        anchorWs: number,
+        anchorWs: number
     ): void {
         if (
             window.get_compositor_private() === null || // destroyed: property access would throw
@@ -2359,11 +2403,11 @@ export class TilingManager {
         if (plan.appendWorkspace) {
             const ws = global.workspaceManager.append_new_workspace(
                 false,
-                global.get_current_time(),
+                global.get_current_time()
             );
             for (const monitorIndex of this._getMonitorsInRowOrder()) {
                 this._getInsertionTargetManager(
-                    monitorIndex,
+                    monitorIndex
                 )?._ensureWorkspaceTilingLayout(ws);
             }
         }
@@ -2377,8 +2421,7 @@ export class TilingManager {
         referencedWsIndices.add(plan.newWindowTarget.wsIndex);
         for (const wsIndex of referencedWsIndices) {
             if (
-                global.workspaceManager.get_workspace_by_index(wsIndex) ===
-                null
+                global.workspaceManager.get_workspace_by_index(wsIndex) === null
             ) {
                 this._debug('insertion: aborted, workspace vanished');
                 return;
@@ -2389,18 +2432,16 @@ export class TilingManager {
         // placement may have filled it in the gap, and the tail move would
         // then stack its occupant on top
         const absorbTarget =
-            plan.moves.length > 0
-                ? plan.moves[0].target
-                : plan.newWindowTarget;
+            plan.moves.length > 0 ? plan.moves[0].target : plan.newWindowTarget;
         if (!plan.appendWorkspace) {
             const absorbWs = global.workspaceManager.get_workspace_by_index(
-                absorbTarget.wsIndex,
+                absorbTarget.wsIndex
             );
             if (
                 absorbWs !== null &&
                 this._isInsertionSlotOccupied(
                     absorbWs,
-                    absorbTarget.slot.tileRect,
+                    absorbTarget.slot.tileRect
                 )
             ) {
                 this._debug('insertion: aborted, target occupied');
@@ -2434,19 +2475,16 @@ export class TilingManager {
                 return;
             }
             const manager = this._getInsertionTargetManager(
-                move.target.slot.monitorIndex,
+                move.target.slot.monitorIndex
             );
             if (!manager) {
-                this._debug(
-                    'insertion: fallback, monitor manager unavailable',
-                );
+                this._debug('insertion: fallback, monitor manager unavailable');
                 return;
             }
             if (win.get_workspace().index() !== move.target.wsIndex) {
-                const targetWs =
-                    global.workspaceManager.get_workspace_by_index(
-                        move.target.wsIndex,
-                    );
+                const targetWs = global.workspaceManager.get_workspace_by_index(
+                    move.target.wsIndex
+                );
                 if (targetWs === null) {
                     this._debug('insertion: aborted, workspace vanished');
                     return;
@@ -2458,7 +2496,7 @@ export class TilingManager {
                 manager._ensureWorkspaceTilingLayout(targetWs);
                 win.change_workspace(targetWs);
                 this._debug(
-                    `insertion: overflow window -> ws=${move.target.wsIndex}`,
+                    `insertion: overflow window -> ws=${move.target.wsIndex}`
                 );
             }
             const preMoveMonitor = win.get_monitor();
@@ -2478,14 +2516,14 @@ export class TilingManager {
                     .get_frame_rect()
                     .overlap(move.target.slot.tileRect);
                 this._debug(
-                    `insertion: move ${movedOk ? 'ok' : 'FAIL'} ws=${move.target.wsIndex} slot=${move.target.slot.slotIndex}`,
+                    `insertion: move ${movedOk ? 'ok' : 'FAIL'} ws=${move.target.wsIndex} slot=${move.target.slot.slotIndex}`
                 );
             } else {
                 this._auditInsertionMoveLater(
                     win,
                     move.target.wsIndex,
                     move.target.slot.slotIndex,
-                    move.target.slot.tileRect,
+                    move.target.slot.tileRect
                 );
             }
         }
@@ -2495,7 +2533,7 @@ export class TilingManager {
         // lookup below finds it; every manager already holds its layout
         // entry from the same block.
         const newTargetWs = global.workspaceManager.get_workspace_by_index(
-            plan.newWindowTarget.wsIndex,
+            plan.newWindowTarget.wsIndex
         );
         if (newTargetWs === null) {
             this._debug('insertion: aborted, workspace vanished');
@@ -2506,7 +2544,7 @@ export class TilingManager {
         if (
             this._isInsertionSlotOccupied(
                 newTargetWs,
-                plan.newWindowTarget.slot.tileRect,
+                plan.newWindowTarget.slot.tileRect
             )
         ) {
             this._debug('insertion: aborted, target occupied');
@@ -2519,21 +2557,18 @@ export class TilingManager {
             // synchronously creates the target workspace's tiling layouts,
             // which the placement below depends on
             this._debug(
-                `insertion: view switch to ws=${plan.newWindowTarget.wsIndex}`,
+                `insertion: view switch to ws=${plan.newWindowTarget.wsIndex}`
             );
             newTargetWs.activate_with_focus(window, global.get_current_time());
         }
         const newManager = this._getInsertionTargetManager(
-            plan.newWindowTarget.slot.monitorIndex,
+            plan.newWindowTarget.slot.monitorIndex
         );
         if (!newManager) {
             this._debug('insertion: fallback, monitor manager unavailable');
             return;
         }
-        newManager.autoTileWindowToTile(
-            plan.newWindowTarget.slot.tile,
-            window,
-        );
+        newManager.autoTileWindowToTile(plan.newWindowTarget.slot.tile, window);
     }
 
     // Deferred geometry audit for cross-monitor move legs: the frame rect
@@ -2544,27 +2579,36 @@ export class TilingManager {
         wsIndex: number,
         slotIndex: number,
         tileRect: Mtk.Rectangle,
-        attempt: number = 1,
+        attempt: number = 1
     ): void {
-        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 250 * attempt, () => {
-            if (window.get_compositor_private() === null)
-                return GLib.SOURCE_REMOVE; // unmanaged meanwhile: nothing to audit
-            const movedOk = window.get_frame_rect().overlap(tileRect);
-            if (!movedOk && attempt < 3) {
-                this._auditInsertionMoveLater(
-                    window,
-                    wsIndex,
-                    slotIndex,
-                    tileRect,
-                    attempt + 1,
-                );
-                return GLib.SOURCE_REMOVE;
+        const timeoutId = GLib.timeout_add(
+            GLib.PRIORITY_DEFAULT,
+            250 * attempt,
+            () => {
+                try {
+                    if (window.get_compositor_private() === null)
+                        return GLib.SOURCE_REMOVE; // unmanaged meanwhile: nothing to audit
+                    const movedOk = window.get_frame_rect().overlap(tileRect);
+                    if (!movedOk && attempt < 3) {
+                        this._auditInsertionMoveLater(
+                            window,
+                            wsIndex,
+                            slotIndex,
+                            tileRect,
+                            attempt + 1
+                        );
+                        return GLib.SOURCE_REMOVE;
+                    }
+                    this._debug(
+                        `insertion: move ${movedOk ? 'ok' : 'FAIL'} ws=${wsIndex} slot=${slotIndex}`
+                    );
+                    return GLib.SOURCE_REMOVE;
+                } finally {
+                    this._pendingMainloopSources.delete(timeoutId);
+                }
             }
-            this._debug(
-                `insertion: move ${movedOk ? 'ok' : 'FAIL'} ws=${wsIndex} slot=${slotIndex}`,
-            );
-            return GLib.SOURCE_REMOVE;
-        });
+        );
+        this._pendingMainloopSources.add(timeoutId);
     }
 
     // frame rects of tiled windows (assigned tile, not minimized, not
@@ -2572,24 +2616,24 @@ export class TilingManager {
     // Without a workspace this scans the ACTIVE workspace (matches the
     // historical getWindows() default used by _findEmptyTile).
     private _getTiledWindowRects(
-        workspace: Meta.Workspace | undefined = undefined,
+        workspace: Meta.Workspace | undefined = undefined
     ): Mtk.Rectangle[] {
         return getWindows(workspace)
             .filter(
-                (window) =>
+                window =>
                     window &&
                     (window as ExtendedWindow).assignedTile &&
                     !window.minimized &&
                     !window.maximizedVertically &&
-                    !window.maximizedHorizontally,
+                    !window.maximizedHorizontally
             )
-            .map((window) => window.get_frame_rect());
+            .map(window => window.get_frame_rect());
     }
 
     private _findSwapTargetOnTile(
         tile: Tile,
         workspace: Meta.Workspace | undefined,
-        exclude: Meta.Window,
+        exclude: Meta.Window
     ): Meta.Window | undefined {
         // occupancy truth MUST match _getTiledWindowRects: assignedTile set,
         // not minimized, not maximized; tile rect MUST come from
@@ -2614,7 +2658,7 @@ export class TilingManager {
                 !win.is_attached_dialog() &&
                 win.allows_move() &&
                 win.allows_resize() &&
-                win.get_frame_rect().overlap(tileRect),
+                win.get_frame_rect().overlap(tileRect)
         );
         return candidates[0];
     }
@@ -2631,7 +2675,7 @@ export class TilingManager {
     // free-form rect, and a floating (untiled) mover never swaps.
     private _performKeyboardSwap(
         movingWindow: Meta.Window,
-        swapTarget: Meta.Window,
+        swapTarget: Meta.Window
     ): boolean {
         const aTile = (movingWindow as ExtendedWindow).assignedTile;
         if (!aTile) return false; // floating mover: no swap (constraint)
@@ -2653,7 +2697,7 @@ export class TilingManager {
                 aTile,
                 swapTarget,
                 true,
-                originManager._monitor.index,
+                originManager._monitor.index
             );
         }
         return true;
@@ -2673,7 +2717,7 @@ export class TilingManager {
     // no resolvable workspace/entering tile.
     public onKeyboardMoveWindowAcrossWorkspaces(
         window: Meta.Window,
-        direction: KeyBindingsDirection,
+        direction: KeyBindingsDirection
     ): boolean {
         if (
             direction !== KeyBindingsDirection.LEFT &&
@@ -2711,7 +2755,7 @@ export class TilingManager {
         ) {
             targetWs = global.workspaceManager.append_new_workspace(
                 false,
-                global.get_current_time(),
+                global.get_current_time()
             );
             this._debug('appended a new workspace for the directional move');
         }
@@ -2725,12 +2769,12 @@ export class TilingManager {
         const enteringTile = this._findEnteringTileOnWorkspace(
             window,
             targetWs,
-            direction,
+            direction
         );
         if (!enteringTile) return false; // degenerate layout
 
         this._debug(
-            `moving window to workspace ${targetWs.index()} monitor ${this._monitor.index}`,
+            `moving window to workspace ${targetWs.index()} monitor ${this._monitor.index}`
         );
         // suppressed: the relocation's change_workspace calls fire the
         // workspace-changed wires synchronously while the windows carry
@@ -2742,7 +2786,7 @@ export class TilingManager {
             const swapTarget = this._findSwapTargetOnTile(
                 enteringTile,
                 targetWorkspace,
-                window,
+                window
             );
             if (swapTarget) {
                 swapTarget.change_workspace(originWs);
@@ -2754,7 +2798,7 @@ export class TilingManager {
             window.change_workspace(targetWorkspace);
             targetWorkspace.activate_with_focus(
                 window,
-                global.get_current_time(),
+                global.get_current_time()
             );
             this._easeWindowRectFromTile(enteringTile, window);
         });
@@ -2767,22 +2811,22 @@ export class TilingManager {
     private _findEnteringTileOnWorkspace(
         window: Meta.Window,
         ws: Meta.Workspace,
-        direction: KeyBindingsDirection,
+        direction: KeyBindingsDirection
     ): Tile | undefined {
         const tiles = GlobalState.get().getSelectedLayoutOfMonitor(
             this._monitor.index,
-            ws.index(),
+            ws.index()
         ).tiles;
         if (tiles.length === 0) return undefined;
 
         const enteringX =
             direction === KeyBindingsDirection.RIGHT
-                ? Math.min(...tiles.map((t) => t.x))
-                : Math.max(...tiles.map((t) => t.x + t.width));
-        const column = tiles.filter((t) =>
+                ? Math.min(...tiles.map(t => t.x))
+                : Math.max(...tiles.map(t => t.x + t.width));
+        const column = tiles.filter(t =>
             direction === KeyBindingsDirection.RIGHT
                 ? t.x <= enteringX + WORKSPACE_EDGE_EPSILON
-                : t.x + t.width >= enteringX - WORKSPACE_EDGE_EPSILON,
+                : t.x + t.width >= enteringX - WORKSPACE_EDGE_EPSILON
         );
         if (column.length === 0) return undefined;
 
@@ -2805,19 +2849,19 @@ export class TilingManager {
     private _findEmptyTile(
         window: Meta.Window,
         monitorIndex: number = window.get_monitor(),
-        wsIndex: number = window.get_workspace().index(),
+        wsIndex: number = window.get_workspace().index()
     ): Tile | undefined {
         const targetWs =
             global.workspaceManager.get_workspace_by_index(wsIndex);
         const occupiedRects = this._getTiledWindowRects(targetWs ?? undefined);
         const tiles = GlobalState.get().getSelectedLayoutOfMonitor(
             monitorIndex,
-            wsIndex,
+            wsIndex
         ).tiles;
         const workArea = Main.layoutManager.getWorkAreaForMonitor(monitorIndex);
-        const vacantTiles = tiles.filter((t) => {
+        const vacantTiles = tiles.filter(t => {
             const tileRect = TileUtils.apply_props(t, workArea);
-            return !occupiedRects.find((rect) => tileRect.overlap(rect));
+            return !occupiedRects.find(rect => tileRect.overlap(rect));
         });
 
         if (vacantTiles.length === 0) return undefined;
@@ -2852,7 +2896,7 @@ export class TilingManager {
 
     private _placeWindowOnWorkspace(
         window: Meta.Window,
-        target: { ws: Meta.Workspace; monitorIndex: number; tile: Tile },
+        target: { ws: Meta.Workspace; monitorIndex: number; tile: Tile }
     ): void {
         const manager =
             target.monitorIndex === this._monitor.index
@@ -2860,7 +2904,7 @@ export class TilingManager {
                 : this._getTilingManager?.(target.monitorIndex);
         if (!manager) return;
         this._debug(
-            `auto-tiling window to workspace ${target.ws.index()} monitor ${target.monitorIndex}`,
+            `auto-tiling window to workspace ${target.ws.index()} monitor ${target.monitorIndex}`
         );
         // suppressed: the relocation's change_workspace/move_to_monitor
         // fires the workspace-changed/monitor-left wires while the window

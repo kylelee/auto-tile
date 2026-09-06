@@ -7,15 +7,16 @@ import TilePreview, {
 } from '../../components/tilepreview/tilePreview';
 
 export default class TilePreviewWithWindow extends TilePreview {
-    static { registerGObjectClass(this) }
-    
+    static {
+        registerGObjectClass(this);
+    }
+
     constructor(params: Partial<TilePreviewConstructorProperties>) {
         super(params);
         if (params.parent) params.parent.add_child(this);
 
         this._showing = false;
         this._rect = params.rect || buildRectangle({});
-        this._gaps = new Clutter.Margin();
         this.gaps = params.gaps || new Clutter.Margin();
         this._tile =
             params.tile ||

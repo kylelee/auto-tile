@@ -17,15 +17,15 @@ export class WindowBorderManager {
 
     private _border: WindowBorder | null;
     private _enableScaling: boolean;
-    private _interfaceSettings: Gio.Settings;
+    private _interfaceSettings: Gio.Settings | null;
+    private _accentColorChangedId: number;
 
     constructor(enableScaling: boolean) {
         this._signals = new SignalHandling();
         this._border = null;
         this._enableScaling = enableScaling;
-        this._interfaceSettings = new Gio.Settings({
-            schema_id: 'org.gnome.desktop.interface',
-        });
+        this._interfaceSettings = null;
+        this._accentColorChangedId = 0;
     }
 
     public enable(): void {
@@ -43,6 +43,13 @@ export class WindowBorderManager {
     }
 
     private _turnOn() {
+        // the manager survives destroy()/enable() toggling cycles: recreate
+        // the settings object lazily after a destroy released it
+        if (!this._interfaceSettings)
+            this._interfaceSettings = new Gio.Settings({
+                schema_id: 'org.gnome.desktop.interface',
+            });
+
         this._onWindowFocused();
         this._signals.connect(
             global.display,
@@ -57,8 +64,9 @@ export class WindowBorderManager {
             Settings.KEY_WINDOW_USE_CUSTOM_BORDER_COLOR,
             () => this._border?.updateStyle()
         );
-        this._interfaceSettings.connect('changed::accent-color', () =>
-            this._border?.updateStyle()
+        this._accentColorChangedId = this._interfaceSettings.connect(
+            'changed::accent-color',
+            () => this._border?.updateStyle()
         );
         this._signals.connect(Settings, Settings.KEY_WINDOW_BORDER_WIDTH, () =>
             this._border?.updateStyle()
@@ -72,6 +80,11 @@ export class WindowBorderManager {
 
     public destroy(): void {
         this._signals.disconnect();
+        if (this._accentColorChangedId !== 0 && this._interfaceSettings) {
+            this._interfaceSettings.disconnect(this._accentColorChangedId);
+            this._accentColorChangedId = 0;
+        }
+        this._interfaceSettings = null;
         this._border?.destroy();
         this._border = null;
     }
