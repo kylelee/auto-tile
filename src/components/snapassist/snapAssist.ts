@@ -23,36 +23,38 @@ const SNAP_ASSIST_LAYOUT_WIDTH = 120;
 const SNAP_ASSIST_LAYOUT_HEIGHT = 68;
 
 class SnapAssistContent extends St.BoxLayout {
-    static { registerGObjectClass(this, {
-        GTypeName: 'SnapAssistContent',
-        Properties: {
-            blur: GObject.ParamSpec.boolean(
-                'blur',
-                'blur',
-                'Enable or disable the blur effect',
-                GObject.ParamFlags.READWRITE,
-                false,
-            ),
-            snapAssistantThreshold: GObject.ParamSpec.uint(
-                'snapAssistantThreshold',
-                'snapAssistantThreshold',
-                'Distance from the snap assistant to trigger its opening/closing',
-                GObject.ParamFlags.READWRITE,
-                0,
-                2000,
-                16,
-            ),
-            snapAssistantAnimationTime: GObject.ParamSpec.uint(
-                'snapAssistantAnimationTime',
-                'snapAssistantAnimationTime',
-                'Animation time in milliseconds',
-                GObject.ParamFlags.READWRITE,
-                0,
-                2000,
-                180,
-            ),
-        },
-    })};
+    static {
+        registerGObjectClass(this, {
+            GTypeName: 'SnapAssistContent',
+            Properties: {
+                blur: GObject.ParamSpec.boolean(
+                    'blur',
+                    'blur',
+                    'Enable or disable the blur effect',
+                    GObject.ParamFlags.READWRITE,
+                    false
+                ),
+                snapAssistantThreshold: GObject.ParamSpec.uint(
+                    'snapAssistantThreshold',
+                    'snapAssistantThreshold',
+                    'Distance from the snap assistant to trigger its opening/closing',
+                    GObject.ParamFlags.READWRITE,
+                    0,
+                    2000,
+                    16
+                ),
+                snapAssistantAnimationTime: GObject.ParamSpec.uint(
+                    'snapAssistantAnimationTime',
+                    'snapAssistantAnimationTime',
+                    'Animation time in milliseconds',
+                    GObject.ParamFlags.READWRITE,
+                    0,
+                    2000,
+                    180
+                ),
+            },
+        });
+    }
 
     private readonly _container: St.Widget;
 
@@ -93,19 +95,19 @@ class SnapAssistContent extends St.BoxLayout {
             Settings.KEY_ENABLE_BLUR_SNAP_ASSISTANT,
             this,
             'blur',
-            Gio.SettingsBindFlags.GET,
+            Gio.SettingsBindFlags.GET
         );
         Settings.bind(
             Settings.KEY_SNAP_ASSISTANT_THRESHOLD,
             this,
             'snapAssistantThreshold',
-            Gio.SettingsBindFlags.GET,
+            Gio.SettingsBindFlags.GET
         );
         Settings.bind(
             Settings.KEY_SNAP_ASSISTANT_ANIMATION_TIME,
             this,
             'snapAssistantAnimationTime',
-            Gio.SettingsBindFlags.GET,
+            Gio.SettingsBindFlags.GET
         );
 
         this._applyStyle();
@@ -114,7 +116,7 @@ class SnapAssistContent extends St.BoxLayout {
             'changed',
             () => {
                 this._applyStyle();
-            },
+            }
         );
 
         this._setLayouts(GlobalState.get().layouts);
@@ -123,12 +125,16 @@ class SnapAssistContent extends St.BoxLayout {
             GlobalState.SIGNAL_LAYOUTS_CHANGED,
             () => {
                 this._setLayouts(GlobalState.get().layouts);
-            },
+            }
         );
 
-        this.connect('destroy', () => this._signals.disconnect());
+        this.connect('destroy', this._onDestroy.bind(this));
 
         this.close();
+    }
+
+    private _onDestroy(): void {
+        this._signals.disconnect();
     }
 
     private set blur(value: boolean) {
@@ -204,9 +210,7 @@ class SnapAssistContent extends St.BoxLayout {
         return this._isEnlarged
             ? Math.max(
                   0,
-                  this._snapAssistantThreshold -
-                      this.height / 2 +
-                      this._padding,
+                  this._snapAssistantThreshold - this.height / 2 + this._padding
               )
             : -this.height + this._padding;
     }
@@ -230,7 +234,7 @@ class SnapAssistContent extends St.BoxLayout {
     }
 
     private _setLayouts(layouts: Layout[]) {
-        this._snapAssistLayouts.forEach((lay) => lay.destroy());
+        this._snapAssistLayouts.forEach(lay => lay.destroy());
         this.remove_all_children();
 
         const [, scalingFactor] = getScalingFactorOf(this);
@@ -247,12 +251,12 @@ class SnapAssistContent extends St.BoxLayout {
                 layoutGaps,
                 new Clutter.Margin(),
                 width,
-                height,
+                height
             );
             // build and place a spacer
             if (ind < layouts.length - 1) {
                 this.add_child(
-                    new St.Widget({ width: this._padding, height: 1 }),
+                    new St.Widget({ width: this._padding, height: 1 })
                 );
             }
             return saLay;
@@ -264,7 +268,7 @@ class SnapAssistContent extends St.BoxLayout {
     public onMovingWindow(
         window: Meta.Window,
         currPointerPos: { x: number; y: number },
-        ease: boolean = false,
+        ease: boolean = false
     ) {
         const wasEnlarged = this._isEnlarged;
         this.handleOpening(window, currPointerPos, ease);
@@ -276,7 +280,7 @@ class SnapAssistContent extends St.BoxLayout {
                 this._container.emit(
                     SNAP_ASSIST_SIGNAL,
                     new Tile({ x: 0, y: 0, width: 0, height: 0, groups: [] }),
-                    '',
+                    ''
                 );
             }
             return;
@@ -301,7 +305,7 @@ class SnapAssistContent extends St.BoxLayout {
     private handleOpening(
         window: Meta.Window,
         currPointerPos: { x: number; y: number },
-        ease: boolean = false,
+        ease: boolean = false
     ) {
         if (!this._showing) {
             if (this.get_parent() === global.windowGroup) {
@@ -388,14 +392,16 @@ class SnapAssistContent extends St.BoxLayout {
 }
 
 export default class SnapAssist extends St.Widget {
-    static { registerGObjectClass(this, {
-        GTypeName: 'SnapAssist',
-        Signals: {
-            'snap-assist': {
-                param_types: [Tile.$gtype, String.$gtype], // tile, layout_id
+    static {
+        registerGObjectClass(this, {
+            GTypeName: 'SnapAssist',
+            Signals: {
+                'snap-assist': {
+                    param_types: [Tile.$gtype, String.$gtype], // tile, layout_id
+                },
             },
-        },
-    })};
+        });
+    }
 
     private readonly _content: SnapAssistContent;
 
@@ -403,7 +409,7 @@ export default class SnapAssist extends St.Widget {
         parent: Clutter.Actor,
         workArea: Mtk.Rectangle,
         monitorIndex: number,
-        scalingFactor?: number,
+        scalingFactor?: number
     ) {
         super();
         parent.add_child(this);
@@ -423,7 +429,7 @@ export default class SnapAssist extends St.Widget {
     public onMovingWindow(
         window: Meta.Window,
         currPointerPos: { x: number; y: number },
-        ease: boolean = false,
+        ease: boolean = false
     ) {
         this._content.onMovingWindow(window, currPointerPos, ease);
     }
