@@ -4,6 +4,7 @@ import { St, Clutter, Gio } from '../../gi/ext';
 import LayoutButton from '../../indicator/layoutButton';
 import GlobalState from '../../utils/globalState';
 import Layout from '../../components/layout/Layout';
+import SignalHandling from '../../utils/signalHandling';
 
 import Tile from '../../components/layout/Tile';
 import * as ModalDialog from 'resource:///org/gnome/shell/ui/modalDialog.js';
@@ -16,13 +17,16 @@ import { t } from '../../translations';
 import { widgetOrientation } from '../../utils/gnomesupport';
 
 export default class EditorDialog extends ModalDialog.ModalDialog {
-    static { registerGObjectClass(this) }
+    static {
+        registerGObjectClass(this);
+    }
 
     private readonly _layoutHeight: number = 72;
     private readonly _layoutWidth: number = 128; // 16:9 ratio. -> (16*layoutHeight) / 9 and then rounded to int
     private readonly _gapsSize: number = 3;
 
-    private _layoutsBoxLayout: St.BoxLayout;
+    private _layoutsBoxLayout: St.BoxLayout | null;
+    private _signals: SignalHandling;
 
     constructor(params: {
         enableScaling: boolean;
@@ -42,7 +46,7 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
         if (params.enableScaling) {
             const monitor = Main.layoutManager.findMonitorForActor(this);
             const scalingFactor = getMonitorScalingFactor(
-                monitor?.index || Main.layoutManager.primaryIndex,
+                monitor?.index || Main.layoutManager.primaryIndex
             );
             enableScalingFactorSupport(this, scalingFactor);
         }
@@ -53,7 +57,7 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                 xAlign: Clutter.ActorAlign.CENTER,
                 xExpand: true,
                 styleClass: 'editor-dialog-title',
-            }),
+            })
         );
 
         this._layoutsBoxLayout = new St.BoxLayout({
@@ -61,6 +65,8 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
             xAlign: Clutter.ActorAlign.CENTER,
         });
         this.contentLayout.add_child(this._layoutsBoxLayout);
+        this._signals = new SignalHandling();
+        this.connect('destroy', this._onDestroy.bind(this));
 
         if (!params.legend) {
             this._drawLayouts({
@@ -87,6 +93,14 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
         }
     }
 
+    private _onDestroy(): void {
+        if (this._layoutsBoxLayout) {
+            this._layoutsBoxLayout.destroy();
+            this._layoutsBoxLayout = null;
+        }
+        this._signals.disconnect();
+    }
+
     private _makeLegendDialog(params: { onClose: () => void; path: string }) {
         const suggestion1 = new St.BoxLayout();
         // LEFT-CLICK to split a tile
@@ -98,7 +112,7 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                 styleClass: 'button kbd',
                 xExpand: false,
                 pseudoClass: 'active',
-            }),
+            })
         );
         suggestion1.add_child(
             new St.Label({
@@ -107,7 +121,7 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                 yAlign: Clutter.ActorAlign.CENTER,
                 styleClass: '',
                 xExpand: false,
-            }),
+            })
         );
 
         const suggestion2 = new St.BoxLayout();
@@ -120,7 +134,7 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                 styleClass: 'button kbd',
                 xExpand: false,
                 pseudoClass: 'active',
-            }),
+            })
         );
         suggestion2.add_child(
             new St.Label({
@@ -129,7 +143,7 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                 yAlign: Clutter.ActorAlign.CENTER,
                 styleClass: '',
                 xExpand: false,
-            }),
+            })
         );
         suggestion2.add_child(
             new St.Label({
@@ -139,7 +153,7 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                 styleClass: 'button kbd',
                 xExpand: false,
                 pseudoClass: 'active',
-            }),
+            })
         );
         suggestion2.add_child(
             new St.Label({
@@ -148,7 +162,7 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                 yAlign: Clutter.ActorAlign.CENTER,
                 styleClass: '',
                 xExpand: false,
-            }),
+            })
         );
 
         const suggestion3 = new St.BoxLayout();
@@ -161,7 +175,7 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                 styleClass: 'button kbd',
                 xExpand: false,
                 pseudoClass: 'active',
-            }),
+            })
         );
         suggestion3.add_child(
             new St.Label({
@@ -170,7 +184,7 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                 yAlign: Clutter.ActorAlign.CENTER,
                 styleClass: '',
                 xExpand: false,
-            }),
+            })
         );
 
         const suggestion4 = new St.BoxLayout({
@@ -183,11 +197,11 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                 iconSize: 16,
                 yAlign: Clutter.ActorAlign.CENTER,
                 gicon: Gio.icon_new_for_string(
-                    `${params.path}/icons/indicator-symbolic.svg`,
+                    `${params.path}/icons/indicator-symbolic.svg`
                 ),
                 styleClass: 'button kbd',
                 pseudoClass: 'active',
-            }),
+            })
         );
         suggestion4.add_child(
             new St.Label({
@@ -196,7 +210,7 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                 yAlign: Clutter.ActorAlign.CENTER,
                 styleClass: '',
                 xExpand: false,
-            }),
+            })
         );
 
         const legend = new St.BoxLayout({
@@ -209,13 +223,15 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
         legend.add_child(suggestion4);
 
         this.contentLayout.destroy_all_children();
+        // the layouts box was a child of contentLayout: forget the destroyed actor
+        this._layoutsBoxLayout = null;
         this.contentLayout.add_child(
             new St.Label({
                 text: t('How to use the editor'),
                 xAlign: Clutter.ActorAlign.CENTER,
                 xExpand: true,
                 styleClass: 'editor-dialog-title',
-            }),
+            })
         );
         this.contentLayout.add_child(legend);
 
@@ -238,7 +254,10 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
         path: string;
     }) {
         const gaps = Settings.get_inner_gaps(1).top > 0 ? this._gapsSize : 0;
-        this._layoutsBoxLayout.destroy_all_children();
+        const layoutsBox = this._layoutsBoxLayout;
+        if (!layoutsBox) return;
+
+        layoutsBox.destroy_all_children();
 
         params.layouts.forEach((lay, btnInd) => {
             const layoutBox = new St.BoxLayout({
@@ -246,13 +265,13 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                 styleClass: 'layout-button-container',
                 ...widgetOrientation(true),
             });
-            this._layoutsBoxLayout.add_child(layoutBox);
+            layoutsBox.add_child(layoutBox);
             const btn = new LayoutButton(
                 layoutBox,
                 lay,
                 gaps,
                 this._layoutHeight,
-                this._layoutWidth,
+                this._layoutWidth
             );
             const moveAndDeleteButtonsBox = new St.BoxLayout({
                 xAlign: Clutter.ActorAlign.CENTER,
@@ -271,12 +290,12 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                     });
                     moveLeftBtn.child = new St.Icon({
                         gicon: Gio.icon_new_for_string(
-                            `${params.path}/icons/chevron-left-symbolic.svg`,
+                            `${params.path}/icons/chevron-left-symbolic.svg`
                         ),
                         iconSize: 16,
                     });
                     moveLeftBtn.connect('clicked', () => {
-                        params.onReorderLayout(btnInd, btnInd-1);
+                        params.onReorderLayout(btnInd, btnInd - 1);
                         this._drawLayouts({
                             ...params,
                             layouts: GlobalState.get().layouts,
@@ -293,7 +312,7 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                 });
                 deleteBtn.child = new St.Icon({
                     gicon: Gio.icon_new_for_string(
-                        `${params.path}/icons/delete-symbolic.svg`,
+                        `${params.path}/icons/delete-symbolic.svg`
                     ),
                     iconSize: 16,
                 });
@@ -315,12 +334,12 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                     });
                     moveRightBtn.child = new St.Icon({
                         gicon: Gio.icon_new_for_string(
-                            `${params.path}/icons/chevron-right-symbolic.svg`,
+                            `${params.path}/icons/chevron-right-symbolic.svg`
                         ),
                         iconSize: 16,
                     });
                     moveRightBtn.connect('clicked', () => {
-                        params.onReorderLayout(btnInd, btnInd+1);
+                        params.onReorderLayout(btnInd, btnInd + 1);
                         this._drawLayouts({
                             ...params,
                             layouts: GlobalState.get().layouts,
@@ -329,7 +348,7 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
                     moveAndDeleteButtonsBox.add_child(moveRightBtn);
                 }
             }
-            btn.connect('clicked', () => {
+            this._signals.connect(btn, 'clicked', () => {
                 params.onSelectLayout(btnInd, lay);
                 this._makeLegendDialog({
                     onClose: params.onClose,
@@ -344,26 +363,26 @@ export default class EditorDialog extends ModalDialog.ModalDialog {
             styleClass: 'layout-button-container',
             ...widgetOrientation(true),
         });
-        this._layoutsBoxLayout.add_child(box);
+        layoutsBox.add_child(box);
         const newLayoutBtn = new LayoutButton(
             box,
             new Layout(
                 [new Tile({ x: 0, y: 0, width: 1, height: 1, groups: [] })],
-                'New Layout',
+                'New Layout'
             ),
             gaps,
             this._layoutHeight,
-            this._layoutWidth,
+            this._layoutWidth
         );
         const icon = new St.Icon({
             gicon: Gio.icon_new_for_string(
-                `${params.path}/icons/add-symbolic.svg`,
+                `${params.path}/icons/add-symbolic.svg`
             ),
             iconSize: 32,
         });
         icon.set_size(newLayoutBtn.child.width, newLayoutBtn.child.height);
         newLayoutBtn.child.add_child(icon);
-        newLayoutBtn.connect('clicked', () => {
+        this._signals.connect(newLayoutBtn, 'clicked', () => {
             params.onNewLayout();
             this._makeLegendDialog({
                 onClose: params.onClose,
