@@ -11,25 +11,27 @@ import ExtendedWindow from '../components/tilingsystem/extendedWindow';
 const debug = logger('GlobalState');
 
 export default class GlobalState extends GObject.Object {
-    static { registerGObjectClass(this, {
-        GTypeName: 'GlobalState',
-        Signals: {
-            'layouts-changed': {
-                param_types: [],
+    static {
+        registerGObjectClass(this, {
+            GTypeName: 'GlobalState',
+            Signals: {
+                'layouts-changed': {
+                    param_types: [],
+                },
             },
-        },
-        Properties: {
-            tilePreviewAnimationTime: GObject.ParamSpec.uint(
-                'tilePreviewAnimationTime',
-                'tilePreviewAnimationTime',
-                'Animation time of tile previews in milliseconds',
-                GObject.ParamFlags.READWRITE,
-                0,
-                2000,
-                100,
-            ),
-        },
-    })};
+            Properties: {
+                tilePreviewAnimationTime: GObject.ParamSpec.uint(
+                    'tilePreviewAnimationTime',
+                    'tilePreviewAnimationTime',
+                    'Animation time of tile previews in milliseconds',
+                    GObject.ParamFlags.READWRITE,
+                    0,
+                    2000,
+                    100
+                ),
+            },
+        });
+    }
 
     public static SIGNAL_LAYOUTS_CHANGED = 'layouts-changed';
 
@@ -50,10 +52,14 @@ export default class GlobalState extends GObject.Object {
 
     static destroy() {
         if (this._instance) {
-            this._instance._signals.disconnect();
-            this._instance._layouts = [];
+            this._instance.destroy();
             this._instance = null;
         }
+    }
+
+    public destroy(): void {
+        this._signals.disconnect();
+        this._layouts = [];
     }
 
     constructor() {
@@ -69,7 +75,7 @@ export default class GlobalState extends GObject.Object {
             Settings.KEY_TILE_PREVIEW_ANIMATION_TIME,
             this,
             'tilePreviewAnimationTime',
-            Gio.SettingsBindFlags.GET,
+            Gio.SettingsBindFlags.GET
         );
         this._signals.connect(
             Settings,
@@ -77,7 +83,7 @@ export default class GlobalState extends GObject.Object {
             () => {
                 this._layouts = Settings.get_layouts_json();
                 this.emit(GlobalState.SIGNAL_LAYOUTS_CHANGED);
-            },
+            }
         );
 
         this._signals.connect(
@@ -109,7 +115,7 @@ export default class GlobalState extends GObject.Object {
 
                     this._selected_layouts.set(ws, monitors_layouts);
                 }
-            },
+            }
         );
 
         this._signals.connect(
@@ -125,7 +131,7 @@ export default class GlobalState extends GObject.Object {
 
                 const secondLastWs =
                     global.workspaceManager.get_workspace_by_index(
-                        n_workspaces - 2,
+                        n_workspaces - 2
                     );
 
                 // the new workspace must start with the same layout of the last workspace
@@ -137,14 +143,14 @@ export default class GlobalState extends GObject.Object {
                 if (secondLastWsLayoutsId.length === 0) {
                     secondLastWsLayoutsId.push(
                         ...Main.layoutManager.monitors.map(
-                            () => this._layouts[0].id,
-                        ),
+                            () => this._layouts[0].id
+                        )
                     );
                 }
 
                 this._selected_layouts.set(
                     newWs,
-                    secondLastWsLayoutsId, // Main.layoutManager.monitors.map(() => layout.id),
+                    secondLastWsLayoutsId // Main.layoutManager.monitors.map(() => layout.id),
                 );
 
                 const to_be_saved: string[][] = [];
@@ -158,7 +164,7 @@ export default class GlobalState extends GObject.Object {
                 }
 
                 Settings.save_selected_layouts(to_be_saved);
-            },
+            }
         );
 
         this._signals.connect(
@@ -184,7 +190,7 @@ export default class GlobalState extends GObject.Object {
                 this._selected_layouts.clear();
                 this._selected_layouts = newMap;
                 debug('deleted workspace');
-            },
+            }
         );
 
         this._signals.connect(
@@ -193,7 +199,7 @@ export default class GlobalState extends GObject.Object {
             () => {
                 this._save_selected_layouts();
                 debug('reordered workspaces');
-            },
+            }
         );
     }
 
@@ -213,7 +219,7 @@ export default class GlobalState extends GObject.Object {
             monitors_layouts.forEach((_, ind) => {
                 if (
                     this._layouts.findIndex(
-                        (lay) => lay.id === monitors_layouts[ind],
+                        lay => lay.id === monitors_layouts[ind]
                     ) === -1
                 )
                     monitors_layouts[ind] = monitors_layouts[0];
@@ -252,7 +258,7 @@ export default class GlobalState extends GObject.Object {
     public deleteLayout(layoutToDelete: Layout) {
         if (this._layouts.length <= 1) return;
         const layFoundIndex = this._layouts.findIndex(
-            (lay) => lay.id === layoutToDelete.id,
+            lay => lay.id === layoutToDelete.id
         );
         if (layFoundIndex === -1) return;
 
@@ -261,7 +267,7 @@ export default class GlobalState extends GObject.Object {
         // easy way to trigger a save and emit layouts-changed signal
         this.layouts = this._layouts;
 
-        this._selected_layouts.forEach((monitors_selected) => {
+        this._selected_layouts.forEach(monitors_selected => {
             if (
                 layoutToDelete.id ===
                 monitors_selected[Main.layoutManager.primaryIndex]
@@ -275,7 +281,7 @@ export default class GlobalState extends GObject.Object {
 
     public editLayout(newLay: Layout) {
         const layFoundIndex = this._layouts.findIndex(
-            (lay) => lay.id === newLay.id,
+            lay => lay.id === newLay.id
         );
         if (layFoundIndex === -1) return;
 
@@ -300,7 +306,7 @@ export default class GlobalState extends GObject.Object {
 
     public getSelectedLayoutOfMonitor(
         monitorIndex: number,
-        workspaceIndex: number,
+        workspaceIndex: number
     ): Layout {
         const selectedLayouts = Settings.get_selected_layouts();
         if (workspaceIndex < 0 || workspaceIndex >= selectedLayouts.length)
@@ -315,7 +321,7 @@ export default class GlobalState extends GObject.Object {
 
         return (
             this._layouts.find(
-                (lay) => lay.id === monitors_selected[monitorIndex],
+                lay => lay.id === monitors_selected[monitorIndex]
             ) || this._layouts[0]
         );
     }
@@ -330,7 +336,7 @@ export default class GlobalState extends GObject.Object {
 
     public setSelectedLayoutOfMonitor(
         layoutToSelectId: string,
-        monitorIndex: number,
+        monitorIndex: number
     ) {
         // get the currently selected layouts
         const selected = Settings.get_selected_layouts();
@@ -349,15 +355,15 @@ export default class GlobalState extends GObject.Object {
             n_workspaces - 2
         ) {
             const lastWs = global.workspaceManager.get_workspace_by_index(
-                n_workspaces - 1,
+                n_workspaces - 1
             );
             if (!lastWs) return;
 
             // check if there are tiled windows on that monitor and in the last workspace
             const tiledWindows = getWindows(lastWs).find(
-                (win) =>
+                win =>
                     (win as ExtendedWindow).assignedTile &&
-                    win.get_monitor() === monitorIndex,
+                    win.get_monitor() === monitorIndex
             );
             if (!tiledWindows) {
                 // the last workspace, on that monitor, is empty
