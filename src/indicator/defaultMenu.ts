@@ -24,26 +24,29 @@ import { createButton, createIconButton } from './utils';
 const debug = logger('DefaultMenu');
 
 class LayoutsRow extends St.BoxLayout {
-    static { registerGObjectClass(this, {
-        GTypeName: 'LayoutsRow',
-        Signals: {
-            'selected-layout': {
-                param_types: [GObject.TYPE_STRING],
+    static {
+        registerGObjectClass(this, {
+            GTypeName: 'LayoutsRow',
+            Signals: {
+                'selected-layout': {
+                    param_types: [GObject.TYPE_STRING],
+                },
             },
-        },
-    })};
+        });
+    }
 
     private _layoutsBox: St.BoxLayout;
     private _layoutsButtons: LayoutButton[];
     private _label: St.Label;
     private _monitor: Monitor;
+    private _signals: SignalHandling;
 
     constructor(
         parent: Clutter.Actor,
         layouts: Layout[],
         selectedId: string,
         showMonitorName: boolean,
-        monitor: Monitor,
+        monitor: Monitor
     ) {
         super({
             xAlign: Clutter.ActorAlign.CENTER,
@@ -61,6 +64,7 @@ class LayoutsRow extends St.BoxLayout {
             styleClass: 'layouts-box-layout',
         });
         this._monitor = monitor;
+        this._signals = new SignalHandling();
         this._label = new St.Label({
             text: `Monitor ${this._monitor.index + 1}`,
             styleClass: 'monitor-layouts-title',
@@ -71,7 +75,7 @@ class LayoutsRow extends St.BoxLayout {
 
         parent.add_child(this);
 
-        const selectedIndex = layouts.findIndex((lay) => lay.id === selectedId);
+        const selectedIndex = layouts.findIndex(lay => lay.id === selectedId);
         const hasGaps = Settings.get_inner_gaps(1).top > 0;
 
         const layoutHeight: number = 36;
@@ -83,23 +87,29 @@ class LayoutsRow extends St.BoxLayout {
                 lay,
                 hasGaps ? 2 : 0,
                 layoutHeight,
-                layoutWidth,
+                layoutWidth
             );
-            btn.connect(
+            this._signals.connect(
+                btn,
                 'clicked',
-                () => !btn.checked && this.emit('selected-layout', lay.id),
+                () => !btn.checked && this.emit('selected-layout', lay.id)
             );
             if (ind === selectedIndex) btn.set_checked(true);
             return btn;
         });
     }
 
+    public destroy() {
+        this._signals.disconnect();
+        super.destroy();
+    }
+
     public selectLayout(selectedId: string) {
         const selectedIndex = GlobalState.get().layouts.findIndex(
-            (lay) => lay.id === selectedId,
+            lay => lay.id === selectedId
         );
         this._layoutsButtons.forEach((btn, ind) =>
-            btn.set_checked(ind === selectedIndex),
+            btn.set_checked(ind === selectedIndex)
         );
     }
 
@@ -112,31 +122,39 @@ class LayoutsRow extends St.BoxLayout {
             y?: number;
             height?: number;
             width?: number;
-        }[],
+        }[]
     ) {
         if (!showMonitorName) this._label.hide();
         else this._label.show();
 
-        debug(`updateMonitorName: monitor=${this._monitor.index}, x=${this._monitor.x}, y=${this._monitor.y}`);
-        debug(`updateMonitorName: monitorsDetails=${JSON.stringify(monitorsDetails)}`);
+        debug(
+            `updateMonitorName: monitor=${this._monitor.index}, x=${this._monitor.x}, y=${this._monitor.y}`
+        );
+        debug(
+            `updateMonitorName: monitorsDetails=${JSON.stringify(monitorsDetails)}`
+        );
 
         // Try to match by index first, then fall back to coordinates
         let details = monitorsDetails.find(
-            (m) => m.index === this._monitor.index,
+            m => m.index === this._monitor.index
         );
         if (details) {
             debug(`updateMonitorName: matched by index ${this._monitor.index}`);
         }
         if (!details) {
             details = monitorsDetails.find(
-                (m) => m.x === this._monitor.x && m.y === this._monitor.y,
+                m => m.x === this._monitor.x && m.y === this._monitor.y
             );
             if (details) {
-                debug(`updateMonitorName: matched by coordinates (${this._monitor.x}, ${this._monitor.y})`);
+                debug(
+                    `updateMonitorName: matched by coordinates (${this._monitor.x}, ${this._monitor.y})`
+                );
             }
         }
         if (!details) {
-            debug(`updateMonitorName: no match found for monitor ${this._monitor.index}`);
+            debug(
+                `updateMonitorName: no match found for monitor ${this._monitor.index}`
+            );
             return;
         }
 
@@ -150,12 +168,16 @@ export default class DefaultMenu implements CurrentMenu {
     private readonly _indicator: Indicator;
 
     private _layoutsRows: LayoutsRow[];
-    private _container: St.BoxLayout;
+    private _container: St.BoxLayout | null;
     private _scalingFactor: number;
     private _children: St.Widget[];
     private _openPrefsFn: () => void;
 
-    constructor(indicator: Indicator, enableScalingFactor: boolean, openPrefsFn: () => void) {
+    constructor(
+        indicator: Indicator,
+        enableScalingFactor: boolean,
+        openPrefsFn: () => void
+    ) {
         this._indicator = indicator;
         this._signals = new SignalHandling();
         this._openPrefsFn = openPrefsFn;
@@ -164,7 +186,7 @@ export default class DefaultMenu implements CurrentMenu {
             style_class: 'indicator-menu-item',
         });
         this._children.push(layoutsPopupMenu);
-        this._container = new St.BoxLayout({
+        const container = new St.BoxLayout({
             xAlign: Clutter.ActorAlign.CENTER,
             yAlign: Clutter.ActorAlign.CENTER,
             xExpand: true,
@@ -172,21 +194,20 @@ export default class DefaultMenu implements CurrentMenu {
             styleClass: 'default-menu-container',
             ...widgetOrientation(true),
         });
-        layoutsPopupMenu.add_child(this._container);
+        layoutsPopupMenu.add_child(container);
         (this._indicator.menu as PopupMenu.PopupMenu).addMenuItem(
-            layoutsPopupMenu,
+            layoutsPopupMenu
         );
 
         if (enableScalingFactor) {
-            const monitor = Main.layoutManager.findMonitorForActor(
-                this._container,
-            );
+            const monitor = Main.layoutManager.findMonitorForActor(container);
             const scalingFactor = getMonitorScalingFactor(
-                monitor?.index || Main.layoutManager.primaryIndex,
+                monitor?.index || Main.layoutManager.primaryIndex
             );
-            enableScalingFactorSupport(this._container, scalingFactor);
+            enableScalingFactorSupport(container, scalingFactor);
         }
-        this._scalingFactor = getScalingFactorOf(this._container)[1];
+        this._scalingFactor = getScalingFactorOf(container)[1];
+        this._container = container;
 
         this._layoutsRows = [];
         this._drawLayouts();
@@ -196,7 +217,7 @@ export default class DefaultMenu implements CurrentMenu {
             Settings.KEY_SETTING_LAYOUTS_JSON,
             () => {
                 this._drawLayouts();
-            },
+            }
         );
         this._signals.connect(Settings, Settings.KEY_INNER_GAPS, () => {
             this._drawLayouts();
@@ -221,7 +242,7 @@ export default class DefaultMenu implements CurrentMenu {
                             : GlobalState.get().layouts[0].id;
                     this._layoutsRows[index].selectLayout(selectedId);
                 });
-            },
+            }
         );
 
         this._signals.connect(
@@ -238,17 +259,17 @@ export default class DefaultMenu implements CurrentMenu {
                             : GlobalState.get().layouts[0].id;
                     this._layoutsRows[index].selectLayout(selectedId);
                 });
-            },
+            }
         );
 
         this._signals.connect(Main.layoutManager, 'monitors-changed', () => {
-            if (!enableScalingFactor) return;
+            if (!enableScalingFactor || !this._container) return;
 
             const monitor = Main.layoutManager.findMonitorForActor(
-                this._container,
+                this._container
             );
             const scalingFactor = getMonitorScalingFactor(
-                monitor?.index || Main.layoutManager.primaryIndex,
+                monitor?.index || Main.layoutManager.primaryIndex
             );
             enableScalingFactorSupport(this._container, scalingFactor);
 
@@ -265,7 +286,7 @@ export default class DefaultMenu implements CurrentMenu {
 
         const buttonsPopupMenu = this._buildEditingButtonsRow();
         (this._indicator.menu as PopupMenu.PopupMenu).addMenuItem(
-            buttonsPopupMenu,
+            buttonsPopupMenu
         );
         this._children.push(buttonsPopupMenu);
     }
@@ -273,21 +294,23 @@ export default class DefaultMenu implements CurrentMenu {
     // compute monitors details and update labels asynchronously (if we have successful results...)
     private _computeMonitorsDetails() {
         if (getMonitors().length === 1) {
-            this._layoutsRows.forEach((lr) => lr.updateMonitorName(false, []));
+            this._layoutsRows.forEach(lr => lr.updateMonitorName(false, []));
             return;
         }
 
         // GNOME 49+ has Meta.Monitor with get_display_name()
-        const monitorsDetails: {
-            name: string;
-            index: number;
-            x: number;
-            y: number;
-        }[] | undefined = this._get_display_name();
+        const monitorsDetails:
+            | {
+                  name: string;
+                  index: number;
+                  x: number;
+                  y: number;
+              }[]
+            | undefined = this._get_display_name();
 
         if (monitorsDetails) {
-            this._layoutsRows.forEach((lr) =>
-                lr.updateMonitorName(true, monitorsDetails),
+            this._layoutsRows.forEach(lr =>
+                lr.updateMonitorName(true, monitorsDetails)
             );
             return;
         }
@@ -300,7 +323,7 @@ export default class DefaultMenu implements CurrentMenu {
             const proc = Gio.Subprocess.new(
                 ['gjs', '-m', `${this._indicator.path}/monitorDescription.js`],
                 Gio.SubprocessFlags.STDOUT_PIPE |
-                    Gio.SubprocessFlags.STDERR_PIPE,
+                    Gio.SubprocessFlags.STDERR_PIPE
             );
 
             proc.communicate_utf8_async(
@@ -313,13 +336,13 @@ export default class DefaultMenu implements CurrentMenu {
                     if (pr.get_successful()) {
                         debug(stdout);
                         const parsedMonitorsDetails = JSON.parse(stdout);
-                        this._layoutsRows.forEach((lr) =>
-                            lr.updateMonitorName(true, parsedMonitorsDetails),
+                        this._layoutsRows.forEach(lr =>
+                            lr.updateMonitorName(true, parsedMonitorsDetails)
                         );
                     } else {
                         debug('error:', stderr);
                     }
-                },
+                }
             );
         } catch (e) {
             debug(e);
@@ -362,6 +385,8 @@ export default class DefaultMenu implements CurrentMenu {
     }
 
     private _updateScaling() {
+        if (!this._container) return;
+
         const newScalingFactor = getScalingFactorOf(this._container)[1];
         if (this._scalingFactor === newScalingFactor) return;
 
@@ -381,25 +406,25 @@ export default class DefaultMenu implements CurrentMenu {
         const editLayoutsBtn = createButton(
             'edit-symbolic',
             `${t('Edit Layouts')}...`,
-            this._indicator.path,
+            this._indicator.path
         );
         editLayoutsBtn.connect('clicked', () =>
-            this._indicator.openLayoutEditor(),
+            this._indicator.openLayoutEditor()
         );
         buttonsBoxLayout.add_child(editLayoutsBtn);
         const newLayoutBtn = createButton(
             'add-symbolic',
             `${t('New Layout')}...`,
-            this._indicator.path,
+            this._indicator.path
         );
         newLayoutBtn.connect('clicked', () =>
-            this._indicator.newLayoutOnClick(true),
+            this._indicator.newLayoutOnClick(true)
         );
         buttonsBoxLayout.add_child(newLayoutBtn);
 
         const prefsBtn = createIconButton(
             'prefs-symbolic',
-            this._indicator.path,
+            this._indicator.path
         );
         prefsBtn.connect('clicked', () => {
             this._openPrefsFn();
@@ -416,14 +441,17 @@ export default class DefaultMenu implements CurrentMenu {
     }
 
     private _drawLayouts() {
+        const container = this._container;
+        if (!container) return;
+
         const layouts = GlobalState.get().layouts;
-        this._container.destroy_all_children();
+        container.destroy_all_children();
         this._layoutsRows = [];
 
         const selected_layouts = Settings.get_selected_layouts();
         const ws_index = global.workspaceManager.get_active_workspace_index();
         const monitors = getMonitors();
-        this._layoutsRows = monitors.map((monitor) => {
+        this._layoutsRows = monitors.map(monitor => {
             const ws_selected_layouts =
                 ws_index < selected_layouts.length
                     ? selected_layouts[ws_index]
@@ -433,20 +461,21 @@ export default class DefaultMenu implements CurrentMenu {
                     ? ws_selected_layouts[monitor.index]
                     : GlobalState.get().layouts[0].id;
             const row = new LayoutsRow(
-                this._container,
+                container,
                 layouts,
                 selectedId,
                 monitors.length > 1,
-                monitor,
+                monitor
             );
-            row.connect(
+            this._signals.connect(
+                row,
                 'selected-layout',
                 (r: LayoutsRow, layoutId: string) => {
                     this._indicator.selectLayoutOnClick(
                         monitor.index,
-                        layoutId,
+                        layoutId
                     );
-                },
+                }
             );
             return row;
         });
@@ -454,9 +483,13 @@ export default class DefaultMenu implements CurrentMenu {
 
     public destroy() {
         this._signals.disconnect();
-        this._layoutsRows.forEach((lr) => lr.destroy());
+        this._layoutsRows.forEach(lr => lr.destroy());
         this._layoutsRows = [];
-        this._children.forEach((c) => c.destroy());
+        if (this._container) {
+            this._container.destroy();
+            this._container = null;
+        }
+        this._children.forEach(c => c.destroy());
         this._children = [];
     }
 }
