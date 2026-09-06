@@ -34,27 +34,29 @@ interface WindowWithCachedProps extends Meta.Window {
 }
 
 export default class AutoTileWindowManager extends GObject.Object {
-    static { registerGObjectClass(this, {
-        GTypeName: 'AutoTileWindowManager',
-        Signals: {
-            unmaximized: {
-                param_types: [Meta.Window.$gtype],
+    static {
+        registerGObjectClass(this, {
+            GTypeName: 'AutoTileWindowManager',
+            Signals: {
+                unmaximized: {
+                    param_types: [Meta.Window.$gtype],
+                },
+                maximized: {
+                    param_types: [Meta.Window.$gtype],
+                },
+                'window-unmanaged': {
+                    param_types: [Meta.Window.$gtype],
+                },
+                'window-workspace-changed': {
+                    param_types: [
+                        Meta.Window.$gtype,
+                        GObject.TYPE_INT,
+                        GObject.TYPE_INT,
+                    ], // Meta.Window, old workspace index, new workspace index
+                },
             },
-            maximized: {
-                param_types: [Meta.Window.$gtype],
-            },
-            'window-unmanaged': {
-                param_types: [Meta.Window.$gtype],
-            },
-            'window-workspace-changed': {
-                param_types: [
-                    Meta.Window.$gtype,
-                    GObject.TYPE_INT,
-                    GObject.TYPE_INT,
-                ], // Meta.Window, old workspace index, new workspace index
-            },
-        },
-    })};
+        });
+    }
 
     private static _instance: AutoTileWindowManager | null;
 
@@ -69,10 +71,14 @@ export default class AutoTileWindowManager extends GObject.Object {
 
     static destroy() {
         if (this._instance) {
-            this._instance._signals.disconnect();
-            this._instance._windowSignals.disconnect();
+            this._instance.destroy();
             this._instance = null;
         }
+    }
+
+    public destroy(): void {
+        this._signals.disconnect();
+        this._windowSignals.disconnect();
     }
 
     constructor() {
@@ -80,7 +86,7 @@ export default class AutoTileWindowManager extends GObject.Object {
 
         this._signals = new SignalHandling();
         this._windowSignals = new SignalHandling();
-        global.get_window_actors().forEach((winActor) => {
+        global.get_window_actors().forEach(winActor => {
             (winActor.metaWindow as WindowWithCachedProps).__ts_cached =
                 new CachedWindowProperties(winActor.metaWindow, this);
             this._trackWindowSignals(winActor.metaWindow);
@@ -93,7 +99,7 @@ export default class AutoTileWindowManager extends GObject.Object {
                 (window as WindowWithCachedProps).__ts_cached =
                     new CachedWindowProperties(window, this);
                 this._trackWindowSignals(window);
-            },
+            }
         );
         this._signals.connect(
             global.windowManager,
@@ -101,9 +107,9 @@ export default class AutoTileWindowManager extends GObject.Object {
             (_, actor: Meta.WindowActor) => {
                 (actor.metaWindow as WindowWithCachedProps).__ts_cached?.update(
                     actor.metaWindow,
-                    this,
+                    this
                 );
-            },
+            }
         );
         this._signals.connect(
             global.windowManager,
@@ -111,9 +117,9 @@ export default class AutoTileWindowManager extends GObject.Object {
             (_, actor: Meta.WindowActor) => {
                 (actor.metaWindow as WindowWithCachedProps).__ts_cached?.update(
                     actor.metaWindow,
-                    this,
+                    this
                 );
-            },
+            }
         );
         this._signals.connect(
             global.windowManager,
@@ -122,9 +128,9 @@ export default class AutoTileWindowManager extends GObject.Object {
                 // TODO disable default window animations Main.wm.skipNextEffect(actor);
                 (actor.metaWindow as WindowWithCachedProps).__ts_cached?.update(
                     actor.metaWindow,
-                    this,
+                    this
                 );
-            },
+            }
         );
     }
 
@@ -134,7 +140,7 @@ export default class AutoTileWindowManager extends GObject.Object {
             'workspace-changed',
             () => {
                 this._onWindowWorkspaceChanged(window);
-            },
+            }
         );
         const unmanagedId = this._windowSignals.connect(
             window,
@@ -143,7 +149,7 @@ export default class AutoTileWindowManager extends GObject.Object {
                 window.disconnect(workspaceChangedId);
                 window.disconnect(unmanagedId);
                 this.emit('window-unmanaged', window);
-            },
+            }
         );
     }
 
@@ -163,7 +169,7 @@ export default class AutoTileWindowManager extends GObject.Object {
                     'AutoTile: tracked workspace of window',
                     window.get_id(),
                     'was disposed, resetting it',
-                    e,
+                    e
                 );
                 return;
             }
@@ -235,7 +241,7 @@ export default class AutoTileWindowManager extends GObject.Object {
             params.to.x,
             params.to.y,
             params.to.width,
-            params.to.height,
+            params.to.height
         );
         // while we hide the preview, show the actor to the new position,
         // this has opacity of 0 so it is hidden. Later we immediately swap
