@@ -11,9 +11,11 @@ import { t } from '../../translations';
 const OUTER_GAPS = 2;
 
 export default class MultipleWindowsIcon extends LayoutWidget<TilePreviewWithWindow> {
-    static { registerGObjectClass(this) }
+    static {
+        registerGObjectClass(this);
+    }
 
-    private _label: St.Label;
+    private _label: St.Label | null;
     private _window: MetaWindowGroup;
 
     constructor(params: {
@@ -63,7 +65,7 @@ export default class MultipleWindowsIcon extends LayoutWidget<TilePreviewWithWin
         // if the rightmost tiled window doesn't reach the end of the icon
         // let's shrink the width to make it happen
         let rightMostPercentage = 0.0;
-        params.tiles.forEach((tile) => {
+        params.tiles.forEach(tile => {
             if (tile.x + tile.width > rightMostPercentage)
                 rightMostPercentage = tile.x + tile.width;
         });
@@ -75,9 +77,19 @@ export default class MultipleWindowsIcon extends LayoutWidget<TilePreviewWithWin
         parent: Clutter.Actor,
         rect: Mtk.Rectangle,
         gaps: Clutter.Margin,
-        tile: Tile,
+        tile: Tile
     ): TilePreviewWithWindow {
         return new TilePreviewWithWindow({ parent, rect, gaps, tile });
+    }
+
+    // the label is NOT parented into the icon (the alt-tab switcher owns it):
+    // release it explicitly instead of relying on the actor teardown
+    public override destroy(): void {
+        if (this._label) {
+            this._label.destroy();
+            this._label = null;
+        }
+        super.destroy();
     }
 
     public get window() {
