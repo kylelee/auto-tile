@@ -32,5 +32,5 @@ Prefer the wrapper scripts — they check the required tools (GLib dev tools, et
 The plain `npm run …` equivalents exist too (`npm run build`, `npm run install:extension`, …). See [AGENTS.md](./AGENTS.md) for the full map of the codebase and build pipeline.
 
 ## Any contributions you make will be under the GPLv3 Software License
-In short, when you submit code changes, your submissions are understood to be under the same [GPLv3 License](https://github.com/kylelee/AutoTile/blob/main/LICENSE) that covers the project. 
+In short, when you submit code changes, your submissions are understood to be under the same [GPLv3 License](https://github.com/kylelee/auto-tile/blob/main/LICENSE) that covers the project. 
 Feel free to contact the maintainers if that's a concern.

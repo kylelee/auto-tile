@@ -1,6 +1,6 @@
 <img src="https://raw.githubusercontent.com/kylelee/AutoTile/main/logo.png" align="right" width="76"/>
 
-[![release](https://img.shields.io/badge/Release_v18.0-blue?style=for-the-badge)](https://github.com/kylelee/AutoTile/releases)
+[![release](https://img.shields.io/badge/Release_v18.0-blue?style=for-the-badge)](https://github.com/kylelee/auto-tile/releases)
 ![](https://img.shields.io/github/license/kylelee/AutoTile?style=for-the-badge)
 ![](https://img.shields.io/badge/GNOME-42--50-e04196?style=for-the-badge&logo=gnome&logoColor=white)
 
@@ -10,7 +10,7 @@
 
 AutoTile is a GNOME Shell extension that brings **automatic tiling window management** to GNOME. It is heavily inspired by **[Omarchy](https://omarchy.org) 4.0** and the window layouters of **[Hyprland](https://hyprland.org)**: that is why we forked the excellent **[Tiling Shell](https://github.com/domferr/tilingshell)** project (many thanks to its original author [Domenico Ferraro](https://github.com/domferr)) and extended it, so that GNOME users can enjoy an auto-tiling experience that comes close to **Omarchy Linux** — huge thanks to DHH and the Omarchy developers for their aesthetics, inspiration, philosophy and outstanding code contributions.
 
-Improvement suggestions and ideas of any kind are more than welcome — please open an [issue](https://github.com/kylelee/AutoTile/issues)! 🙌
+Improvement suggestions and ideas of any kind are more than welcome — please open an [issue](https://github.com/kylelee/auto-tile/issues)! 🙌
 
 AutoTile runs on GNOME Shell **42 to 50**, on X11 and Wayland, with multi-monitor support even across monitors with different scaling factors — on top of everything Tiling Shell already offered:
 
@@ -20,12 +20,12 @@ AutoTile runs on GNOME Shell **42 to 50**, on X11 and Wayland, with multi-monito
 - 🚀 Adapts to your GNOME theme for a **seamless integration**!
 
 <div align="center">
-  <a href="https://github.com/kylelee/AutoTile/releases" >
+  <a href="https://github.com/kylelee/auto-tile/releases" >
       <img src="https://img.shields.io/badge/Get%20it%20on-GitHub-4A86CF?style=for-the-badge&logo=Gnome&logoColor=white"/>
   </a>
 </div>
 
-<img src="https://github.com/kylelee/AutoTile/blob/main/doc/horiz_summary.jpg" align="center"/>
+<img src="https://github.com/kylelee/auto-tile/blob/main/doc/horiz_summary.jpg" align="center"/>
 
 <details>
   <summary><span align="center">See here the video overview</span></summary>
@@ -42,10 +42,10 @@ https://github.com/user-attachments/assets/2905f0a1-ecd4-47b5-a6bc-59f91716e685
 
 ## Installation
 
-You can install AutoTile from the official GNOME Extensions website or from [GitHub](https://github.com/kylelee/AutoTile). By installing from [GitHub releases](https://github.com/kylelee/AutoTile/releases) you will always have the latest update.
+You can install AutoTile from the official GNOME Extensions website or from [GitHub](https://github.com/kylelee/auto-tile). By installing from [GitHub releases](https://github.com/kylelee/auto-tile/releases) you will always have the latest update.
 
 <div align="center">
-  <a href="https://github.com/kylelee/AutoTile/releases" >
+  <a href="https://github.com/kylelee/auto-tile/releases" >
       <img src="https://img.shields.io/badge/Get%20it%20on-GitHub-4A86CF?style=for-the-badge&logo=Gnome&logoColor=white"/>
   </a>
 </div>
@@ -60,7 +60,7 @@ Once approved, you will be able to install it with one click from the website (b
 
 ### Install from GitHub releases
 
-Download the latest [release](https://github.com/kylelee/AutoTile/releases) archive matching your GNOME Shell version and install it locally:
+Download the latest [release](https://github.com/kylelee/auto-tile/releases) archive matching your GNOME Shell version and install it locally:
 
 | GNOME Shell version | Archive                                |
 | ------------------- | -------------------------------------- |
@@ -76,7 +76,7 @@ gnome-shell --version
 For GNOME Shell 45–50:
 
 ```bash
-curl -L -o /tmp/autotile.zip https://github.com/kylelee/AutoTile/releases/latest/download/autotile@kylelee.github.io.zip
+curl -L -o /tmp/autotile.zip https://github.com/kylelee/auto-tile/releases/latest/download/autotile@kylelee.github.io.zip
 mkdir -p ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
 unzip -o /tmp/autotile.zip -d ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
 ```
@@ -84,7 +84,7 @@ unzip -o /tmp/autotile.zip -d ~/.local/share/gnome-shell/extensions/autotile@kyl
 For GNOME Shell 42–44, download the other archive instead — the install steps are the same:
 
 ```bash
-curl -L -o /tmp/autotile.zip https://github.com/kylelee/AutoTile/releases/latest/download/GNOME.42-44.autotile@kylelee.github.io.zip
+curl -L -o /tmp/autotile.zip https://github.com/kylelee/auto-tile/releases/latest/download/GNOME.42-44.autotile@kylelee.github.io.zip
 mkdir -p ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
 unzip -o /tmp/autotile.zip -d ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
 ```
@@ -162,7 +162,7 @@ Further keybinding-driven commands are available, all customizable from the pref
 
 When grabbing and moving a window, press <kbd>CTRL</kbd> key to show the tiling layout (you can choose another key from the preferences). When moving on a tile, it will highlight. Ungrab the window to place that window on the highlighted tile.
 
-[tiling_system.webm](https://github.com/kylelee/AutoTile/assets/14203981/a45ec416-ad39-458d-9b9f-cddce8b25666)
+[tiling_system.webm](https://github.com/kylelee/auto-tile/assets/14203981/a45ec416-ad39-458d-9b9f-cddce8b25666)
 
 > This extension and the tiling system also implements Windows PowerToys FancyZones!
 
@@ -172,7 +172,7 @@ When grabbing and moving a window, press <kbd>CTRL</kbd> key to show the tiling 
 
 When grabbing and moving a window, the snap assistant will be available on top of the screen. Move the window near it to activate the snap assistant. While still grabbing the window, move your mouse to the tile you are interested in. By stopping grabbing the window will be tiled to the selected tile!
 
-[snap_assistant.webm](https://github.com/kylelee/AutoTile/assets/14203981/33511582-fa92-445e-b1ba-8b08f9a8e43a)
+[snap_assistant.webm](https://github.com/kylelee/auto-tile/assets/14203981/33511582-fa92-445e-b1ba-8b08f9a8e43a)
 
 > Snap Assistant's sensibility can be customized from the preferences.
 
@@ -182,7 +182,7 @@ When grabbing and moving a window, the snap assistant will be available on top o
 
 Click on AutoTile's panel indicator and the available layouts will be shown. Select the one you prefer by clicking on it. That layout will be applied to every monitor in case you have more than one.
 
-[layout_selection.webm](https://github.com/kylelee/AutoTile/assets/14203981/f4956a34-64e3-4c24-b177-8f9b08fcc45c)
+[layout_selection.webm](https://github.com/kylelee/auto-tile/assets/14203981/f4956a34-64e3-4c24-b177-8f9b08fcc45c)
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
@@ -190,7 +190,7 @@ Click on AutoTile's panel indicator and the available layouts will be shown. Sel
 
 The layout is not strict. You can select multiple tiles too! Just hold <kbd>ALT</kbd> while using the tiling system (you can choose another key from the preferences).
 
-[multiple_selection.webm](https://github.com/kylelee/AutoTile/assets/14203981/92b29130-260c-479d-9237-bf5c87427e52)
+[multiple_selection.webm](https://github.com/kylelee/auto-tile/assets/14203981/92b29130-260c-479d-9237-bf5c87427e52)
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
@@ -198,9 +198,9 @@ The layout is not strict. You can select multiple tiles too! Just hold <kbd>ALT<
 
 |     Split a tile      |        Split a tile _vertically_        |     Delete a tile      |                                                         Save, close the editor or open the menu                                                         |
 | :-------------------: | :-------------------------------------: | :--------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------: |
-| <kbd>LEFT CLICK</kbd> | <kbd>LEFT CLICK</kbd> + <kbd>CTRL</kbd> | <kbd>RIGHT CLICK</kbd> | Click the AutoTile's icon <img src="https://github.com/kylelee/AutoTile/assets/14203981/13e27ec1-6a5d-420f-a87f-8f3df0b34c92" width=96 /> on the panel. |
+| <kbd>LEFT CLICK</kbd> | <kbd>LEFT CLICK</kbd> + <kbd>CTRL</kbd> | <kbd>RIGHT CLICK</kbd> | Click the AutoTile's icon <img src="https://github.com/kylelee/auto-tile/assets/14203981/13e27ec1-6a5d-420f-a87f-8f3df0b34c92" width=96 /> on the panel. |
 
-[layout_editor.webm](https://github.com/kylelee/AutoTile/assets/14203981/c6e05589-69d9-4fa3-a4df-61ee875cf9e1)
+[layout_editor.webm](https://github.com/kylelee/auto-tile/assets/14203981/c6e05589-69d9-4fa3-a4df-61ee875cf9e1)
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
@@ -208,7 +208,7 @@ The layout is not strict. You can select multiple tiles too! Just hold <kbd>ALT<
 
 You can resize adjacent tiled windows together!
 
-[Resizing tiled windows](https://github.com/kylelee/AutoTile/assets/14203981/da4ef97e-cdbb-4981-a8ab-9ca8cd23d63d)
+[Resizing tiled windows](https://github.com/kylelee/auto-tile/assets/14203981/da4ef97e-cdbb-4981-a8ab-9ca8cd23d63d)
 
 > It can be enabled/disabled from the preferences
 
@@ -218,7 +218,7 @@ You can resize adjacent tiled windows together!
 
 You can tile a window by moving it to the edge.
 
-[Screencast from 2024-06-22 22-12-22.webm](https://github.com/kylelee/AutoTile/assets/14203981/6e5a2ba9-cd38-44bb-b791-51e41e07f7a0)
+[Screencast from 2024-06-22 22-12-22.webm](https://github.com/kylelee/auto-tile/assets/14203981/6e5a2ba9-cd38-44bb-b791-51e41e07f7a0)
 
 <p align="right"><b>Go to Usage</b> <a href="#usage">⬆️</a></p>
 
@@ -230,7 +230,7 @@ Right-click on a window to use the auto-tile buttons and the snap assistant from
 
 <p align="center">Check the demonstration video to see it in action!</p>
 
-[Screencast from 2024-07-13 18-21-57.webm](https://github.com/kylelee/AutoTile/assets/14203981/8fd79faa-a476-4b55-b7c6-6329e4b59519)
+[Screencast from 2024-07-13 18-21-57.webm](https://github.com/kylelee/auto-tile/assets/14203981/8fd79faa-a476-4b55-b7c6-6329e4b59519)
 
 > The original idea was to show the snap assistant when hovering the maximize button (as it is done on Windows 11). Unfortunately, GNOME doesn't let us handle the hovering of the maximize button or add another button near it...
 
@@ -309,7 +309,7 @@ When one tiled window is raised, all the other tiled windows come to the foregro
 
 ## Contributing
 
-Feel free to submit [issues](https://github.com/kylelee/AutoTile/issues/new/choose) and [Pull Requests](https://github.com/kylelee/AutoTile/pulls)!
+Feel free to submit [issues](https://github.com/kylelee/auto-tile/issues/new/choose) and [Pull Requests](https://github.com/kylelee/auto-tile/pulls)!
 
 ### How to add new keybindings
 
@@ -322,7 +322,7 @@ Feel free to submit [issues](https://github.com/kylelee/AutoTile/issues/new/choo
 </key>
 ```
 
-2. Edit the file `src/settings/settings.ts` and add a static constant at the end of the list of the static constants (for example [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/settings/settings.ts#L138)). The static constant must be a string equal to the key name. The constant name must start with `SETTING_` and must be the key name capitalized and using underscores. For example if the key name is `highlight-current-window`, add this to the file:
+2. Edit the file `src/settings/settings.ts` and add a static constant at the end of the list of the static constants (for example [here](https://github.com/kylelee/auto-tile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/settings/settings.ts#L138)). The static constant must be a string equal to the key name. The constant name must start with `SETTING_` and must be the key name capitalized and using underscores. For example if the key name is `highlight-current-window`, add this to the file:
 
 ```js
 static SETTING_HIGHLIGHT_CURRENT_WINDOW = 'highlight-current-window';
@@ -336,7 +336,7 @@ static SETTING_HIGHLIGHT_CURRENT_WINDOW = 'highlight-current-window';
 },
 ```
 
-4. The idea is that, when the user presses the keybindings, the Keybinding singleton class will emit that signal. To achieve that, edit the file `src/keybindings.ts` by emitting the signal when the keybindings are used, for example [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L223). For example if the key name is `highlight-current-window`, add this:
+4. The idea is that, when the user presses the keybindings, the Keybinding singleton class will emit that signal. To achieve that, edit the file `src/keybindings.ts` by emitting the signal when the keybindings are used, for example [here](https://github.com/kylelee/auto-tile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L223). For example if the key name is `highlight-current-window`, add this:
 
 ```js
 Main.wm.addKeybinding(
@@ -352,13 +352,13 @@ Main.wm.addKeybinding(
 
 You can put after `display` all the parameters you need (if any).
 
-5. Ensure you disable the keybindings when the extension is disabled. To achieve that edit the file `src/keybindings.ts` to remove the keybindings, for example [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L318). For example, if the key name is `highlight-current-window` then add this:
+5. Ensure you disable the keybindings when the extension is disabled. To achieve that edit the file `src/keybindings.ts` to remove the keybindings, for example [here](https://github.com/kylelee/auto-tile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L318). For example, if the key name is `highlight-current-window` then add this:
 
 ```js
 Main.wm.removeKeybinding(Settings.SETTING_HIGHLIGHT_CURRENT_WINDOW);
 ```
 
-6. You can now listen to the keybindings from everywhere by just connecting to the signal. A good place to do so is in the `src/extension.ts` file, for example [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/extension.ts#L264). For example, if the key name is `highlight-current-window` then add this:
+6. You can now listen to the keybindings from everywhere by just connecting to the signal. A good place to do so is in the `src/extension.ts` file, for example [here](https://github.com/kylelee/auto-tile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/extension.ts#L264). For example, if the key name is `highlight-current-window` then add this:
 
 ```js
 this._signals.connect(
@@ -372,7 +372,7 @@ this._signals.connect(
 );
 ```
 
-7. Edit the file `src/prefs.ts` to allow the user to choose its preferred keybindings. This can be easily done by adding a new entry in the `keybindings` array. For example by adding a new entry [here](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/prefs.ts#L639). For example, if the key name is `highlight-current-window` then add this:
+7. Edit the file `src/prefs.ts` to allow the user to choose its preferred keybindings. This can be easily done by adding a new entry in the `keybindings` array. For example by adding a new entry [here](https://github.com/kylelee/auto-tile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/prefs.ts#L639). For example, if the key name is `highlight-current-window` then add this:
 
 ```js
 [

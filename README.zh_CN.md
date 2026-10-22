@@ -1,6 +1,6 @@
 <img src="https://raw.githubusercontent.com/kylelee/AutoTile/main/logo.png" align="right" width="76"/>
 
-[![release](https://img.shields.io/badge/Release_v18.0-blue?style=for-the-badge)](https://github.com/kylelee/AutoTile/releases)
+[![release](https://img.shields.io/badge/Release_v18.0-blue?style=for-the-badge)](https://github.com/kylelee/auto-tile/releases)
 ![](https://img.shields.io/github/license/kylelee/AutoTile?style=for-the-badge)
 ![](https://img.shields.io/badge/GNOME-42--50-e04196?style=for-the-badge&logo=gnome&logoColor=white)
 
@@ -10,7 +10,7 @@
 
 AutoTile 是一个为 GNOME Shell 提供**自动平铺窗口管理**的扩展。它深受 **[Omarchy](https://omarchy.org) 4.0** 以及 **[Hyprland](https://hyprland.org)** 窗口布局器的启发：正因如此，我们 fork 了优秀的 **[Tiling Shell](https://github.com/domferr/tilingshell)** 项目（在此特别感谢原作者 [Domenico Ferraro](https://github.com/domferr)），并在其基础上扩展了大量功能，让 GNOME 用户也能获得接近 **Omarchy Linux** 的自动平铺窗口管理体验（衷心感谢 DHH 与 Omarchy 的开发者们带来的审美、灵感、哲学以及卓越的代码贡献）。
 
-欢迎提出各种改进意见和想法 —— 请直接提交 [issue](https://github.com/kylelee/AutoTile/issues)！🙌
+欢迎提出各种改进意见和想法 —— 请直接提交 [issue](https://github.com/kylelee/auto-tile/issues)！🙌
 
 AutoTile 兼容 GNOME Shell **42 至 50**，支持 X11 与 Wayland，即使多个显示器使用不同的缩放比例也能正常工作 —— 同时保留了 Tiling Shell 原有的全部能力：
 
@@ -20,12 +20,12 @@ AutoTile 兼容 GNOME Shell **42 至 50**，支持 X11 与 Wayland，即使多�
 - 🚀 自动适配你的 GNOME 主题，实现**无缝融入**！
 
 <div align="center">
-  <a href="https://github.com/kylelee/AutoTile/releases" >
+  <a href="https://github.com/kylelee/auto-tile/releases" >
       <img src="https://img.shields.io/badge/Get%20it%20on-GitHub-4A86CF?style=for-the-badge&logo=Gnome&logoColor=white"/>
   </a>
 </div>
 
-<img src="https://github.com/kylelee/AutoTile/blob/main/doc/horiz_summary.jpg" align="center"/>
+<img src="https://github.com/kylelee/auto-tile/blob/main/doc/horiz_summary.jpg" align="center"/>
 
 <details>
   <summary><span align="center">点击查看视频总览</span></summary>
@@ -42,10 +42,10 @@ https://github.com/user-attachments/assets/2905f0a1-ecd4-47b5-a6bc-59f91716e685
 
 ## 安装
 
-你可以从 GNOME Extensions 官网或 [GitHub](https://github.com/kylelee/AutoTile) 安装 AutoTile。通过 [GitHub Releases](https://github.com/kylelee/AutoTile/releases) 安装可以始终获得最新更新。
+你可以从 GNOME Extensions 官网或 [GitHub](https://github.com/kylelee/auto-tile) 安装 AutoTile。通过 [GitHub Releases](https://github.com/kylelee/auto-tile/releases) 安装可以始终获得最新更新。
 
 <div align="center">
-  <a href="https://github.com/kylelee/AutoTile/releases" >
+  <a href="https://github.com/kylelee/auto-tile/releases" >
       <img src="https://img.shields.io/badge/Get%20it%20on-GitHub-4A86CF?style=for-the-badge&logo=Gnome&logoColor=white"/>
   </a>
 </div>
@@ -60,7 +60,7 @@ https://github.com/user-attachments/assets/2905f0a1-ecd4-47b5-a6bc-59f91716e685
 
 ### 从 GitHub Releases 安装
 
-从最新的 [Release](https://github.com/kylelee/AutoTile/releases) 下载与你的 GNOME Shell 版本对应的压缩包，本地安装：
+从最新的 [Release](https://github.com/kylelee/auto-tile/releases) 下载与你的 GNOME Shell 版本对应的压缩包，本地安装：
 
 | GNOME Shell 版本 | 压缩包                                 |
 | --------------- | -------------------------------------- |
@@ -76,7 +76,7 @@ gnome-shell --version
 GNOME Shell 45–50：
 
 ```bash
-curl -L -o /tmp/autotile.zip https://github.com/kylelee/AutoTile/releases/latest/download/autotile@kylelee.github.io.zip
+curl -L -o /tmp/autotile.zip https://github.com/kylelee/auto-tile/releases/latest/download/autotile@kylelee.github.io.zip
 mkdir -p ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
 unzip -o /tmp/autotile.zip -d ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
 ```
@@ -84,7 +84,7 @@ unzip -o /tmp/autotile.zip -d ~/.local/share/gnome-shell/extensions/autotile@kyl
 GNOME Shell 42–44 请改用另一个压缩包，安装步骤相同：
 
 ```bash
-curl -L -o /tmp/autotile.zip https://github.com/kylelee/AutoTile/releases/latest/download/GNOME.42-44.autotile@kylelee.github.io.zip
+curl -L -o /tmp/autotile.zip https://github.com/kylelee/auto-tile/releases/latest/download/GNOME.42-44.autotile@kylelee.github.io.zip
 mkdir -p ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
 unzip -o /tmp/autotile.zip -d ~/.local/share/gnome-shell/extensions/autotile@kylelee.github.io
 ```
@@ -161,7 +161,7 @@ journalctl -f -o cat /usr/bin/gjs
 
 抓起并移动窗口时，按住 <kbd>CTRL</kbd> 键即可显示平铺布局（可在首选项中更换按键）。移动到某个磁贴上时它会高亮，松开窗口即可将其放置到高亮的磁贴中。
 
-[tiling_system.webm](https://github.com/kylelee/AutoTile/assets/14203981/a45ec416-ad39-458d-9b9f-cddce8b25666)
+[tiling_system.webm](https://github.com/kylelee/auto-tile/assets/14203981/a45ec416-ad39-458d-9b9f-cddce8b25666)
 
 > 本扩展的平铺系统同样实现了 Windows PowerToys 的 FancyZones！
 
@@ -171,7 +171,7 @@ journalctl -f -o cat /usr/bin/gjs
 
 抓起并移动窗口时，屏幕顶部会出现贴靠助手。将窗口移近即可激活它；保持抓取状态，把鼠标移到心仪的磁贴上，松开窗口即可将其平铺到所选磁贴！
 
-[snap_assistant.webm](https://github.com/kylelee/AutoTile/assets/14203981/33511582-fa92-445e-b1ba-8b08f9a8e43a)
+[snap_assistant.webm](https://github.com/kylelee/auto-tile/assets/14203981/33511582-fa92-445e-b1ba-8b08f9a8e43a)
 
 > 贴靠助手的灵敏度可以在首选项中自定义。
 
@@ -181,7 +181,7 @@ journalctl -f -o cat /usr/bin/gjs
 
 点击面板上的 AutoTile 指示器即可显示所有可用布局，点击即可选用。如果你有多个显示器，该布局会被应用到每一个显示器上。
 
-[layout_selection.webm](https://github.com/kylelee/AutoTile/assets/14203981/f4956a34-64e3-4c24-b177-8f9b08fcc45c)
+[layout_selection.webm](https://github.com/kylelee/auto-tile/assets/14203981/f4956a34-64e3-4c24-b177-8f9b08fcc45c)
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
@@ -189,7 +189,7 @@ journalctl -f -o cat /usr/bin/gjs
 
 布局并非死板固定，你也可以一次选择多个磁贴！只需在使用平铺系统时按住 <kbd>ALT</kbd>（可在首选项中更换按键）。
 
-[multiple_selection.webm](https://github.com/kylelee/AutoTile/assets/14203981/92b29130-260c-479d-9237-bf5c87427e52)
+[multiple_selection.webm](https://github.com/kylelee/auto-tile/assets/14203981/92b29130-260c-479d-9237-bf5c87427e52)
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
@@ -197,9 +197,9 @@ journalctl -f -o cat /usr/bin/gjs
 
 |      分割磁贴       |             垂直分割磁贴              |      删除磁贴       |                                                          保存、关闭编辑器或打开菜单                                                          |
 | :-----------------: | :-----------------------------------: | :-----------------: | :------------------------------------------------------------------------------------------------------------------------------------------: |
-| <kbd>左键单击</kbd> | <kbd>左键单击</kbd> + <kbd>CTRL</kbd> | <kbd>右键单击</kbd> | 点击面板上的 AutoTile 图标 <img src="https://github.com/kylelee/AutoTile/assets/14203981/13e27ec1-6a5d-420f-a87f-8f3df0b34c92" width=96 />。 |
+| <kbd>左键单击</kbd> | <kbd>左键单击</kbd> + <kbd>CTRL</kbd> | <kbd>右键单击</kbd> | 点击面板上的 AutoTile 图标 <img src="https://github.com/kylelee/auto-tile/assets/14203981/13e27ec1-6a5d-420f-a87f-8f3df0b34c92" width=96 />。 |
 
-[layout_editor.webm](https://github.com/kylelee/AutoTile/assets/14203981/c6e05589-69d9-4fa3-a4df-61ee875cf9e1)
+[layout_editor.webm](https://github.com/kylelee/auto-tile/assets/14203981/c6e05589-69d9-4fa3-a4df-61ee875cf9e1)
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
@@ -207,7 +207,7 @@ journalctl -f -o cat /usr/bin/gjs
 
 相邻的已平铺窗口可以一起调整大小！
 
-[Resizing tiled windows](https://github.com/kylelee/AutoTile/assets/14203981/da4ef97e-cdbb-4981-a8ab-9ca8cd23d63d)
+[Resizing tiled windows](https://github.com/kylelee/auto-tile/assets/14203981/da4ef97e-cdbb-4981-a8ab-9ca8cd23d63d)
 
 > 可在首选项中启用/禁用
 
@@ -217,7 +217,7 @@ journalctl -f -o cat /usr/bin/gjs
 
 将窗口移到屏幕边缘即可平铺。
 
-[Screencast from 2024-06-22 22-12-22.webm](https://github.com/kylelee/AutoTile/assets/14203981/6e5a2ba9-cd38-44bb-b791-51e41e07f7a0)
+[Screencast from 2024-06-22 22-12-22.webm](https://github.com/kylelee/auto-tile/assets/14203981/6e5a2ba9-cd38-44bb-b791-51e41e07f7a0)
 
 <p align="right"><b>回到功能目录</b> <a href="#使用方法">⬆️</a></p>
 
@@ -229,7 +229,7 @@ journalctl -f -o cat /usr/bin/gjs
 
 <p align="center">观看演示视频了解实际效果！</p>
 
-[Screencast from 2024-07-13 18-21-57.webm](https://github.com/kylelee/AutoTile/assets/14203981/8fd79faa-a476-4b55-b7c6-6329e4b59519)
+[Screencast from 2024-07-13 18-21-57.webm](https://github.com/kylelee/auto-tile/assets/14203981/8fd79faa-a476-4b55-b7c6-6329e4b59519)
 
 > 最初的想法是在悬停最大化按钮时显示贴靠助手（就像 Windows 11 那样）。遗憾的是，GNOME 不允许我们处理最大化按钮的悬停事件，也不允许在其附近添加新按钮……
 
@@ -308,7 +308,7 @@ _可以自行选择开启或关闭吗？_
 
 ## 参与贡献
 
-欢迎提交 [issue](https://github.com/kylelee/AutoTile/issues/new/choose) 和 [Pull Request](https://github.com/kylelee/AutoTile/pulls)！
+欢迎提交 [issue](https://github.com/kylelee/auto-tile/issues/new/choose) 和 [Pull Request](https://github.com/kylelee/auto-tile/pulls)！
 
 ### 如何新增快捷键
 
@@ -321,7 +321,7 @@ _可以自行选择开启或关闭吗？_
 </key>
 ```
 
-2. 编辑文件 `src/settings/settings.ts`，在静态常量列表的末尾添加一个新的静态常量（例如[这里](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/settings/settings.ts#L138)）。静态常量必须是一个与 key 名称相同的字符串；常量名必须以 `SETTING_` 开头，并使用 key 名称的大写下划线形式。例如 key 名称为 `highlight-current-window` 时，向文件中添加：
+2. 编辑文件 `src/settings/settings.ts`，在静态常量列表的末尾添加一个新的静态常量（例如[这里](https://github.com/kylelee/auto-tile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/settings/settings.ts#L138)）。静态常量必须是一个与 key 名称相同的字符串；常量名必须以 `SETTING_` 开头，并使用 key 名称的大写下划线形式。例如 key 名称为 `highlight-current-window` 时，向文件中添加：
 
 ```js
 static SETTING_HIGHLIGHT_CURRENT_WINDOW = 'highlight-current-window';
@@ -335,7 +335,7 @@ static SETTING_HIGHLIGHT_CURRENT_WINDOW = 'highlight-current-window';
 },
 ```
 
-4. 思路是：当用户按下快捷键时，Keybinding 单例类会发出该信号。为此，编辑文件 `src/keybindings.ts`，在快捷键被使用时发出信号（例如[这里](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L223)）。例如 key 名称为 `highlight-current-window` 时，添加：
+4. 思路是：当用户按下快捷键时，Keybinding 单例类会发出该信号。为此，编辑文件 `src/keybindings.ts`，在快捷键被使用时发出信号（例如[这里](https://github.com/kylelee/auto-tile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L223)）。例如 key 名称为 `highlight-current-window` 时，添加：
 
 ```js
 Main.wm.addKeybinding(
@@ -351,13 +351,13 @@ Main.wm.addKeybinding(
 
 如有需要，可以在 `display` 之后添加所有你需要的参数。
 
-5. 请确保在扩展被禁用时移除快捷键。为此，编辑文件 `src/keybindings.ts` 来移除快捷键（例如[这里](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L318)）。例如，key 名称为 `highlight-current-window` 时，添加：
+5. 请确保在扩展被禁用时移除快捷键。为此，编辑文件 `src/keybindings.ts` 来移除快捷键（例如[这里](https://github.com/kylelee/auto-tile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/keybindings.ts#L318)）。例如，key 名称为 `highlight-current-window` 时，添加：
 
 ```js
 Main.wm.removeKeybinding(Settings.SETTING_HIGHLIGHT_CURRENT_WINDOW);
 ```
 
-6. 现在，你可以在任何地方通过连接该信号来监听快捷键。推荐的位置是 `src/extension.ts` 文件（例如[这里](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/extension.ts#L264)）。例如，key 名称为 `highlight-current-window` 时，添加：
+6. 现在，你可以在任何地方通过连接该信号来监听快捷键。推荐的位置是 `src/extension.ts` 文件（例如[这里](https://github.com/kylelee/auto-tile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/extension.ts#L264)）。例如，key 名称为 `highlight-current-window` 时，添加：
 
 ```js
 this._signals.connect(
@@ -371,7 +371,7 @@ this._signals.connect(
 );
 ```
 
-7. 编辑文件 `src/prefs.ts`，允许用户选择自己偏好的快捷键。只需在 `keybindings` 数组中新增一项即可（例如在[这里](https://github.com/kylelee/AutoTile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/prefs.ts#L639)添加新条目）。例如，key 名称为 `highlight-current-window` 时，添加：
+7. 编辑文件 `src/prefs.ts`，允许用户选择自己偏好的快捷键。只需在 `keybindings` 数组中新增一项即可（例如在[这里](https://github.com/kylelee/auto-tile/blob/8a1f21620d5d8f1db7c5b6b45c0ef0c483801420/src/prefs.ts#L639)添加新条目）。例如，key 名称为 `highlight-current-window` 时，添加：
 
 ```js
 [
