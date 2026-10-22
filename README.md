@@ -1,6 +1,6 @@
 <img src="https://raw.githubusercontent.com/kylelee/AutoTile/main/logo.png" align="right" width="76"/>
 
-[![release](https://img.shields.io/badge/Release_v18.0-blue?style=for-the-badge)](https://github.com/kylelee/auto-tile/releases)
+[![release](https://img.shields.io/badge/Release_v18.1-blue?style=for-the-badge)](https://github.com/kylelee/auto-tile/releases)
 ![](https://img.shields.io/github/license/kylelee/AutoTile?style=for-the-badge)
 ![](https://img.shields.io/badge/GNOME-42--50-e04196?style=for-the-badge&logo=gnome&logoColor=white)
 
