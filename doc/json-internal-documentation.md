@@ -32,7 +32,7 @@ So a `Tile` with `x` = 0.5 and `y` = 0.5, on a screen with a resolution of 1920x
 
 The `groups` attribute is mainly used in the layout editor where it determines which `Tile`(s) are "linked": if you resize a single `Tile` it's linked neighbour(s) are also updated.
 
-For more in depth information you can look at an [in depth explanation](https://github.com/kylelee/AutoTile/issues/177#issuecomment-2458322208) of `group`(s).
+For more in depth information you can look at an [in depth explanation](https://github.com/kylelee/auto-tile/issues/177#issuecomment-2458322208) of `group`(s).
 
 Example JSON of a `Tile` object would look like this
 

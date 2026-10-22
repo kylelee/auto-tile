@@ -15,7 +15,7 @@
   ],
   "version": 100,
   "version-name": "18.0",
-  "url": "https://github.com/kylelee/AutoTile",
+  "url": "https://github.com/kylelee/auto-tile",
   "settings-schema": "org.gnome.shell.extensions.autotile",
   "gettext-domain": "autotile",
   "donations": {

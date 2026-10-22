@@ -1056,13 +1056,13 @@ export default class AutoTileExtensionPreferences extends ExtensionPreferences {
         buttons.append(
             this._buildLinkButton(
                 _t('Report a bug'),
-                'https://github.com/kylelee/AutoTile/issues/new?template=bug_report.md',
+                'https://github.com/kylelee/auto-tile/issues/new?template=bug_report.md',
             ),
         );
         buttons.append(
             this._buildLinkButton(
                 _t('Request a feature'),
-                'https://github.com/kylelee/AutoTile/issues/new?template=feature_request.md',
+                'https://github.com/kylelee/auto-tile/issues/new?template=feature_request.md',
             ),
         );
         footerGroup.add(buttons);
@@ -1077,7 +1077,7 @@ export default class AutoTileExtensionPreferences extends ExtensionPreferences {
         );
         footerGroup.add(
             new Gtk.Label({
-                label: `${_t('Open a new issue on')} <a href="https://github.com/kylelee/AutoTile">GitHub</a>!`,
+                label: `${_t('Open a new issue on')} <a href="https://github.com/kylelee/auto-tile">GitHub</a>!`,
                 useMarkup: true,
                 margin_bottom: 32,
             }),
