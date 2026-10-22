@@ -13,8 +13,8 @@
     "49",
     "50"
   ],
-  "version": 100,
-  "version-name": "18.0",
+  "version": 101,
+  "version-name": "18.1",
   "url": "https://github.com/kylelee/auto-tile",
   "settings-schema": "org.gnome.shell.extensions.autotile",
   "gettext-domain": "autotile",
